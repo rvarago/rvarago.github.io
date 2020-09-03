@@ -484,3 +484,6 @@ preface/>
 
 [3] Algebraic data type. <https://en.wikipedia.org/wiki/Algebraic_data_type>
 
+
+***
+*Originally published at https://medium.com/@rvarago*

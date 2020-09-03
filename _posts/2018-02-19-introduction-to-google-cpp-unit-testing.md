@@ -98,3 +98,6 @@ changes the "conventional" process from: Code -> Test, to: Test -> Code.
 [1] <https://github.com/google/googletest#Assertions>  
 [2] <https://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/>
 
+
+***
+*Originally published at https://medium.com/@rvarago*

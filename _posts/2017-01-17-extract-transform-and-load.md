@@ -137,3 +137,6 @@ obtained [here](https://github.com/rvarago/etl-example).
 [1] GROSSMANN, W. and RINDERLE-MA, S. Fundamentals of Business Intelligence.
 1E. Published By Springer-Verlag Berlin Heidelberg.
 
+
+***
+*Originally published at https://medium.com/@rvarago*

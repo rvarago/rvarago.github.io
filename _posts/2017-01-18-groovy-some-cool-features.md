@@ -155,3 +155,6 @@ to follow the reference at [1] to learn more.
 
 [1] Groovy. <http://www.groovy-lang.org/>
 
+
+***
+*Originally published at https://medium.com/@rvarago*

@@ -199,3 +199,6 @@ McGraw-Hill Education.
 
 [2] ASSAF, A. N. Mercado Financeiro. 2E. Published by Atlas.
 
+
+***
+*Originally published at https://medium.com/@rvarago*

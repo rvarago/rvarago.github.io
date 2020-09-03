@@ -189,3 +189,6 @@ cons, and how to use the C API for Linux development.
 
 [4] <http://man7.org/linux/man-pages/man2/syscalls.2.html>
 
+
+***
+*Originally published at https://medium.com/@rvarago*

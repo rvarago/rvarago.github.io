@@ -251,3 +251,6 @@ pull it in whenever the time comes.
 7d05a77a510?gi=9b0a44f3cfd7](https://code.egym.de/the-beauty-of-total-
 functions-e8c35fee2d87)
 
+
+***
+*Originally published at https://medium.com/@rvarago*

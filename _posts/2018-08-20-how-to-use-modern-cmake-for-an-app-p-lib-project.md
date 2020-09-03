@@ -187,3 +187,6 @@ Originally posted at [Rafael Varago's private
 space](https://medium.com/@varago.rafael/how-to-use-modern-cmake-for-an-app-
 lib-project-3c2ee6018cde) on August, 20, 2018.
 
+
+***
+*Originally published at https://medium.com/@rvarago*

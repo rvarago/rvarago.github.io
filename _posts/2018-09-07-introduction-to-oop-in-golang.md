@@ -157,3 +157,6 @@ providing, possibly, alternative ways to solve problems.
 
 [3] <https://golang.org/>
 
+
+***
+*Originally published at https://medium.com/@rvarago*

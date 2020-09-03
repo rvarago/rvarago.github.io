@@ -345,3 +345,6 @@ functions-e8c35fee2d87)
 [[3] From null to Option in Scala](https://code.egym.de/from-null-to-option-
 in-scala-3436cfeef7b0)
 
+
+***
+*Originally published at https://medium.com/@rvarago*

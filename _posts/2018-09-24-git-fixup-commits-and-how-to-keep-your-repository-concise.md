@@ -189,3 +189,6 @@ funnier.
 
 [1] Pro Git Book. <https://git-scm.com/book/en/v2>
 
+
+***
+*Originally published at https://medium.com/@rvarago*

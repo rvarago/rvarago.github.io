@@ -172,3 +172,6 @@ started/)
 
 [2] <https://github.com/docker/labs>
 
+
+***
+*Originally published at https://medium.com/@rvarago*

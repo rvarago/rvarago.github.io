@@ -148,3 +148,6 @@ google-c-unit-testing-3d564c30f3b0) to your project.
 
 [1] <https://cmake.org/>
 
+
+***
+*Originally published at https://medium.com/@rvarago*

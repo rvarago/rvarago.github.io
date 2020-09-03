@@ -113,3 +113,6 @@ injection-46157eb1dc4d>
 
 [3] <https://github.com/google/guice>
 
+
+***
+*Originally published at https://medium.com/@rvarago*

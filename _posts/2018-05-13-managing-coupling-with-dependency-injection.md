@@ -189,3 +189,6 @@ the assistance of frameworks for container management.
 
 [2] Effective C++. Scott Meyers.
 
+
+***
+*Originally published at https://medium.com/@rvarago*

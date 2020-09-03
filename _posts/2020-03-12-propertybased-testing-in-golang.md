@@ -472,3 +472,6 @@ tool in your toolbox to pull when needed, nonetheless.
   * [John Hughes -- Don't Write Tests](https://www.youtube.com/watch?v=hXnS_Xjwk2Y)
   * <https://golang.org/pkg/testing/quick/>
 
+
+***
+*Originally published at https://medium.com/@rvarago*

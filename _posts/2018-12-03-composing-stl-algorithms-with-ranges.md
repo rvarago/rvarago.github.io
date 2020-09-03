@@ -304,3 +304,6 @@ operations. And that among many other operations
 
 [2]Ranges library (C++20). <https://en.cppreference.com/w/cpp/ranges>
 
+
+***
+*Originally published at https://medium.com/@rvarago*

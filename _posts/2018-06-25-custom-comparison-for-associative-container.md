@@ -112,3 +112,6 @@ made solutions.
 
 [3] Effective STL. Scott Meyers.
 
+
+***
+*Originally published at https://medium.com/@rvarago*

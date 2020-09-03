@@ -53,3 +53,6 @@ of it.
   * [Expressiveness, Nullable Types, and Composition (Part 1)](https://www.fluentcpp.com/2019/07/16/expressiveness-nullable-types-and-composition-part-1/)
   * [Expressiveness, Nullable Types, and Composition (Part 2)](https://www.fluentcpp.com/2019/07/19/expressiveness-nullable-types-and-composition-part-2/)
 
+
+***
+*Originally published at https://medium.com/@rvarago*

@@ -541,3 +541,6 @@ your API via types that precisely express your intentions 😉.
 [3] absent: A simple library to compose nullable types in a declarative style
 for the modern C++ programmer. <https://github.com/rvarago/absent>.
 
+
+***
+*Originally published at https://medium.com/@rvarago*

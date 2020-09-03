@@ -215,3 +215,6 @@ Hacker.](https://www.google.com/url?sa=t&source=web&rct=j&url=https://m.youtube.
 Composition](https://medium.com/@varago.rafael/expressiveness-nullable-types-
 and-composition-949285bd6d1)
 
+
+***
+*Originally published at https://medium.com/@rvarago*

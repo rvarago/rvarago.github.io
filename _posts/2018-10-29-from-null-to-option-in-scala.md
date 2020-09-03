@@ -211,3 +211,6 @@ value, instead of _null._ Hence, improving your interfaces.
 > The technologies used at eGym are listed on our [Tech Radar,](https://tech-
 radar.co.ts.egym.com) but that's a topic for future articles.
 
+
+***
+*Originally published at https://medium.com/@rvarago*

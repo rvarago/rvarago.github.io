@@ -110,3 +110,6 @@ I would like to thank **Simon St James** for kindly revised this text.
 
 [1] Meyers, Scott. Effective C++.
 
+
+***
+*Originally published at https://medium.com/@rvarago*

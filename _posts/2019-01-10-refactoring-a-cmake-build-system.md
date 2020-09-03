@@ -269,3 +269,6 @@ Modular Design". <https://www.youtube.com/watch?v=eC9-iRN2b04>
 [5] How to Use Modern CMake for an App + Lib Project. <https://code.egym.de
 /how-to-use-modern-cmake-for-an-app-lib-project-3c2ee6018cde>
 
+
+***
+*Originally published at https://medium.com/@rvarago*
