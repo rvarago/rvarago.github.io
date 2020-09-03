@@ -1,1 +1,33 @@
-theme: jekyll-theme-midnight
+title: "Rafael Varago's blog"
+author: "rvarago"
+description: Thoughts about programming, sort of. 
+
+url: "https://rvarago.github.io"
+
+email: varago.rafael@gmail.com
+github_username: rvarago
+
+social:
+  name: Rafael Varago
+  links:
+    - https://www.linkedin.com/in/rvarago
+    - https://github.com/rvarago
+    - https://medium.com/@rvarago
+
+logo: /assets/rvarago.jpeg
+
+markdown: kramdown
+theme: minima
+exclude:
+  - Gemfile
+  - Gemfile.lock
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-paginate
+  - jekyll-redirect-from
+
+paginate: 7
+paginate_path: /page:num/
+
