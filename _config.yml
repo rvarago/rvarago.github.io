@@ -1,20 +1,17 @@
-title: "Rafael Varago's blog"
-author: "rvarago"
-description: Thoughts about programming, sort of. 
+title: "Rafael Varago's Tech Blog"
+author: "Rafael Varago"
+description: Thoughts on programming, mostly.
 
 url: "https://rvarago.github.io"
 
 email: varago.rafael@gmail.com
 github_username: rvarago
+linkedin_username: rafaelvarago
+medium_username: rvarago
 
-social:
-  name: Rafael Varago
-  links:
-    - https://www.linkedin.com/in/rvarago
-    - https://github.com/rvarago
-    - https://medium.com/@rvarago
-
-logo: /assets/rvarago.jpeg
+header_pages:
+  - index.html
+  - about.md
 
 markdown: kramdown
 theme: minima
@@ -28,6 +25,5 @@ plugins:
   - jekyll-paginate
   - jekyll-redirect-from
 
-paginate: 7
+paginate: 10
 paginate_path: /page:num/
-
