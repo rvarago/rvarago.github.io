@@ -1,103 +1,72 @@
 ---
-layout:	"post"
-title:	"Introduction to Google C++ Unit Testing"
+layout: "post"
+title:  "Quick Look at GoogleTest for C++"
 ---
+
+> A quick look at GoogleTest library for automated testing in C++.
 
 * * *
 
-Hello,
+# Installation
 
-Today, I'm going to introduce the Google Testing Framework for C++,
-abbreviated as GoogleTest.
-
-### Installation
-
-To install GoogleTest on Debian, I've used the _apt_ command:
-
+First, you need to install GoogleTest, which can be done by following the instructions at [https://github.com/google/googletest](https://github.com/google/googletest).
     
-    
-    sudo apt install libgtest-dev
+# Example
 
-This command will only install the sources into your _src_ directory (for
-example: _/usr/src/gtest_ ), now you have to compile them with the tools:
-_cmake_ and _make_ :
+This example will be a simplified, and poorly written, calculator for signed-integers (a-ha!), "suitably" named `calc`, and
+it supports addition and subtraction.
 
-    
-    
-    cd /usr/src/gtest sudo && cmake CMakeLists.txt && sudo make
+The header file `calc.hpp`:
 
-Then, copy the generated binaries into your lib directory (for example:
-_/usr/lib_ ):
+<script src="https://gist.github.com/rvarago/3cfb9a93c83ba114660ac61748a7d8ca.js"></script>
 
-    
-    
-    sudo cp libgtest.a libgtest_main.a /usr/lib
+The implementation file `calc.cpp`:
 
-### Example
+<script src="https://gist.github.com/rvarago/9696e1af67ce6052b8aeddf0b4c0d9d7.js"></script>
 
-This example will be a simplified calculator, named **calc** , for integral
-numbers computations with just two supported operations: addition and
-subtraction.
+And the test file `calc_test.cpp`:
 
-NOTE: I've ignored the code comments to simplify the understanding, but
-remember to comment your code whenever necessary.
+<script src="https://gist.github.com/rvarago/455d424f63c5e9ed1819568185c032be.js"></script>
 
-The header file _calc.hpp_ :
+There is some stuff from GoogleTest:
 
-The implementation file _calc.cpp_ :
+  1. Its header file `gtest/gtest.h`.
+  2. The `TEST` macro creates the test cases, where the first parameter is the test-suite name and the second is the test-case name.
+  3. The `ASSERT_EQ`, member of the `ASSERT_*` group of macros, which asserts for equality, stopping execution if the arguments are not equal. You may also use `EXPECT_EQ` if you want to continue execution regardless.
+  4. You can set GoogleTest up by calling `testing::InitGoogleTest`.
+  5. Then, start GoogleTest up by invoking `RUN_ALL_TESTS`.
 
-And finally, the test file _calc_test.cpp_ :
+# Compilation
 
-There are some new stuff from GoogleTest here:
-
-  1. You must include the header file _gtest/gtest.h_ (look at _/usr/include/gtest_ for more information)
-  2. The _TEST_ macro is responsible for the creation of the test cases, where the first parameter is the test suite name and the second parameter is the specific test case name, which will be visible in the display information during execution
-  3. The _ASSERT_EQ_ , member of _ASSERT_*_ group of macros, defines the equality test for GoogleTest and, based on this information, the framework verifies the success or failure of the tests and logs these information, aborting the test case when the test failed. You can use _EXPECT_EQ_ if you want to continue the test case execution in the presence of a failure
-  4. You can prepare the GoogleTest by calling _testing::InitGoogleTest_ and passing a pointer to _argc_ and the _argv_ array (which is a pointer too)
-  5. Then, you start GoogleTest by invoking _RUN_ALL_TESTS_
-
-### Compilation
-
-To compile the example, type the following command:
-
-    
-    
+Depending on your setup and how you've installed the library, you may be able to compile by typing:
+   
     g++ -o calc_test calc_test.cpp calc.cpp -lgtest -lpthread
 
 Note that you must link the code against the GoogleTest ( _gtest_ ) and the
 POSIX Thread ( _pthread_ ) libs.
 
-### Running
+# Running
 
-Finally, to run the test suite, just type:
-
-    
+To run the test suite, just type:   
     
     ./calc_test
 
-Thus, the test runner will run each test suite and output a summary similar to
-this:
+Thus, the test runner will run each test-suite and print a summary similar to this:
 
-![](/assets/img/2018-02-19-introduction-to-google-cpp-unit-testing_0.png)
+{% include image.html url="2018-02-19-introduction-to-google-cpp-unit-testing_0.png" %}
 
-### Conclusion
+# Conclusion
 
-During software development life cycle is very important to write test code to
-verify the correctness of production code, paving the way to improve the code
-quality, developer's confidence when refactoring etc. In this context, tools
-for automatic unit testing can help in the process and they can be integrated
-with a Continuous Integration (CI) server to be executed automatically for
-each commit.
+During software development, life-cycle is important to write tests to
+check for correctness, thereby paving the way for improvements later down the road by boosting developer's confidence when refactoring, etc.
 
-In a future post, I intend to talk more about unit testing and the software
-development methodology denominated Test Driven Development (TDD), which
-changes the "conventional" process from: Code -> Test, to: Test -> Code.
+In this context, tools for automated testing are critical to helping us out in the process. They should be integrated
+into Continuous Integration (CI) pipelines to be executed automatically upon pushes.
 
-### References
+# References
 
 [1] <https://github.com/google/googletest#Assertions>  
 [2] <https://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/>
 
-
 ***
-*Originally published at https://medium.com/@rvarago*
+*Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*

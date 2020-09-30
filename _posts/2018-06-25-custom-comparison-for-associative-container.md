@@ -1,117 +1,85 @@
 ---
-layout:	"post"
-title:	"Custom Comparison for Associative Container"
+layout: "post"
+title:  "Custom Comparison for Associative Container"
 ---
 
-To use the STL associative containers, the type of keys stored must be
-comparable. But for some instances of the containers, you might want to supply
-an alternative comparison function.
+> For STL associative containers, the type of keys stored must be comparable. Although in some cases you might want to supply an alternative comparison function.
 
 * * *
 
-To use the Standard Template Library (STL) associative containers, the type of
-keys stored must be comparable.
+To use the associative containers provided by the Standard Template Library (STL), the type of
+keys stored must be somehow comparable.
 
-For sorted containers (e.g _std::set_ ), the comparison is by equivalence,
-which **roughly** means overloading the _operator <_, __ and for unsorted
-containers (e.g _std::unordered_set_ ) the comparison is by equality, which in
-turn (again, **roughly** ) means overloading the _operator==_.
+For ordered containers (e.g `std::set<T>`), the comparison of elements of type `T` is by equivalence,
+which, roughly speaking, means overloading `operator<` for `T`. And for unordered containers (e.g `std::unordered_set<T>`) the comparison is by equality, which in, again roughly speaking, means overloading `operator==`.
 
-But for some instances of a container with a predefined comparison function
-for the stored type, you may want to supply an alternative comparison function
-that makes more sense for the container instance's purpose.
+Nevertheless, for some instances of a container, we may want to supply an alternative comparison function that makes more sense for that single container instance.
 
-For example, given a type _Person_ that are normally sorted by _Person::id_ ,
-for some _std::set <Person> _called _names_ you may want to compare the
-elements by _Person::name_ instead of _Person::id_. How do you  "override" the
-default comparison function for _Person_ to achieve the desired behavior for
-this particular instance of _std::set <Person>_?
+For example, given a type `Person` that would normally sorted by `Person::id`, for some `std::set <Person>` called `names` we may want to compare the elements by `Person::name`, instead of `Person::id`. How do you "override" the default comparison function of `Person` for this particular instance of `std::set <Person>`?
 
-#### The Complete Declaration for Associative Containers
+## The Complete Declaration for Associative Containers
 
-To exemplify the concepts, I'll consider _std::set_ as a representative of the
-STL 's associative containers, the differences between it and the others
-aren't significant for our purpose: how to create an associative container
-with a different comparison function from the one defined by the type of
-element held inside the container?
+To exemplify the concepts, I'll pick up `std::set` as a representative of the
+STL's associative containers, albeit differences between it and others, aren't significant for our goal, which is how to create an associative container with a different comparison function than the one defined by the type of element held inside the container?
 
-The complete declaration for _std::set_ is:
+According to [cppreference](https://en.cppreference.com/w/cpp/container/set), the complete declaration of `std::set` is:
 
-    
-    
-    template   
-     <   
-    class T,   
-    class Compare = less<T>,   
-    class Alloc = allocator<T>  
-    >   
-    class set;
+```cpp
+template<   
+  class Key,   
+  class Compare = std::less<Key>,   
+  class Alloc = std::allocator<Key>  
+> class set;
+```
 
 Where:
 
-  *  _T_ is the type of elements that will be held
-  *  _Alloc_ is the memory allocator, with the default being _allocator <T>_
+ *  `Key`is the type of elements held in the container.
+ *  `Alloc` is the memory allocator, with the default being `std::allocator<Key>`.
 
-And the most important aspect for this article:
+And the most important piece for us:
 
-> Compare is the type of the comparison used, with the default being
-_std::less <T>_
+* Compare is the type of comparison used by the container, which defaults to `std::less<Key>`.
 
-But, what's _std::less <T>_?
+Now, what's `std::less<Key>`?
 
- _std::less <T> _is a function object that expresses the "less-than" semantic
-for objects of type _T_. Its behavior is to call the _operator <_ overloaded
-by the type _T_ to check the relative order of two objects _A_ and _B_ of type
-_T_.
+`std::less<Key>` is a function object that expresses the "less-than" operation on objects of type `Key`. And it does so by calling `operator<` overloaded by the type `Key` to check the relative order of two objects `A` and `B` of type `Key` like `A < B`.
 
-Given the declaration for _std::set_ , we can see that the way for providing
-our desired behavior is to supply a different type of comparison function
-object for the template parameter: _Compare_. Alright? Let 's do it then!
+Given the declaration of `std::set`, we see that the way to provide our desired behaviour is to supply a different type of comparison function
+object for the template parameter: `Compare`. Alright? Let's do it then!
 
-Our type _Person_ looks like this:
+Our type `Person` might look like this:
 
-And the use of _Person_ inside _std::set_ and comparing by _Person::name_
-instead of _Person::id_ can be achieved by:
+<script src="https://gist.github.com/rvarago/e018a7dae52619894458b8e56de0f385.js"></script>
 
-Firstly, we'd created the _peopleById_ that uses the internal (default)
-comparison function for the type _Person_ : By _Person::id()_. Thus, every
-element inside the container will be sorted based on its id.
+The use of `Person` inside `std::set` and comparing by `Person::name`, instead of `Person::id` can be done by:
 
-Then, at (1) we created _peopleName_ that relies on the function object
-_PersonCompareByName_ as the argument for the template parameter _Compare,_
-establishing the comparison by _Person::name()_.
+<script src="https://gist.github.com/rvarago/65bea0e13527830724127ecc2e1f91a0.js"></script>
 
-At (2) we achieved the same behavior of (1) but employing an alternative
-syntax that uses the lambda _personComparator_ and supplied the template
-parameter with _decltype_.
+Firstly, we created a variable `peopleById` that uses the internal (default) comparison function for types `Person`: `Person::id()`. Thus, every element inside the container will be sorted based on its `id`.
 
-Finally, the output of the program will be:
+Then, at (1) we created `peopleName` that relies on the function object `PersonCompareByName` as the argument for the template parameter `Compare`, establishing the comparison by `Person::name()`.
 
-![](/assets/img/2018-06-25-custom-comparison-for-associative-container_0.png)
+At (2) we achieved the same behaviour of (1), but employing an alternative syntax that uses a lambda expression `personComparator` and supplied its type to the template parameter with `decltype`.
 
-#### Conclusion
+Finally, the output of the program should be similar to:
 
-Sometimes you may want to supply an alternative way to sort elements of
-associative containers, other than the one defined by the key part of the
-element (e.g. _T::operator <_), but the custom behavior may be wanted for just
-a particular instance of the container. This article has covered a manner to
-achieve this goal, providing two alternative syntaxes for expressing the
-intention.
+{% include image.html url="2018-06-25-custom-comparison-for-associative-container_0.png" %}
 
-STL has a vast collection of containers and algorithms that simplify our daily
-C++'s programming tasks in a highly flexible and algorithmically optimized
-manner. Therefore, I really encourage you to search for more information and,
-whether possible, favor STL's components in your projects rather than home-
-made solutions.
+# Conclusion
 
-#### References
+Sometimes we may want to supply alternative ways to sort elements of associative containers, other than the one defined by the key part of the
+element (i.e. `T::operator<`), but the custom behaviour may be wanted for only a particular instance of the container. This text has shown a way to achieve the intended behaviour, by providing two different syntaxes to achieve the same result.
 
-[1] <http://www.cplusplus.com/reference/set/set/>
+STL has a vast collection of algorithms and containers that simplify our daily programming tasks in C++, with highly flexible and optimized solutions. Therefore, I encourage you to search for more information and whenever possible, favour STL components in your projects rather than home-made solutions.
 
-[2] <http://www.cplusplus.com/reference/functional/less/>
+# References
+
+[1] [http://www.cplusplus.com/reference/set/set/](http://www.cplusplus.com/reference/set/set/)
+
+[2] [http://www.cplusplus.com/reference/functional/less/](http://www.cplusplus.com/reference/functional/less/)
 
 [3] Effective STL. Scott Meyers.
 
-
 ***
-*Originally published at https://medium.com/@rvarago*
+*Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*

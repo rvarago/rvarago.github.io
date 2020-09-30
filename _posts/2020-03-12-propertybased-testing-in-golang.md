@@ -1,477 +1,381 @@
 ---
-layout:	"post"
-title:	"Property-based Testing in Golang"
+layout: "post"
+title:  "Property-based Testing in Golang"
 ---
 
-* * *
-
-![](/assets/img/2020-03-12-propertybased-testing-in-golang_0.png)
-
-An enterprise Gopher with a tie and long beard ready to fight bugs alongside
-you.
-[Gopherize.me](https://gopherize.me/gopher/1695ff01da3dda465e7874f291c3a1e6554a2f90)
-
-> Testing is an important aspect of software development. Let's see how
-Property-based Testing can help us to test our Go programs.
-
-A few weeks ago, I gave a talk about Property-based Testing using Golang on
-our awesome Engineering Summit 2020 @ eGym, which I tidied up, included more
-details and now I want to share with you in this blog post.
+> Testing is a critical part of software development. Let's see how property-based testing can help us to test our Go programs.
 
 * * *
 
-Programming is an activity carried out by humans, and hence prone to mistakes.
-Mistakes can happen and sporadically they do.
+|![](/assets/img/2020-03-12-propertybased-testing-in-golang_0.png)|
+|:--:| 
+| *An enterprise Gopher with a tie and long beard ready to fight bugs alongside us. [Gopherize.me](https://gopherize.me/gopher/1695ff01da3dda465e7874f291c3a1e6554a2f90)*|
 
-However, as professionals, we have techniques, practices, and tools that help
-us to catch mistakes as early as possible and therefore reduce the likelihood
-of deploying them to production. We have: code review, pair programming, a
-myriad of programming languages, type-checkers, linters, static analyzers,
-sanitizers, mathematical proofs, CI, automated testing (how about TDD? 😉) -
-just to name a few.
+> A few weeks ago, I gave a talk about Property-based Testing using Golang on the Engineering Summit 2020 @ eGym, which I tidied up, included more details and now I want to share with you in this blog post.
 
-In this post, we're going to briefly talk about tests, particularly property-
-based Testing, which is a way of writing tests based on general governing
-principles that our code should uphold for all valid inputs that it can
-receive.
+* * *
 
-To put it in perspective, let's first quickly glance over other possible
-approaches to writing unit tests.
+Programming is an activity carried out by humans, and hence prone to mistakes. We can make mistakes and, sporadically, we do.
 
-### Unit Tests
+However, as professionals, we have techniques, practices, and tools that help us to catch mistakes as early as possible and therefore reduce the likelihood of deploying them to production. We have: code review, pair programming, a myriad of programming languages, type-checkers, linters, static analyzers, sanitizers, proof assistants, automated testing (how about TDD? 😉), CI, and the list goes on.
 
-We commonly write unit tests to increase our confidence that our unit-under-
-test correctly fulfils its designed specification.
+In this post, we're going to briefly talk about unit tests, particularly property-based testing, which is a way of writing tests based on the general governing principles that our program should uphold for all valid inputs that it can ever process.
 
-They provide fast feedback that quickly tells us whether we have committed a
-mistake, so we have a chance to readily fix it before it propagates to later
-stages of our development pipeline, risking popping up at the customer site.
+Before, we're going to quickly glance over other approaches to writing unit tests, shall we?
 
-A well-written suite of unit tests also serves as live documentation that
-exposes how the code should behave or, at least, how we expect it to behave.
+## Unit Tests
 
-Commonly, we write unit tests by listing particular examples of inputs that
-are fed into our code-under-test (function, object, module, etc), and then we
-assert that the obtained output matches what we were expecting.
+We commonly write unit tests to increase our confidence that our unit-under-test correctly satisfies the specification.
+
+They provide us with fast feedback, which tells us whether we have committed a mistake. So we have a chance to readily fix it before it propagates to later stages of our development pipeline, and eventually landing into production.
+
+A well-written suite of unit tests also serves as live documentation, exposing how the program should behave.
+
+Further, a failing unit test should look like a good bug report, pointing us to the problem.
+
+Commonly, we write unit tests by listing particular examples of inputs that are fed into our unit-under-test (function, object, module, or whatever that is), and then asserting that the obtained output matches what we were expecting.
 
 More precisely, it says:
 
-> Given an input **_x_** _in_ ** _X_** , expected output **_y_** _in_ ** _Y_**
-, and a function to be tested **_f: X - > Y_**:
+> Given an input _x_ _in_ _X_, an expected output _y_ _in_ _Y_, and an unit-under-test _f: X - > Y_:
+>
+> Assert that _f(x) == y_
 
-> Assert that **_f(x) == y_**
-
-To illustrate the idea, let's look at the contrived, yet illustrative, Go
-function that we want to test. Its purpose is to simply add two integers
-together and then return the integer result:
-
+To reify this idea, we will look at a contrived, yet illustrative, Go function that computes the sum of two integers:
     
-    
-    func Add(x, y int) int {   
-      return x + y  
-    }
+```go
+func Add(x, y int) int {   
+  return x + y  
+}
+```
 
-#### Example-based Testing
+Our goal is to test it.
 
-We may manually write examples of the form { _input_ , _expectedOutput_ }, and
-then assert that _expectedOutput_ equals to obtained _output_ :
+### Example-based Testing
 
-    
-    
-    expectedOutput := 1  
-      
-    if output := Add(0, 1); output != expectedOutput {  
-      t.Errorf("Add fail, obtained: %v, expected: %v.", output, expectedOutput)  
-    }
+We may manually write examples in the form {_input_, _expectedOutput_}, and then assert that _expectedOutput_ equals to obtained _output_:
 
-#### Table-driven Testing
+```go    
+expectedOutput := 1  
+  
+if output := Add(0, 1); output != expectedOutput {  
+  t.Errorf("Add fail, obtained: %v, expected: %v.", output, expectedOutput)  
+}
+```
 
-Perhaps we could factor out the examples into a table to separate the examples
-from the code that exercises them. Thus, making it easier to add new examples:
+### Table-driven Testing
 
-    
-    
-    type InputPair struct {  
-      left int  
-      right int  
-    }  
-      
-    type Example struct {  
-      input InputPair  
-      expectedOutput int  
-    }  
-      
-    examples := []Example {  
-      {InputPair{0, 0}, 0},  
-      {InputPair{1, 0}, 1},  
-    }  
-      
-    for _, e := range examples {  
-      if output := Add(e.input.left, e.input.right); output != e.expectedOutput {  
-         t.Errorf("Add was incorrect, obtained: %v, expected: %v.", output, e.expectedOutput)  
-      }  
-    }
+Perhaps we could factor out the examples into a table, separating the examples from the code that exercises them:
 
-#### But, how many examples do we need?
+```go
+type InputPair struct {  
+  left int  
+  right int  
+}  
+  
+type Example struct {  
+  input InputPair  
+  expectedOutput int  
+}  
+  
+examples := []Example {  
+  {InputPair{0, 0}, 0},  
+  {InputPair{1, 0}, 1},  
+}  
+  
+for _, e := range examples {  
+  if output := Add(e.input.left, e.input.right); output != e.expectedOutput {  
+      t.Errorf("Add was incorrect, obtained: %v, expected: %v.", output, e.expectedOutput)  
+  }  
+}
+```
 
-When defining our examples, we can partition the set of valid inputs and
-outputs into regions of interest and sample these regions to get the elements
-that will compose our examples. With these regions, we try to build a
-collection of samples (i.e. examples) that is representative enough for our
-goals.
+At first, the implementation may look a bit more complicate. However, it's easier to add new examples as we would only need to insert new entries in the `examples` variable.
 
-Of course, we aim to achieve a reasonable coverage (whatever that means to
-your project) and test against edge cases, or the _known_ edge cases that we
-are aware of, to be more precise.
+### But, How Many Examples Do We Need?
 
-But the question that arises is: how many examples do we need?
+We can partition the set of valid inputs and outputs into regions of interest and sample these regions to get the elements that will compose our examples. Within these regions, we try to build a collection of samples (i.e. examples) that is representative enough for our goals.
 
-Maybe 1, 2, 10, 100, 1000, more? I firmly believe that our previous tests
-didn't have enough examples to give us satisfactory coverage, it's far from
-that 😅.
+Of course, we aim to achieve a reasonable coverage (whatever that means to your project) and be confident that our code does what it should, or perhaps even more critical, that it does not do what it should not. Further, we want to test against edge cases, or rather the _known_ edge cases that we are aware of.
 
-Moreover, we have to keep some compromises in mind, presumably:
+The immediate question is then:
 
-  1. Adding loads of examples might be tedious or even infeasible
-  2. We may not know all the edge cases beforehand
+> How many examples do we need?
 
-I found the second point very interesting because sometimes it happens that we
-may not be completely aware of all possible edge cases that can emerge from
-the complex interactions within our systems. Possibly, due to legacy code,
-essential and/or accidental complexities, non-localized behaviours, etc. If
-that wasn't true, then perhaps bugs would show up less frequently than they
-do.
+Maybe 1, 2, 10, 100, 1000, more? I firmly believe that our previous tests didn't have enough examples to give us satisfactory coverage. At least, I am not happy with that.
 
-### Property-based Testing
+Moreover, we have to keep some compromises in mind. Presumably:
+
+  1. Adding loads of examples might be tedious or even infeasible.
+  2. We may not know all the edge cases beforehand.
+
+I found the second point very interesting because sometimes it happens that we may not be completely aware of all possible edge cases that can emerge from the complex interactions within our systems. Possibly, due to legacy code, essential and/or accidental complexities, non-localized behaviours, etc. If that wasn't true, then perhaps bugs would show up less often than they do.
+
+## Property-based Testing
 
 Disclaimer:
 
-> Property-based Testing is a complementary approach to the other methods
-previously seen. It does not substitute them, it rather collaborates with
-them.
+> Property-based Testing is a complementary approach to other testing approaches. It does not replace them, it rather collaborates with them.
 
-Property-based Testing is a technique of writing tests that originated in the
-Haskell library [QuickCheck](https://hackage.haskell.org/package/QuickCheck).
-And there are also libraries available for several other programming
-languages, for instance, [Go](https://golang.org/pkg/testing/quick/),
-[Java](https://jqwik.net/), [Scala](https://www.scalacheck.org/),
-[C++](https://github.com/emil-e/rapidcheck),
-[Swift](https://github.com/typelift/SwiftCheck),
-[Rust,](https://github.com/BurntSushi/quickcheck) etc. However, I haven't used
-all these libraries, so I cannot give more details about them.
+Property-based testing is a technique of writing tests popularized by the Haskell library [QuickCheck](https://hackage.haskell.org/package/QuickCheck).
 
-To benefit from Property-based Testing, we have to shift a little bit our
-point of view on tests, and instead of thinking in terms of specific examples,
-we focus on abstract properties of our code that shall hold for all valid
-inputs, e.g.:
+Many other programming languages also have, more or less, similar libraries, for instance:
 
-  * Under what _preconditions_ should an abstraction (function, object, module, etc) lead to a given _postcondition_?
-  * What are the _invariants_ that should be preserved?
+* [Go](https://golang.org/pkg/testing/quick/).
+* [Java](https://jqwik.net/).
+* [Scala](https://www.scalacheck.org/).
+* [C++](https://github.com/emil-e/rapidcheck).
+* [Swift](https://github.com/typelift/SwiftCheck).
+* [Rust](https://github.com/BurntSushi/quickcheck).
 
-We now have to define statements, i.e. properties, that must be true not for
-only **some** specific examples, but rather for **all** of them.
+> Disclaimer: I haven't used all of these libraries and therefore I cannot and will not give more details about them.
 
-Properties are usually more concerned about the principles that govern the
-general behaviour of the code, it enforces discipline on abstractions that
-must obey a set of rules.
+Property-based testing is different from the more traditional approaches and hence might need us to shift our mindset a little. Rather than think in terms of specific examples (points), we focus on abstract properties defined by our module (transformations) that shall hold for all possible valid inputs, e.g.:
 
-That being said, a property is a predicate, i.e. evaluates to true or false,
-that must hold for all elements within a given set of examples:
+  * Under what **preconditions** should a module (function, object, module, etc) lead to a given **postcondition**?
+  * What are the **invariants** that should be preserved?
 
-> For all **_x_** _in_ ** _X_** , the predicate **_p: X - > Bool_** must be
-**true**
+We now have to define statements, i.e. properties, that must be true not for only **some** specific examples, but rather for **all** examples that we can ever come up with.
 
-Some examples of properties are:
+Properties are usually more concerned with the general principles governing the behaviour of the code, enforcing discipline on abstractions that must obey a set of rules.
 
-  * After sorting a non-empty list in ascending order, the minimum element is at the 1st position
-  * For a [Functor](http://adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html), mapping the composition of functions is the same as composing the individual mappings
-  * For all view models, the sub-views within a UI should not overlap
-  * In a state machine, going from state _A_ to state _B_ should trigger a given side-effect
-  * Two implementations of the same algorithm (perhaps after a refactoring, optimization, etc) should always manifest the same externally observable effect for all valid inputs
+That all said, a property is a predicate (evaluates to true or false), which must hold (be true) for all elements within a given set of examples:
 
-#### What does it buy us?
+> For all _x_ _in_ _X_, the predicate _p: X - > Bool_ evaluate be true.
 
-Once we have a property, we don't have to write the examples ourselves.
-Instead, we let the library in charge of generating as many pseudo-random
-examples as we want.
+As examples of properties, we have:
 
-Each example will attempt to falsify the property, in which case the whole
-test fails.
+  * Given a sorting algorithm: for all non-empty lists, if we sort them ascending order, then we should have the least element at the 1st position.
+  * Given a [Functor](http://adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html): for all parameters of the functions _f_ and _g_, if we map the composition of _f_ and _g_, then we should end up with the same result as composing the individual mappings: _map(f) ∘ map(g) == map(f ∘ g)_.
+  * Given a layout manager: for all view models within a UI, if we apply the layout manager, they should not see sub-views overlapping.
+  * Given two implementations of the same algorithm: for all possible inputs, if we call both algorithms with the same input, then we should obtain the same outcome.
 
-Among the benefits of Property-based Testing, we can list:
+### Benefits of Property-based Testing
 
-  1. It can generate many more examples than we would have normally done manually
-  2. Theoretically, it can generate examples that cover all possible combinations of inputs
-  3. It's particularly useful to compare different implementations of the same algorithm
-  4. It may generate examples that find edge cases that we didn't even know about
+Once we have a property, we don't have to write the examples ourselves. Instead, we let the computer in charge of generating as many pseudo-random examples as we want and check our properties on our behalf.
 
-The fourth item is nice as we had previously said that we may not know all
-edge cases in advance. And Property-based Testing might increase the
-likelihood of observing them by leveraging the power of computers to enlarge
-the input space that is covered and introduce pseudo-random variability on its
-generated inputs.
+Each example will attempt to falsify the property. If it cannot find an example where the property is false, then we say that the test has succeeded. Otherwise, if it found at least one example for which the property is false, then the test has failed.
 
-Furthermore, Property-based Testing libraries usually ship with a powerful
-capability named _shrinkage_.
+Among the benefits of property-based testing, we can list:
 
-Roughly speaking, shrinkage is the ability to reduce an example that fails a
-property to its minimum (or simplest) instance that still fails the property.
+  1. It can generate many more examples than we would likely have done manually.
+  2. Theoretically, it can generate examples that cover all possible combinations of inputs.
+  3. It may generate examples for edge cases that we hadn't even thought about.
 
-As an example, we might test whether a property holds for lists, and we found
-out that, for a list with size 10000, the property fails.
+The fourth item is particularly nice. As we said before, we may not know all edge cases in advance.
 
-At first, the library would have reported this 10000-elements list to us and
-then we would have to debug the code to understand the reason why it failed
-for this particular example, which can be painful as the list is fairly large.
+Property-based testing relies on the power of computers to generate as many examples as possible, thus enlarging the input space covered by the test and introducing pseudo-random variability on the automatically generated inputs.
 
-But perhaps the same property would also have failed for a smaller list, maybe
-100, 10, or even 1 element would have been enough to falsify the property.
+Furthermore, property-based testing libraries commonly ship with a killer feature: _shrinkage_.
 
-It would be more convenient to start our debugging from this 1-element list,
-instead of the one with 10000 elements that we initially had.
+#### Shrinkage
 
-That's the basic idea behind shrinkage.
+Roughly speaking, shrinkage is the ability to reduce an example that falsifies a property to its minimum (i.e. simplest) instance that still falsifies the property. The motivation is that, the smaller an input is, the simpler it should be to reason about, reproduce, debug, and then fix the bug. 
 
-Instead of eagerly reporting the failed example to the user, the library tries
-its best to reduce the example to the smallest possible instance that also
-fails the property. And only then it reports this such an instance. It
-essentially filters the noise out, leaving us with an example with a better
-signal-to-noise ratio, which is hopefully easier to reason about and therefore
-fix it.
+As an example, say we want to test if a property holds for lists. After writing a property-based test, we then found that our property does not hold for a list with 10000 elements. At first, the library would have reported this 10000-elements list to us and then we would have to debug our implementation to understand the reason why it failed for this particular example, which can be painful as the list is reasonably big.
 
-#### How can we do it in Go?
+Perhaps the same property would also have failed for smaller lists. Maybe a list with 100, 10, or even 1 element would have been enough to falsify the property.
 
-We are going to use Go, which ships with the library
-[**_testing/quick_**](https://golang.org/pkg/testing/quick/) ** _._** This
-library has reached a feature-frozen status and it has its limitations; for
-example, it doesn 't support shrinkage. Yet, it's quite simple and easy to
-use, being enough to make a point. As an alternative, there is a library
-called [Gopter,](https://github.com/leanovate/gopter) which we won't be
-covering in this article.
+It would be more much more convenient to start our debugging session with this 1-element list, instead of the one with 10000 elements that we initially obtained.
 
-Before writing the code, we have to define the properties to check against our
-_Add_ function.
+That's the motivation for shrinkage in a nutshell.
 
-Since the addition of integers forms a well-known Algebraic structure, it has
-to obey some well-known rules too.
+> Instead of eagerly reporting the failed example to the user, the library tries its best to reduce it to the smallest possible instance for which the property still does not hold.
 
-In particular, given **_a_** , **_b_** , **_c_** in **_X_** , some possible
-properties that must hold are:
+Shrinkage essentially filters the noise out of the signal of interest, leaving us with a better example, which is hopefully easier to reason about.
 
->  ** _Identity element_** :
+### Property-based Testing in Go
 
+We are going to use Go, which ships the simple [testing/quick](https://golang.org/pkg/testing/quick/) in the standard library.
+
+>`testing/quick` has reached a feature-frozen status. Moreover, it has quite some limitations (e.g. lack of shrinkage). Yet, it's quite simple and easy to use, hence enough to make the point that I want to make here. [Gopter](https://github.com/leanovate/gopter) seems to be a good alternative, but I won't be discussing it in this post.
+
+Before writing the code, we have to derive some properties that we want to verify against our `Add` function.
+
+Given the addition of integers forms a well-known Algebraic structure, it must obey some well-known rules of Maths.
+
+In particular, given _a_, _b_, _c_ in _X_, we might come up with the following properties:
+
+>  **Identity element**:
+>
 >  _a + 0 == 0 + a == a_
+> ⟹
+>  _Add(a, 0) == Add(0, a) == a_
 
->  _= > Add(a, 0) == Add(0, a) == a_
 
->  ** _Associativity_** :
-
+>  **Associativity**:
+>
 >  _(a + b) + c == a + (b + c)_
+>  ⟹
+>  _Add(a, (Add(b, c)) == Add(Add(a, b), c)_
 
->  _= > Add(a, (Add(b, c)) == Add(Add(a, b), c)_
+Translating these statements into Go code, we have the following properties represented by the predicates `identityElement` and `associativity`:
 
-Translating these statements to Go code, we have the following properties:
+```go
+identityElement := func(a int) bool {  
+  left := Add(a, 0)  
+  right := Add(0, a)  
+  return left == a && right == a && left == right  
+}  
+  
+associativity := func(a, b, c int) bool {  
+  return Add(a, Add(b, c)) == Add(Add(a, b), c)  
+}
+```
 
-    
-    
-    identityElement := func(a int) bool {  
-      left := Add(a, 0)  
-      right := Add(0, a)  
-      return left == a && right == a && left == right  
-    }  
-      
-    associativity := func(a, b, c int) bool {  
-      return Add(a, Add(b, c)) == Add(Add(a, b), c)  
-    }
+Equipped with these predicates, we invoke `quick.Check(prop, config)` to generate a bunch of examples for us. The `config` parameter allows us to customize the library (e.g, the number of generated examples). However, we aren't using this parameter in the following snippet, but passing `nil` and accepting the defaults:
 
-Finally, we can use the function _quick.Check(prop, config)_ to generate the
-examples for us.
+```go
+if err := quick.Check(identityElement, nil); err != nil {  
+  t.Errorf("identity element failed: %v", err)  
+}  
+  
+if err := quick.Check(associativity, nil); err != nil {  
+  t.Errorf("associativity failed: %v", err)  
+}
+```
 
-The _config_ parameter allows us to customize the library, for instance, to
-configure the number of examples to be generated. But we aren 't using this
-parameter in the following snippet, instead, we are passing _nil_ to use the
-default values:
+If `err` is different from `nil`, then the property has been falsified and therefore the test failed.
 
-    
-    
-    if err := quick.Check(identityElement, nil); err != nil {  
-      t.Errorf("identity element fail: %v", err)  
-    }  
-      
-    if err := quick.Check(associativity, nil); err != nil {  
-      t.Errorf("associativity fail: %v", err)  
-    }
+The full code:
 
-And that's it, if _err_ isn 't equal to _nil_ , then the property is falsified
-and hence the test fails.
+<script src="https://gist.github.com/rvarago/ac12b55ca227064bb4ae07ca89abdbf6.js"></script>
 
-The full code is:
+## Symmetrical Functions and User-Defined Types
 
-#### Symmetrical functions and user-defined types
+Property-based testing also comes in handy when we deal with "symmetrical functions", where one function takes us from **A** to **B**, while the second function reverses the process, taking us from **B** back to **A**.
 
-Property-based Testing also comes in handy when we are dealing with
-"symmetrical functions", where one function takes us from **A** to **B** ,
-while a second function inverts the process, taking us from **B** back to
-**A**.
+For example, given a `User u`, and the symmetrical functions:
 
-For example, given a _User u_ , and the symmetrical functions:
+  *  `encode`: encodes the `User` into some different, yet lossless, representation.
+  *  `decode`: Reverses the previous `encode` operation, again lossless.
 
-  *  ** _encode_** that encodes a _User_ into a given representation
-  *  ** _decode_** that reverses the previous **_encode_** operation
-
-Then we have that the following property shall hold:
+Then we probably want following property to be satisfied:
 
 > decode(encode(u)) == u
 
-This is quite a powerful statement! Think of serialization pipelines (CSV,
-etc), API <-> domain objects, etc. Whenever we have "mirrored" operations, we
-might have an opportunity to profit from Property-Based Testing.
+That is quite a powerful statement!
 
-To enable the library to generate instances of our type _User_ , the type
-needs to provide an instance of an arbitrary that knows how to construct
-composite objects from its components that themselves provide instances of
-arbitrary.
+Think of serialization pipelines (CSV, etc), API <-> domain objects, etc. Whenever we have "mirrored" operations, we might have a "trivial" property and therefore the opportunity to profit from property-based testing.
 
-In _testing/quick_ this is done by implementing the interface _Generate_ **
-__** that has the following signature:
+To be able to generate pseudo-random instances of our custom-type `User`, we must provide an instance of an **arbitrary** for `User`.
 
-    
-    
-    Generate(r *rand.Rand, size int) reflect.Value
+An instance of an arbitrary knows how to construct composite objects from their components, which themselves provide instances of arbitrary.
 
-Where _r_ is a pseudo-random numbers generator, and _size_ is the size of the
-example to be generated.
+In `testing/quick`, we do this by implementing the interface `Generate`, which has the following shape:
+        
+```go
+Generate(r *rand.Rand, size int) reflect.Value
+```
 
-To exemplify its usage, let's provide a possible instance for a small _User_
-type that is __ composed of _Id_ and _Name_ , with __ the additional
-complication that we are only interested in names formed by alphanumeric
-characters, which can be done by sampling the _alphabet_ string:
+Where `r` is a pseudo-random number generator, and `size` is the size of the example to be generated.
 
-    
-    
-    type User struct {  
-      Id int  
-      Name string  
-     }  
-      
-    func (User) Generate(r *rand.Rand, size int) reflect.Value {  
-      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01233456789"  
-      
-      var buffer bytes.Buffer  
-      for i := 0; i < size; i++ {  
-        index := rand.Intn(len(alphabet))  
-        buffer.WriteString(string(alphabet[index]))  
-      }
-    
-    
-      u := User {  
-        Id: rand.Int(),  
-        Name: buffer.String(),  
-      }  
-      
-      return reflect.ValueOf(u)  
-    }
+As an example, let's provide an instance for a `User` type with `Id` and `Name`. To make things more interesting, let's also restrict generated names to the alphanumeric characters defined by `alphabet`.
 
-Now the library knows how to generate instances of _User_ s for us 😺.
+```go    
+type User struct {  
+  Id int  
+  Name string  
+}  
+  
+func (User) Generate(r *rand.Rand, size int) reflect.Value {  
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01233456789"  
+  
+  var buffer bytes.Buffer  
+  for i := 0; i < size; i++ {  
+    index := rand.Intn(len(alphabet))  
+    buffer.WriteString(string(alphabet[index]))  
+  }
 
-A toy implementation of _encode_ could serialize the _User_ into a pipe-
-separated format. And _decode_ reverses the operation, with a simple error
-handling for the _Id_ which is expected to be a valid integer:
+  u := User {  
+    Id: rand.Int(),  
+    Name: buffer.String(),  
+  }  
+  
+  return reflect.ValueOf(u)  
+}
+```
 
-    
-    
-    func encode(u *User) string {  
-       return fmt.Sprintf("%v|%v", u.Id, u.Name)  
-     }  
-      
-    func decode(s string) (*User, error) {  
-       fields := strings.Split(s, "|")  
-      
-       id, err := strconv.Atoi(fields[0])  
-      
-       if err != nil {  
-          return nil, fmt.Errorf("failed to parse field Id: %v", err)  
-       }  
-      
-       name := fields[1]  
-      
-       u := &User {  
-          Id: id,  
-          Name: name,  
-       }  
-      
-       return u, nil  
-    }
+With this implementation of `Generate` for `User`, the library now can generate instances of `User` for us!
 
-With this, we can test the symmetrical property between _encode_ and _decode_
-via the following property-based test:
+Finally, a toy implementation of `encode` could serialize a `User` into a pipe-separated format. Whereas `decode` would reverse the operation, with a simple error-handling for the `Id`, which we expect to be a valid integer:
 
-    
-    
-    func TestEncodeDecode(t *testing.T) {  
-       symmetrical := func(u User) bool {  
-          roundTripUser, err := decode(encode( &u))  
-          return err == nil && *roundTripUser == u  
-       }  
-      
-       if err := quick.Check(symmetrical, nil); err != nil {  
-          t.Errorf("symmetrical encode -> decode fail: %v", err)  
-       }  
-    }
+```go    
+func encode(u *User) string {  
+    return fmt.Sprintf("%v|%v", u.Id, u.Name)  
+  }  
+  
+func decode(s string) (*User, error) {  
+    fields := strings.Split(s, "|")  
+  
+    id, err := strconv.Atoi(fields[0])  
+  
+    if err != nil {  
+      return nil, fmt.Errorf("failed to parse field Id: %v", err)  
+    }  
+  
+    name := fields[1]  
+  
+    u := &User {  
+      Id: id,  
+      Name: name,  
+    }  
+  
+    return u, nil  
+}
+```
 
- _symmetrical_ is our property and it checks whether _decode_ correctly
-reverses _encode_ to give us back a _User_ equal to one that we initially
-provided to _encode_ , and no error occurs during the process.
+We can now check the symmetrical property between `encode` and `decode` with the following test:
 
-If we had accidentally changed the separator in _decode  _without properly
-updating its counterpart in  _encode_ , maybe by using  _;_ instead of _|_ ,
-then the test would have failed and reported the failure to us, so we could
-promptly fix it.
+```go    
+func TestEncodeDecode(t *testing.T) {  
+    symmetrical := func(u User) bool {  
+      roundTripUser, err := decode(encode( &u))  
+      return err == nil && *roundTripUser == u  
+    }  
+  
+    if err := quick.Check(symmetrical, nil); err != nil {  
+      t.Errorf("symmetrical encode -> decode fail: %v", err)  
+    }  
+}
+```
 
-### Conclusions
+`symmetrical` is our property, and it checks whether `decode` correctly reverses `encode`, returning a `User` that is equal to one that we had provided to `encode`. Further, no error should occur during the process.
 
-Property-based Testing can help us to catch bugs in cases we didn't even think
-about or knew about their existence.
+If we had accidentally changed the separator used by `decode` _without_ properly updating its counterpart in `encode`, then the test would have failed and reported the failure so that we could fix it.
 
-It's particularly helpful to compare two models of the same concept. Say we
-have two implementations of the same feature, perhaps one is better written or
-faster than the other, and we want to make sure that both give the same result
-for all valid inputs, otherwise the behaviour would have been accidentally
-changed. A direct property might then be:
+## Conclusion
+
+Property-based testing can help us catching bugs for cases that we hadn't even imaged could ever be possible.
+
+It's particularly useful when comparing two models of the same concept. Say two implementations of the same feature, but one is better written or faster than the other, and we want to swap them. However, we only want to swap the implementation once we are confident that they always yield the same result for all valid inputs. We might come up with the following property to assist us:
 
 > for all **input, algorithmA(input) == algorithmB(input)**
 
-Property-based Testing encourages us to think in terms of abstract behaviours
-of our code, which potentially could lead to better API designs as we make
-preconditions, postconditions, and invariants explicitly defined.
+By letting the library generate a bunch of examples, we may be confident enough to proceed with our swapping.
 
-It can be even more effective to catch bugs when combined with suitable type
-design techniques, for instance, [Algebraic Data Types](https://code.egym.de/a
--brief-introduction-to-the-algebra-of-types-df92f0820e5).
+Property-based testing encourages us to think in terms of the general behaviours that our program should exhibit. Ultimately, this means that we have to make pre-conditions, post-conditions and invariants more explicit, which most likely lead to better API designs.
 
-As I said before, I don't believe it replaces the other methods of unit
-testing, it rather complements them. Perhaps it's nicer to have a combination
-of all the approaches to increase our safety-net and reduce the chances of
-introducing bugs. Furthermore, Property-based Testing libraries cannot even
-prove that a property is, in fact, correct; it simply tries to find examples
-to falsify it.
+The technique could be made even more effective to catch bugs when combined with suitable strategies for type design, e.g, [Algebraic Data Types]({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %}).
 
-The ability of shrinkage is quite powerful as it can filter the noise out from
-a failed example and so give us a simpler instance that is easier to
-reproduce, reason about, and debug.
+Shrinkage is quite a powerful concept as it can decrease the time between a test failure report and its proper fix.
 
-I must say that it is not always straightforward to specify properties, it
-takes time, practice, and it might be trickier in some cases than in others.
-But I encourage you to give it try, even if you end up not using it for all
-projects, it would show you new ways to look at your code and become a new
-tool in your toolbox to pull when needed, nonetheless.
+As I said before, I don't believe property-based testing replaces other methods of unit-testing, it rather complements them.
 
-### References
+Furthermore, property-based testing libraries cannot prove that a property is, in fact, correct. They just try very hard to find examples to falsify it.
 
-  * [John Hughes -- Experiences with QuickCheck: Testing the Hard Stuff and Staying Sane](https://www.cs.tufts.edu/~nr/cs257/archive/john-hughes/quviq-testing.pdf)
-  * [John Hughes -- Don't Write Tests](https://www.youtube.com/watch?v=hXnS_Xjwk2Y)
-  * <https://golang.org/pkg/testing/quick/>
+> From my perspective, it's far better to have different approaches combined and thus increase our whole safety-net and reduce the chances of bugs slipping into production. 
 
+Lastly, I must say that it is not always straightforward to specify properties. That takes time, practice, and it might be trickier in some cases than in others.
+Nevertheless, I certainly encourage you to give property-based testing a go. Even if you end up not using it within all your projects, it will at least show you new ways to look at your code and hopefully be a new tool in your toolbox to pull in whenever wanted.
+
+## References
+
+[1] [John Hughes -- Experiences with QuickCheck: Testing the Hard Stuff and Staying Sane](https://www.cs.tufts.edu/~nr/cs257/archive/john-hughes/quviq-testing.pdf).
+
+[2] [John Hughes -- Don't Write Tests](https://www.youtube.com/watch?v=hXnS_Xjwk2Y).
+
+[3] [Go's Quick](https://golang.org/pkg/testing/quick/).
 
 ***
-*Originally published at https://medium.com/@rvarago*
+*Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*

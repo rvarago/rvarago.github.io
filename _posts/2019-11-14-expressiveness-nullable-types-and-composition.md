@@ -1,58 +1,46 @@
 ---
-layout:	"post"
-title:	"Expressiveness, Nullable Types, and Composition"
+layout: "post"
+title:  "Expressiveness, Nullable Types, and Composition"
 ---
 
-absent is a small library meant to simplify the composition of nullable types
-in a generic, type-safe, and declarative style for some C++ type constructors.
+> _absent_ is a tiny open-source C++ library meant to simplify the composition of nullable types in a generic, type-safe, and declarative style.
 
 * * *
 
-> An introduction to the C++ library
-[absent](https://github.com/rvarago/absent).
+I have started a tiny open-source C++ library called [_absent_](https://github.com/rvarago/absent) inspired by functional programming
+languages, e.g. Haskell and Scala, whose purpose is to simplify the functional composition of nullable types, such as, but not limited to,
+[std::optional<T>](https://en.cppreference.com/w/cpp/utility/optional).
 
-I have created a small C++ library called absent:
-<https://github.com/rvarago/absent> inspired by functional programming
-languages, e.g. Haskell and Scala, whose purpose is to simplify the functional
-composition of nullable types, such as, but not limited to,
-[std::optional](https://en.cppreference.com/w/cpp/utility/optional).
+_absent_ offers some useful combinators to make the composition of nullable types more expressive, e.g. `and_then`, `transform`, `eval`. Furthermore, it also supports infix notations based on operator overloading that aim to reduce boilerplate when chaining operations on nullable-types while increasing type-safety and expressiveness.
 
-It offers some useful combinators, for instance, _bind_ , _fmap_ , _eval_ ,
-alongside an infix notation based on operator overloading, that aim to reduce
-boilerplate from our daily C++ code while increasing its type-safety and
-expressiveness.
+As an example, consider the following snippet:
 
-One of its main purposes is to refactor this kind of code snippet:
+```cpp
+auto const person_opt = find_person();  
+if (!person_opt) return;  
+  
+auto const address_opt = find_address(*person_opt);  
+if (!address_opt) return;  
+  
+auto const zip_code = get_zip_code(*address_opt);
+```
 
-    
-    
-    auto const maybe_person = find_person();  
-    if (!maybe_person) return;  
-      
-    auto const maybe_address =1 find_address(*maybe_person);  
-    if (!maybe_address) return;  
-      
-    auto const zip_code = zip_code(*maybe_address);
+We can use _absent_ to refactor this piece of code into a declarative pipeline of functions and push the checks against emptiness
+to the very end of the chain, avoiding repetitive and entangled error handling:
 
-To a declarative pipeline of composed functions that pushes the checking
-against emptiness to the very end of the chain, avoiding repetitive error
-handling, and therefore reducing the chances of accidental invalid accesses,
-like this:
+```cpp    
+auto const zip_code_opt = find_person()  
+                            >> find_address
+                            | get_zip_code;  
+if (!zip_code_opt) return
+```
 
-    
-    
-    auto const maybe_zip_code = find_person()  
-                                 >> find_address | zip_code;  
-    if (!maybe_zip_code) return
+I briefly mentioned _absent_ before in the context of [total functions]({{ site.baseurl }}{% link _posts/2019-05-26-the-beauty-of-total-functions.md %}).
 
-The following links lead to the series of two guest posts that I wrote for
-Jonathan Boccara's __[_Fluent C++_](https://www.fluentcpp.com/) __ that
-describes the motivation behind absent, related projects, and how to make use
-of it.
+Additionally, the following links lead to the series of two guest posts that I wrote at Jonathan Boccara's [Fluent C++](https://www.fluentcpp.com/), where I described the motivation behind _absent_ and how we may profit from it:
 
-  * [Expressiveness, Nullable Types, and Composition (Part 1)](https://www.fluentcpp.com/2019/07/16/expressiveness-nullable-types-and-composition-part-1/)
-  * [Expressiveness, Nullable Types, and Composition (Part 2)](https://www.fluentcpp.com/2019/07/19/expressiveness-nullable-types-and-composition-part-2/)
-
+  * [Expressiveness, Nullable Types, and Composition (Part 1)](https://www.fluentcpp.com/2019/07/16/expressiveness-nullable-types-and-composition-part-1/).
+  * [Expressiveness, Nullable Types, and Composition (Part 2)](https://www.fluentcpp.com/2019/07/19/expressiveness-nullable-types-and-composition-part-2/).
 
 ***
-*Originally published at https://medium.com/@rvarago*
+*Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*

@@ -1,177 +1,130 @@
 ---
-layout:	"post"
-title:	"A Quick Introduction to Docker"
+layout: "post"
+title:  "A Quick Introduction to Docker"
 ---
 
-Docker is a technology that simplifies the deployment of applications by using
-containers that run in isolation. Roughly speaking, you can think about a
-container as a "lightweight virtual machine"…
+> Docker simplifies application deployments that should run in "lightweight virtual-machines" within isolated environments.
 
 * * *
 
-Hello,
+I shall briefly describe Docker, focused on its principles and how it may simplify the way we distribute
+our applications by using containers that package the application alongside its dependencies.
 
-Today, I'm going to talk about one of the tools that are commonly applied to
-DevOps practices: Docker.
+# Docker in a Nutshell
 
-I intend to describe its principles and how it can simplify the distribution
-of your application by the use of isolated containers that can package
-together the application and its dependencies.
+Docker is a technology that simplifies the distribution of the applications running "inside" isolated containers, or rather at least conceptually. 
 
-In order to be a quick description, I'll omit a lot of concepts and commands,
-but I advise you to search more about them, for example, in the references
-section.
+Roughly speaking, we can consider containers as "lightweight virtual
+machines". They offer a level of isolation for applications while sharing the underlying OS kernel. Therefore, they generally consume less computing resources than traditional virtual machines and are also quicker to spin up. However, there's the flip side, which is the lower level of isolation, and that may or may not be an issue for your project.
 
-### What is Docker?
+## Basic Concepts
 
-Docker is a technology that simplifies the distribution of the applications
-based on containers that run in isolation.
+Roughly speaking, a container is like an instance of an image, and an image is a recipe of how to build containers.
 
-Roughly speaking, you can think about a container as a "lightweight virtual
-machine", it offers a degree of isolation for your applications. But a
-container shares the OS kernel, so it can be more parsimonious regarding the
-system's resources than a traditional virtual machine, but paying the price of
-a lower level of isolation.
+Images are "static", while containers are "dynamic". It's conceptually similar to Object
+Oriented Programming, say an image is to a class what a container is to an object.
 
-A container represents an abstraction at the application level that packages
-together: the application and it's dependencies, each running as an isolated
-process in the user space, sharing the OS kernel. Because it shares the OS
-kernel, a container doesn't need to boot a kernel, thus it can run very
-quickly and it's one of the most interesting advantages of containerization.
+Interestingly, images are layered, that is, images are composed by aggregating of "check-points". For every command that you put
+inside the image recipe, a layer is created. You can check out some past layer when necessary.
+For example, suppose that the first layer downloads an Ubuntu image, and the second downloads python3, should the download of python3
+have failed then you won't need to download Ubuntu again because its layer was already cached.
 
-### Basic Concepts
+## Docker Client
 
-A container is based on an image that describes what needs to be shipped
-together, for example, compilers, interpreters, web servers, source code etc.
+_docker_ is the client which communicates with the Docker daemon (_dockerd_), responsible for executing commands on the client's behalf.
 
-Basically, an image is a "receipt" of how to build containers, it's a "static
-thing" while a container is the actual execution of an image, it's a "dynamic
-thing". You can approximately compare the two concepts with the Object
-Oriented Paradigm, saying that an image is for a class as a container is for
-an instance of the class, an object!
+The docker client offers a variety of commands, let's try some of them.
 
-An interesting aspect of images is that they are layered, that is, an image is
-composed by the aggregation of "checkpoints". For every command that you put
-inside the image, a layer is created, and you can checkout some past layer
-when necessary. For example, suppose that the first layer is the download of
-Ubuntu and the second is the download of Python3, if the download of Python3
-has failed you won't be required to download Ubuntu again, because its layer
-was already correctly generated.
+To download the latest version of the Alpine OS image from the remote repository into your local cache:
 
-Docker has a on-line server that acts as an image repository, where you can
-distribute your images and download images developed by others. You can also
-configure your own repository.
+```bash
+docker pull alpine:latest
+```
 
-### The Docker Client
+To verify all images that you have downloaded:
 
-When you install Docker, you get access to the Docker's client ( _docker_ )
-that communicates with the Docker's daemon ( _dockerd_ ), responsible for
-actually execute the commands
+```bash
+docker images
+```
 
-The docker client offers a variety of commands, let's try some of them!
+To run a container based on the downloaded `alpine:latest` image in interactive-mode:
 
-* * *
+```bash
+docker run -it alpine:latest
+```
 
-To download the latest version of the Alpine OS image from the remote
-repository into your local cache:
+To list all containers that are running:
 
-> docker pull alpine:latest
+```bash
+docker ps
+```
 
-Now, to verify the downloaded images:
+To stop a given container (you have to replace `$CONTAINER_ID` with the actual container Id obtained by `docker ps`):
 
-> docker images
+```bash
+docker stop $CONTAINER_ID
+```
 
-To run a container based on the downloaded alpine:latest image and getting
-access to its terminal in interactive more:
+## Dockerfile
 
-> docker run -i -t alpine:latest
+Now that we have seen some basic commands, let's create an image?
 
-Have you seen how fast it was started? :)
+First off, we need to write a _Dockerfile_, that is, a receipt that the docker will consume to create an image based on it.
 
-To list the running containers, open a new tab in your terminal and type:
+A _Dockerfile_ describes a sequence of commands, each with the following structure:
 
-> docker ps
+> INSTRUCTION param1 param2 … paramN
 
-Now, to stop the container (you must replace CONTAINER_ID) with your actual
-container Id obtained by the _docker ps_ :
-
-> docker stop CONTAINER_ID
-
-Docker has many more commands, so I recommend you to look at the references to
-know more about them.
-
-### Dockerfile
-
-Now that you have some basic knowledge about Docker, how about create your own
-image?
-
-To create an image, you need to write a receipt that the docker client will
-read and create the image based on it. This receipt has a name: _Dockerfile_.
-
-A Dockerfile is composed by a sequence of commands with the following
-structure:
-
-> INSTRUCTION param1 param2 … paramN
-
-Where _INSTRUCTION_ is a valid docker command that receives _param1_ ,
-_param2_ , …, _paramN_ parameters.
+Where `INSTRUCTION` is a valid docker command that receives `_param1_`, `_param2_` , …, `_paramN_` parameters.
 
 ### Example
 
-To introduce the syntax of the Dockerfile, let's go to an example! The task is
-to create an Linux image with the Alpine OS with Python3 installed and run a
-simple "Hello World" program written in Python during the container startup.
+As an example, let's create a fairly simple Linux image with the Alpine OS and Python3 installed, and then run a
+"Hello World" program written in Python when the container starts up.
 
-Firstly, create a directory (in my case, _/opt/dockertest_ ). Inside it,
-create a file _hello-docker.py_ and copy this python script into it:
+Firstly, create a new directory, e.g. _/opt/dockertest_, and inside of it,
+add a file _hello-docker.py_ with the following python script:
 
-Then, in the same directory, create a Dockerfile with this content:
+<script src="https://gist.github.com/rvarago/179cc1c69414347c1f368acd46bf2637.js"></script>
 
-In the Dockerfile, every command generates a layer inside the image.
+In the same directory, create a _Dockerfile_ with this content:
 
-Firstly, I've stated to docker that our image will be based on an existing
-image for the Alpine OS. Then we named the maintainer. Updated the package
-manager index and installed python3 in the image. After, we copied our script
-_hello-docker.py_. Finally, we defined the default command after the container
-startup will be to run python3 to execute _hello-docker.py_.
+<script src="https://gist.github.com/rvarago/9ba1549057bfd7e09a956d770b9939f4.js"></script>
 
-Now, to build the image and give it the name _alpine-python3-hello_ :
+In the Dockerfile, every command generates a new layer inside the image.
 
-> docker build -t alpine-python3-hello .
+To build the image and give it the name _alpine-python3-hello_:
 
-Docker will execute the commands and generate a new image that will be
-available to instantiate a new container:
+```bash
+docker build -t alpine-python3-hello .
+```
 
-> docker run alpine-python3-hello
+Docker will execute the commands and generate a new image that will be available to instantiate into containers:
 
-And you'll see the output " _Hello World from Docker!_ " on your standard
-output.
+```bash
+docker run alpine-python3-hello
+```
 
-### Conclusion
+Finally, you should see the output "Hello World from Docker!" on the standard output.
 
-In this article, we've discussed the basics of containers and how to use them
-with Docker, then, some commands were showed, and finally an example of how to
-create an image using the Dockerfile.
+# Conclusion
 
-Containers are becoming more and more popular in software distribution, for
-example in cloud computing environments and there are a variety of tools
-emerging from this ecosystem (Docker, Kubernetes etc).
+We've discussed the basics of containers and how to use them
+with Docker, then, we saw some commands followed by an example of how to
+create an image.
 
-I hope that with this quick introduction, you can be able to start applying
-Docker or other container technology in your projects and benefit from it.
+Containers are becoming more and more popular in the software industry, for
+example, in cloud-based environments where there is a variety of tools
+emerging (Docker, Kubernetes etc).
 
-In the future, I intend to write more about Docker and provide more
-information about it, but now, I strongly recommend you to search more about
-Docker, its usage, advanced features, and benefits. You can start by looking
-at the references section.
+I hope that with this quick introduction you should be able to start playing with
+Docker, or other container technology, in your projects and profit from it.
 
 ### References
 
-[1] [https://docs.docker.com/get-started](https://docs.docker.com/get-
-started/)
+[1] [https://docs.docker.com/get-started](https://docs.docker.com/get-started/)
 
-[2] <https://github.com/docker/labs>
-
+[2] [https://github.com/docker/labs](https://github.com/docker/labs)
 
 ***
-*Originally published at https://medium.com/@rvarago*
+*Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*

@@ -1,194 +1,119 @@
 ---
-layout:	"post"
-title:	"Git fix-up commits and how to keep your repository concise"
+layout: "post"
+title:  "Git fix-up Commits: How to Keep your Repository Concise"
 ---
+
+> Have you ever wasted time looking at your repositories because of commits that didn't add any value to the project's story? Some of the most common start with "fix-up…". By avoiding these commits, the repository tends to become easier to understand, as we can then focus on the bigger story that the project is trying to tell, not small details.
 
 * * *
 
-> Have you ever wasted time looking at your repositories because of commits
-that didn't add any value to the project's story? Some of the most common
-normally start with "fix-up…", by avoiding these kinds of commits, your
-repository will be easier to understand, because it'll focus on the story of
-your project, not on smalls mistakes. Here git has to the rescue!
+|![Git.](/assets/img/2018-09-24-git-fixup-commits-and-how-to-keep-your-repository-concise_0.png)|
+|:--:| 
+| *Git. Source: <https://git-scm.com/downloads/logos>.*|
 
-![](/assets/img/2018-09-24-git-fixup-commits-and-how-to-keep-your-repository-concise_0.png)
+[Git](https://git-scm.com/) is an awesome tool and one the most popular Version
+Control System (VCS) ever, it has a distributed structure, it's fast, it's used by popular platforms like [Bitbucket](https://bitbucket.org/) and [GitHub](https://github.com/), and plenty of famous projects are tracked with Git (e.g. the [Linux kernel](https://github.com/torvalds/linux)).
 
-Source: <https://git-scm.com/downloads/logos>
+There are a lot of excellent materials freely available that talks about Git, for instance, [Pro Git Book](https://git-scm.com/book/en/v2). Thus, I won't focus on the basics, and instead, I'll briefly describe a little nice feature provided by Git that might help you to avoid unnecessary commits, which pollute the code history. It's a combination of:
 
-G[it](https://git-scm.com/) is an awesome and one the most popular Version
-Control System (VCS) used around the world, it has a distributed structure,
-it's fast (really fast), it has great tools like
-[Bitbucket](https://bitbucket.org/) and [GitHub](https://github.com/), and
-many famous projects are hosted on Git (for instance: the [Linux
-kernel](https://github.com/torvalds/linux)).
+  1. Fix-up commits.
+  2. Interactive rebase with autosquash.
 
-There are a lot of excellent materials freely available that talks about Git,
-for instance, the [Pro Git Book](https://git-scm.com/book/en/v2). Thus, I
-won't focus on the basics, instead, I'll present a nice feature of Git that
-can help you to avoid unnecessary commits that only pollute your code history,
-adding no value to it. I'm talking about the combination of:
+There aren't mysteries regarding their usage. However, in my experience, these features aren't well-known, so I'll try to present them in this short post along with an example. I hope that you enjoy it!
 
-  1. Fix-up commits
-  2. Rebase with autosquash
+# A repository tells a story
 
-There aren't any mysteries regarding its usage but, unfortunately, these
-features aren't well known, so I'll present them in this short article along
-with an example. I hope that you enjoy!
+A repository contains the efforts that have been put on a project: features, bug-fixes, mistakes, etc. It could be managed by a single developer, by a company, or by an entire community of fellow developers spread all around the globe. As a typical story, a repository collects facts, sorted by time. And every new piece of is such a fact, a discrete event, a snapshot of the project.
 
-#### A repository is a storyteller
+In Git, every discrete event is reified as a _commit_, a checkpoint that tells us that something has happened and worth taking note. By looking at the commits, we are looking at the history of the project and how it has changed over time.
 
-A repository represents all the efforts that have been put on a project, like
-features, bug-fixes, etc. It can be made by just one developer, by a company,
-or by an entire community of fellow developers spread around the globe. Like a
-typical story, a repository is a collection of facts sorted by time, every new
-piece of feature represents a new fact, a discrete event, a snapshot of your
-project at every point of time.
+Given that a series of commits tell us a story, and while writing a story the writer eventually makes mistakes, we'll need to "undo" some features to fix these mistake. However, since we haven't published the story yet, the fix will be part of the original checkpoint and not a new one, with little or no value to the whole story.
 
-In Git, every discrete event is called _commit_ , a checkpoint on the project
-that tells us that something has happened. By looking at the commits, you'll
-be looking at the history of the project, how it has been changing over time.
+Suppose that you're working on a project, let's call it _the-coolest-project_, specifically on the feature _the-feature_. To implement _the-feature_, you've decided to break it in a sequence of logical steps, thus you have commits: _the-feature-step1_ and _the-feature-step2_ tracked by the branch _the-feature_.
 
-Given that a series of commits tell us a story, and while writing a story the
-writer will eventually make mistakes, we'll need some sort of "undo" feature
-that will fix the mistake, but given that you haven't published the story yet,
-the fix will be part of the original checkpoint and not a new one with little
-or no value to the whole story. For example:
-
-Suppose that you're working on a project, let's call it _the-coolest-project_
-, specifically on the feature _the-feature_ and to implement this feature you
-decided to break it on logical steps that run sequentially toward the goal,
-thus you have the commits _the-feature-step1_ and _the-feature-step2_ on the
-branch _the-feature_.
-
-Hence, you type:
-
-    
+Therefore, you may type:
     
     git log --all --decorate --oneline --graph
 
-And your repository can look like this:
+And the outcome may look like this:
 
 ![](/assets/img/2018-09-24-git-fixup-commits-and-how-to-keep-your-repository-concise_1.png)
 
-But then you realized that you had done some mistake on _the-feature-step1_ ,
-and you'd like to fix it, so you created another commit to fix the previous:
-
-    
-    
+You then suddenly realize that you made a mistake on _the-feature-step1_, and you'd like to fix it up, so you make another commit to fix it:
+        
     git commit -m "Fix up a mistake at the-feature-step1"
 
 Now, your repository looks like this:
 
 ![](/assets/img/2018-09-24-git-fixup-commits-and-how-to-keep-your-repository-concise_2.png)
 
-But wait a minute! This fixing commit really doesn't make sense for the
-repository's story, it's just part of a previous commit and doesn't tell us
-anything more about the project than the previous commit did and shouldn't be
-merged to _master_. Instead, we should squash the commit with its fix-up
-before merging the branch to master.
+Hang on! This fix-up commit doesn't make sense that much of a sense to the repository's story, it's just part of a previous commit and doesn't tell us anything more about the project than what the previous commit did, it hasn't been pushed into the remote branch and so there's no need to have it ending up into _master_. Instead, we might squash the commit into its fix-up before merging our branch into _master_.
 
-So, what can we do now?
+So, what can we do then?
 
-#### Fix-up commits and rebase with autosquash to the rescue
+## Fix-up commits and rebase with autosquash to the rescue
 
-First, instead of creating the fix-up commit manually, let Git create it for
-us!
-
-For this, type:
-
-    
+First off, rather than manually creating the fix-up commit, let Git do that for us:  
     
     git commit --fixup 9d33fdb
 
-Where _9d33fdb_ is the hash of the commit that you 'd like to be fixed.
+Where _9d33fdb_ is the hash of the commit that you want to fix.
 
-Now our repository looks like this:
+Now, the repository looks like this:
 
 ![](/assets/img/2018-09-24-git-fixup-commits-and-how-to-keep-your-repository-concise_3.png)
 
-Not so different from our initial scenario, right? But be patient, things will
-be clearer soon.
+Notice the `fixup!` prefix, that will be used by Git to properly clean up our repository later on.
 
-After you've finished the feature, you decided to push it, so your code can be
-reviewed. Do you practice code review, right? You should!
+After you've deemed the feature as done, you decided to push it, so the code review process can start (you do code reviews, right? No? Perhaps you should consider it). It's about time to get rid of the fix-up commit.
 
-But before, let's get rid of the fix-up commit that doesn't add any value to
-our repository's story and shall not be merged to _master_.
-
-Here comes rebase with the autosquash flag enabled to help us. So, Git will be
-able to parse the fix-up commit and automatically squash it to the original
-commit. For this, type:
-
-    
+That's when interactive rebase + autosquash help us. So, Git will use the `fixup!` prefix to automatically arrange and squash the fix-up commit with the original commit:   
     
     git rebase -i --autosquash master
 
 Where:
 
-  *  _-i_ means interactive, which will open a text editor before rebasing the commits, so you can act before (like changing order, editing messages, etc)
-  *  _\--autosquash_ means that commits with _fixup!_ (or _squash!_ ) will be automatically squashed to their original commits
+  *  `-i` stands for interactive, which will open a text editor before rebasing the commits, so you can influence the rebasing process, should you need it.
+  *  `--autosquash` ensures that commits prefixed with `fixup!` (or `squash!`) will be automatically squashed into the commits that they fix.
 
-It'll open your text editor showing what the rebase will do, especially the
-_fixup_ line, that will be already there in the right order, ready to be
-squashed with the desired commit ( _the-feature-step1_ ).
+It'll open your text editor showing what the rebase will look like. Pay special attention to the line starting with `fixup`, it should already be there and in the right order, ready to be squashed with the desired commit (`the-feature-step1`):
 
 ![](/assets/img/2018-09-24-git-fixup-commits-and-how-to-keep-your-repository-concise_4.png)
 
-If everything is fine (and it is for our case), just close the text editor.
+If everything looks correct, and it is in our case, you can then close the text editor.
 
-Now, your repository will look like this:
+Now, the repository should look similar to:
 
 ![](/assets/img/2018-09-24-git-fixup-commits-and-how-to-keep-your-repository-concise_5.png)
 
-And the fix-up commit had been squashed with its originating commit before the
-_the-feature_ branch was merged to _master_. Nice!
+The fix-up commit has been squashed with its original commit before `the-feature` branch was merged into `master`. Just as we intended!
 
-#### Automating: --autosquash as default
+# Using --autosquash by default
 
-The material seen so far is enough for using _fixup_ commits and _autosquash_
-, but Git allows us to go further by providing some ways to make this process
-easier.
+Git allows us to go even further by making the process simpler.
 
-Given that interactive rebase only picks up commits with messages starting
-with _fixup!_ (or _squash!_ ) and we always have the possibility to see what
-Git will do by inspecting the text editor before the rebase takes place. A
-possible improvement is to make _autosquash_ the default behavior for
-interactive rebases.
+Given that interactive rebase only selects commits with messages starting with `fixup!` (or `squash!`) and we always have the possibility of seeing what Git will do with the text editor before rebasing, we can make `autosquash` be the default behaviour of interactive rebases.
 
-For this purpose, you can enable the _rebase.autosquash_ flag by doing:
-
-    
+For that to happen, we can enable the `rebase.autosquash` flag:
     
     git config --global rebase.autosquash true
 
-Now, you can omit the _autosquash_ part of the rebase, like this:
-
-    
+Now, we can omit the `autosquash`flag when starting interactive rebases:
     
     git rebase -i master
 
-And the effect will be the same that we had previously seen. But with a
-shorter syntax, cool!
+The result should be the same as we had before.
 
-#### Conclusion
+# Conclusion
 
-Git is a fantastic tool that helps us on our daily programming tasks, making
-it easier to distribute work among developers, keep track of the project's
-history, etc. Some of its features are, unfortunately, not so well known by a
-lot of developers.
+Git is a fantastic tool that helps us on our daily programming tasks, making it easier to share work with fellow developers, keeping track of the project's history, etc.
 
-Among these "not-well known" features, lies the combination of fix-up commits
-with rebase and autosquash, which makes your repository clean of unimportant
-commits, hence easier to track, and understand.
+Some of its features are still not so well-known yet, for example, fix-up commits combined with interactive rebase and autosquash, which tidies your repository, hence making it easier to understand, so that we can be amused by the story that it's trying to tell you.
 
-I really encourage you to give a chance to Git and explore some of its
-features that can make your development process more manageable, easier and
-funnier.
 
-#### References
+# References
 
 [1] Pro Git Book. <https://git-scm.com/book/en/v2>
 
-
 ***
-*Originally published at https://medium.com/@rvarago*
+*Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*

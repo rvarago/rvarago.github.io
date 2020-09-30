@@ -1,115 +1,94 @@
 ---
-layout:	"post"
-title:	"Default Implementation for Pure Virtual Functions in C++"
+layout: "post"
+title:  "Default Implementation for Pure Virtual Functions in C++"
 ---
+
+> C++ allows default implementation for pure virtual member-functions.
 
 * * *
 
-Hello,
 
-Today, I'm going to talk about an interesting and underused feature of C++ for
-Object Oriented Programming (OOP), the possibility to provide a default
-behavior for abstract member functions.
+# Interface Inheritance
 
-### Interface Inheritance
+Programming languages like Java and C# have explicit support for the keyword _interface_ to express interfaces that
+must be implemented by concrete types that want to be part of the interface.
 
-Some languages, like Java and C#, explicitly support the keyword _interface_
-to express an user-defined type where all methods don 't have implementations,
-just signatures. Every concrete, that is non-leaf, class that implements the
-interface must agree with the established contract and provides an
-implementation for all the inherited methods.
+By doing so, one gains some flexibility provided by runtime polymorphism with dynamic dispatching, _vtables_, and the like.
 
-In C++, you can achieve the interface inheritance concept by the use of pure
-virtual member functions, or abstract member functions, which are member
-functions that must be implemented by every concrete class that inherits from
-the "interface class".
+In C++, you can achieve pretty much the same effect by using pure virtual member-functions (kind of abstract functions), which are member-functions that must be implemented by every concrete derived class that implements the "interface".
 
-The syntax to declare an abstract member function is to append the suffix: _=
-0_ to the virtual member function declaration, for example:
+It specifies a set of behaviours and where we don't care about representation.
 
- _virtual std::string speak() const = 0_
+The syntax to declare an abstract member-function is to append the suffix `= 0_` to the virtual member-function declaration, like so:
 
-Declares a constant abstract member function named _speak_ that takes no
-arguments and returns _std::string_.
+```cpp
+struct shape {
+    virtual double area() const = 0; // Shapes and areas... :-)
+}
+```
 
-### Default Implementation
+Declares the abstract member-function `area` of the "interface" `shape`.
 
-An abstract member function says that every concrete class that implements the
-interface must provide an implementation for every inherited abstract member
-function in order to compile.
+# Default Implementation
 
-But, it doesn't say that the interface class can't provide a default
-implementation, it can and sometimes it makes some sense. But independently of
-the default implementation, all concrete subclass must provide an
-implementation.
+An abstract member-function says that every concrete class that implements the
+the interface must provide an implementation for every abstract member
+function.
 
-For example, the default implementation can offer part of the behavior and
-must be completed by the inherited class to have a full meaning.
+It doesn't say though that the interface can't provide a default
+implementation. Regardless of having a default implementation in the interface, the derived class still needs to provide
+an implementation.
 
-### Example
+For example, the default implementation offers part of the behaviour that must be completed by the derived class.
 
-Suppose that you're modelling a game system for an epic adventure, and your
-game has a variety of weapons (swords, arrows etc) that the hero uses to save
-the world from the evil.
+# Example
 
-You've decided to create an interface _Weapon_ that models the abstract
-concept that must be the base for your weapons system. This interface offers
-the abstract member function _attack_ and it needs to be completed by every
-concrete weapon in the game. The _Weapon_ concept doesn 't have a concrete
-meaning, but perhaps it's reasonable to have a default behavior for the
-_attack_ that the concrete classes may use.
+Suppose that you're modelling a game system for an epic adventure, and your game has a variety of weapons (swords, arrows, etc),
+which the hero makes use to save the world from its doom.
 
-### Helper Member Function
+You've decided to create an interface `Weapon` as an abstract concept in your game. This interface offers
+the abstract member-function `attack` that needs to be implemented by every
+concrete weapon in the game. `Weapon` itself doesn't enough information to be concrete, but it may be reasonable to
+offer a default behaviour for the `attack` that the concrete classes could use.
 
-The first manner to achieve the goal is to have a second member function, for
-example, _defaultAttack_ that can be called by the concrete classes, but given
-that this member function has the sole purpose of being used by derived
-classes, _defaultAttack_ should be made protected.
+## Helper member-function
 
-Thus, you can have:
+The first option is to have a second member-function, say `defaultAttack` (naming is hard, isn't it?)
+that can be called by the concrete `Weapon`s, but given that this member-function has the sole purpose of being used by derived
+classes, `defaultAttack` only needs `protected`:
 
-Here, the _Sword_ class must provide an implementation for _Weapon::attack_ in
-order to be concrete and _Sword::attack_ calls _Weapon::defaultAttack_ to use
-the default behavior provided by it. The drawback of this approach is that you
-need to have a member function that only exists to support another member
-function semantics and you may want to express the default behavior of
-_attack_ in the _attack_ itself.
+<script src="https://gist.github.com/rvarago/102275897b79f56bf101e4bfc9bd2c88.js"></script>
 
-### Pure Virtual Member Function Implementation
+Here, the `Sword` must provide an implementation for `Weapon::attack`. And `Sword::attack` is implemented in terms of
+`Weapon::defaultAttack`.
 
-As I've said, **a pure virtual member function must always be implemented by
-every derived class intended to be concrete**. But, it doesn 't mean that you
-can't provide a default implementation for it in the abstract base class.
+## Pure Virtual member-function Implementation
 
-You can and sometimes you may wish do it and this is how:
+As I've said, **a pure virtual member-function must be implemented by
+the concrete derived class**. That is, it doesn't say that an abstract base class can't provide a default implementation for its pure virtual member-functions, though:
 
-In this approach you can't define the member function inside the class
-declaration, otherwise you will get a compilation error. So, you must define
-your implementation outside the class declaration.
+<script src="https://gist.github.com/rvarago/49e7ffc74203540827c2925c29450f06.js"></script>
 
-The implementation of the derived concrete class continues to be mandatory,
-but it can call the base class implementation.
+In this approach, we can't define the abstract member-function inside the class declaration, it has to be defined out of it.
 
-### Conclusion
+# Conclusion
 
-In this article, we've discussed the meaning of pure virtual member function
-(abstract member function) and the approaches to providing a default
-implementation for this kind of member function that derived class can use
-inside its proper implementation.
+We've discussed a bit about a possible meaning of pure virtual member-functions and the option of providing default implementations so that derived classes can use.
 
-An important fact about pure virtual member functions is that for a pure
-virtual destructor, you're **required** to provide a default implementation,
-and you do it by following the syntax of the the example, where we've defined
-our pure virtual member function outside the class declaration.
+In my experience, this is not a well-known feature and it might be confusing at times. Thus, one might need to consider whether it makes sense to use, perhaps providing a member-function with a different name in the base class is clearer and therefore preferred sometimes.
 
-### Acknowledgements
+As it usually happens in programming, the fact that you can doesn't necessarily mean that you should.
 
-I would like to thank **Simon St James** for kindly revised this text.
+An important fact about pure virtual member-functions is that for a pure
+virtual destructor, you're **required** to provide a default implementation, and you do it by following the syntax of the example, where we defined a pure virtual member-function outside of the class declaration.
 
-### References
+# Acknowledgements
+
+I would like to thank **Simon St James** for kindly reviewing this text.
+
+# References
 
 [1] Meyers, Scott. Effective C++.
 
-
 ***
-*Originally published at https://medium.com/@rvarago*
+*Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*

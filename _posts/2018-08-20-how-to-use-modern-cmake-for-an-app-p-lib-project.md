@@ -1,192 +1,129 @@
 ---
-layout:	"post"
-title:	"How to Use Modern CMake for an App + Lib Project"
+layout: "post"
+title:  "How to Use Modern CMake for an App + Lib Project"
 ---
 
+> An example of how to apply some of the so-called "Modern CMake" to build a simple project composed by an executable that uses a library.
+
 * * *
 
-> An example of how to apply some of the so called "Modern CMake" to build a
-simple project composed by an executable that uses a library.
+# Introduction
 
 Working with build systems is not the easiest task in the Software
-Engineering's world, this is especially true for C++ developers where there's
-not a "standard" of to use this or that. But things are changing and efforts
-towards the development of a standard, or at least a set of guidelines, are
-having a positive effect on our daily tasks, aiming to simplify our lives,
-cool!
+Engineering's world, this is especially true for C++ developers, where there's no widely accepted "standardized" process, yet. However, things are changing and efforts towards the development of a standard or, at least a set of guidelines, are having a positive effect on our daily tasks, aiming to simplify our lives, cool!
 
-Among the build systems available for C++, one of the most popular is
-[CMake,](https://cmake.org/) hold on! Technically, CMake is _not_ a build
-system, instead, it is a build system _generator_ whose duty is to generate
-the necessary files that will be used by the build system itself (Make, Ninja,
-Visual Studio, etc).
+Among the build systems available for C++, one of the most popular is [CMake,](https://cmake.org/) hold on! Technically, CMake is _not_ a build system, it's rather a build system _generator_, whose duty is to generate the necessary files that will be used by the build system itself (Make, Ninja, Visual Studio, etc).
 
-To deal with CMake was not as easy as we would like so, but the set of
-principles inspired on Modern C++, called Modern (or Effective) CMake has
-helped us to develop build systems that are easier to:
+Dealing with CMake has not been as easy as we would like it to be, but the set of principles inspired by Modern C++, called Modern (or Effective) CMake has helped us to better structure our build systems, making them easier to:
 
-  1. Understand
-  2. Maintain
-  3. Evolve
+  1. Understand.
+  2. Maintain.
+  3. Evolve.
 
-You can find more detailed information regarding the concepts of modern CMake
-on the [CMake's documentation](https://cmake.org/documentation/) and the talks
-of [Daniel Pfeifer](https://www.youtube.com/watch?v=bsXLMQ6WgIk) at C++ Now
-2017 and [Mathieu Ropert](https://www.youtube.com/watch?v=eC9-iRN2b04) at
-CppCon 2017, guys, you rock!
+You can find more detailed information regarding the concepts of modern CMake on the [CMake's documentation](https://cmake.org/documentation/), and the talks given by [Daniel Pfeifer](https://www.youtube.com/watch?v=bsXLMQ6WgIk) at C++ Now
+2017 and [Mathieu Ropert](https://www.youtube.com/watch?v=eC9-iRN2b04) at CppCon 2017. You guys rock!
 
-* * *
+# Reasoning About Modules and Dependencies
 
-#### Reasoning About Modules and Dependencies
+From my perspective, modern CMake might be summarized as:
 
-The main idea of modern CMake is to:
-
-> Instead of reasoning about global flags, structure your project as a graph
-of modules with explicit dependencies between these modules.
+> Instead of reasoning about global flags, prefer to structure your project as a graph of modules with dependencies between them being EXPLICIT.
 
 What?
 
-In the old days of CMake, we are used to inserting a lot of global flags and
-includes ( _include_directories_ , __ I'm looking at you) in our
-CMakeLists.txt that affects every module, there wasn't any degree of
-encapsulation and dependency management between projects was a pain.
+In the old days of CMake, we were used to adding a lot of global flags and directory-scoped commands (`include_directories` and friends, I'm looking at you) in our `CMakeLists.txt` that affected many more modules than it should have, there was no insulation and dependency management between projects was painful.
 
-Fortunately, things have changed, and now, we're encouraged on think about
-modules, for instance: On a project, we have an executable _app_ (a module)
-that depends on a library _lib1_ (another module) and we separate what belongs
-to _lib1_ 's interface ( **what** it does) and what belongs to _lib1_ 's
-implementation ( **how** it does it), more or less, an application of Object
-Oriented Programming, or more generally, Modular Programming.
+Fortunately, things have improved. We're now encouraged to think about modules, for instance: On a project, we have an executable `app` (a module)
+that depends on a library `lib1` (another module), and we separate what belongs
+to `lib1`'s interface (**what** it does) from what belongs to `lib1`'s implementation (**how** it does), that is, more or less, Modular Programming applied to build systems.
 
-On the CMake jargon, each module gives origin to a **_target_** __ that has a
-set of **_properties_** __ (ex: compiler definitions, sources, headers,
-libraries, etc).
+On CMake's jargon, each module gives origin to a **target**, which has a set of **properties** (e.g.: compiler definitions, sources, headers, libraries, etc).
 
-One of the benefits of this approach is the possibility to hide from the
-outside world what is private for the module and what is public and can/should
-be used by used by its clients.
+Among the benefits of this approach, we can hide private details of a module from the outside world, so that clients don't see and shouldn't care about.
 
-#### Target and Properties, remember: Target and Properties
+# Target and Properties
 
-You create a target by invoking a command like these (they seem like a
-constructor, right?):
+We create a target by invoking a command like these (they do seem like a constructor, right?):
 
-  *  _add_executable_
-  *  _add_library_
+  *  `add_executable`.
+  *  `add_library`.
 
-And you customize a target but modifying its properties like these (they seem
-like setters, right?):
+And we customize a target by modifying its properties like these (they do seem like setters, right?):
 
-  *  _target_include_directories_
-  *  _target_compile_definitions_
+  *  `target_include_directories`.
+  *  `target_compile_definitions`.
 
-Each command (there're so many others…) affects one target and can be made
-_PRIVATE_ (just used by the module), _INTERFACE_ (just used by clients) or
-_PUBLIC_ (used by the module and its clients). Hence, you can have more
-granular control over your modules and can encapsulate its characteristics.
+Each command (there're so many others…) affects a single target and can be made `PRIVATE` (only used by the module), `INTERFACE` (only used by clients), or `PUBLIC` (used by the module **and** its clients). Hence, we can have much more granular control over modules and thus hide its private details.
 
-#### Example
+## Example
 
-To illustrate the concepts, let's go to a simple example of C++ project. You
-can download the example on this GitHub's repository:
-<https://github.com/rvarago/modern-cmake-appAndLib>.
+To illustrate the concepts, let's go over an example of a C++ project.
 
-Our project is composed by an executable called _app_ and it uses a static
-library called _lib1_ is inside a project's sub-directory. To simplify the
-approach, we won't install our library in the OS's standard folder for
-libraries, neither write tests for the library nor the executable, but always
-remember to write tests for your software! Also, I'm probably not applying all
-the concepts of Effective Modern CMake, but I'm struggling to achieve at least
-a significant percentage of the guidelines.
+The latest version of the example can be obtained [here](https://github.com/rvarago/modern-cmake-appAndLib).
 
-The library will export the function: _int sum(const int, const int)_ that
-computes the sum of the supplied arguments and returns this value. The
-executable will merely invoke this function and print the result on _stdout_.
-Fairly simple, just to focus on the CMake 's stuff.
+Our project is composed of the executable `app` and it depends on the library `lib1`. To simplify the approach, we won't install our library on the operating system, nor write tests, but please write tests for your software :-)! Moreover, chances are high that I might not be following all
+the advice that is given by Effective Modern CMake, but striving to achieve a significant percentage of the guidelines, at least.
 
-Our project layout is:
+The library will export the function `int sum(const int, const int)`, which computes the sum of its arguments and returns the result. The
+executable will then invoke this function and print the result to the console. Fairly straightforward, the goal is to focus on CMake stuff.
+
+The project's layout looks like this:
 
 ![](/assets/img/2018-08-20-how-to-use-modern-cmake-for-an-app-p-lib-project_0.png)
 
-The top-level Makefile will just instruct Make to wrap the creation of the
-build folder used to separate building artefacts from the code, the invocation
-of CMake and then the compilation of the resultant Makefile by Make again.
+The top-level `Makefile` will simply instruct Make to wrap helper commands to drive CMake.
 
-Meanwhile, the top-level CMakeLists.txt contains the basic setup for the
-project, it defines the CMake's minimum version and adds the _app_ and _libs_
-folders as subdirectories by issuing _add_subdirectory_ commands.
+Meanwhile, the top-level `CMakeLists.txt` has the basic setup for the project. It's where we define the minimum version of CMake that we expect, and add the `app` and `libs` subdirectories by issuing `add_subdirectory` commands:
 
-* * *
+<script src="https://gist.github.com/rvarago/9d054acd4eaddb7ec58e28165857cdf4.js"></script>
 
-The _libs/CMakeLists.txt_ only purpose is to add each library's folder as
-subdirectories of the project, so it will be omitted here. It can be useful on
-scenarios where you have many libraries and want to have some feature enabled
-for all the libraries, be careful to not expose more than the necessary.
+The sole purpose of `libs/CMakeLists.txt` is to group all libraries and it won't be mentioned further. It may be useful when we have many libraries and want to have features enabled for all of them, but be careful and don't expose more than what is necessary.
 
-The _libs/lib1/CMakeLists.txt_ defines the _lib1_ target which is a static
-library composed by the _lib1_ 's source files by calling:
+The `libs/lib1/CMakeLists.txt` defines the `lib1` target:
 
-  *  _add_library(lib1 STATIC ${lib1_SOURCES})_
+  *  `add_library(lib1 src/lib1-priv-impl.cpp)`.
 
-Also, it include the target _lib1_ 's inclusion directories by calling:
+It includes the target `lib1`'s path to includes:
 
-  *  _target_include_directories(lib1 PUBLIC include PRIVATE src)_
+  *  `target_include_directories(lib1 PUBLIC include PRIVATE src)`.
 
-Note that the _include_ folder is _PUBLIC_ and will be used by _lib1_ and its
-clients, whereas the _src_ folder is _PRIVATE_ and is going to be used just by
-_lib1_.
+Notice that the `include` directory is `PUBLIC`, so will be used by `lib1` and its clients, whereas `src` is `PRIVATE`, so it will be used only by `lib1` itself:
 
-* * *
+<script src="https://gist.github.com/rvarago/5e2b60ab92939c61881e56d4dce65c2e.js"></script>
 
-Finally, the _app/CMakeLists.txt_ defines the _app_ which is an executable
-composed by the _app_ 's source files by calling:
+Finally, `app/CMakeLists.txt` defines the executable `app` composed of `app`'s source files:
 
-  *  _add_executable(app ${app_SOURCES})_
+  *  `add_executable(app src/main.cpp)`.
 
-Also, it wires _app_ with its dependency on the _lib1_ target, in this case we
-'ve chosen to set this dependency _PRIVATE_ , so it'll just used by the _app_
-target and would be hidden if _app_ had clients. This is done by:
+It also wires `app` with its dependency on `lib1`. In this case, we've chosen to set this dependency `PRIVATE`, so it'll only be used directly by `app` target and would be hidden if `app` had clients (not usual for executables, though). This is done by:
 
-  *  _target_link_libraries(app PRIVATE lib1)_
+  *  `target_link_libraries(app PRIVATE lib1)`.
 
-Look at how easier is to managing dependencies with Modern CMake, a simple
-_target_link_libraries_ is enough to link the library, its header, and all
-other possibly _INTERFACE_ or _PUBLIC_ transitive dependencies that the
-library requires, pretty cool!
+<script src="https://gist.github.com/rvarago/156c5b4cdb3816eabb3755633f821d87.js"></script>
 
-#### Conclusion
+Look at how easier it is to manage dependencies with Modern CMake compared to the old approach. A mere `target_link_libraries` is enough to link against the library, get access to its header, and all other transitive dependencies expressed by `INTERFACE` or `PUBLIC`requires, pretty neat!
 
-Build systems for C++ are known to cause sadness, but Modern CMake has come to
-the rescue and these days are gradually falling behind. The main concept is to
-treat CMake's files as production code and apply the same rules for clarity
-and modular design. For CMake, we need to answer three questions?
+# Conclusion
+
+Build systems for C++ are well-known to be complex and rather hard to understand, but CMake has become easier to use than before.
+
+The idea is to simply write CMake's build scripts with the same level of care as we write production code, and thus focus on clarity and modularity. In CMake, we need to answer these three questions:
 
   1. What are my targets?
   2. What are my target's properties?
-  3. How my target is supposed to interact with its clients?
+  3. How should my target interact with its dependencies and clients?
 
-In this way your project will be easier to maintain, your clients will be
-happier by using your libraries in an easier manner and everyone wins.
+By thoroughly thinking about these questions your build system should become easier to maintain, and easier to be consumed by clients.
 
-#### References
+# References
 
-[1] CMake Documentation. <https://cmake.org/documentation/>
+[1] [CMake Documentation](https://cmake.org/documentation/).
 
-[2] C++Now 2017: Daniel Pfeifer "Effective CMake".
-<https://www.youtube.com/watch?v=bsXLMQ6WgIk>
+[2] [C++Now 2017: Daniel Pfeifer "Effective CMake"](https://www.youtube.com/watch?v=bsXLMQ6WgIk).
 
-[3] CppCon 2017: Mathieu Ropert "Using Modern CMake Patterns to Enforce a Good
-Modular Design". <https://www.youtube.com/watch?v=eC9-iRN2b04>
+[3] [CppCon 2017: Mathieu Ropert "Using Modern CMake Patterns to Enforce a Good Modular Design"](https://www.youtube.com/watch?v=eC9-iRN2b04).
 
-[4] Effective Modern CMake.
-<https://gist.github.com/mbinna/c61dbb39bca0e4fb7d1f73b0d66a4fd1>
-
-* * *
-
-Originally posted at [Rafael Varago's private
-space](https://medium.com/@varago.rafael/how-to-use-modern-cmake-for-an-app-
-lib-project-3c2ee6018cde) on August, 20, 2018.
-
+[4] [Effective Modern CMake](https://gist.github.com/mbinna/c61dbb39bca0e4fb7d1f73b0d66a4fd1).
 
 ***
-*Originally published at https://medium.com/@rvarago*
+*Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*

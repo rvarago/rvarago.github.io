@@ -1,155 +1,100 @@
 ---
-layout:	"post"
-title:	"Introduction to OOP in Golang"
+layout: "post"
+title:  "Introduction to OOP in Golang"
 ---
+
+> Getting started with Object-Oriented Programming (OOP) in Golang (Go).
 
 * * *
 
-> Learn how to get started with Go for OOP.
+|![An object-oriented Gopher.](/assets/img/2018-09-07-introduction-to-oop-in-golang_0.png)|
+|:--:| 
+| *An object-oriented Gopher. Source: <https://github.com/egonelbre/gophers>.*|
 
-Today, I'm going to talk about the basics of Object Oriented Programming (OOP)
-constructions written in Golang or simply Go.
+# User-Defined Types
 
-![](/assets/img/2018-09-07-introduction-to-oop-in-golang_0.png)
-
-An "object oriented" Gopher. Source: <https://github.com/egonelbre/gophers>
-
-#### User-Defined Types
-
-Go supports the notion of user-defined types, that is, the composition of
-native types (like int, string, etc.) to build more complex types reflecting
-the concepts of the real world like person, car, bank account, etc. or
+Go supports the notion of user-defined types, that is, the composition of native types (like int, string, etc.) to build more complex types reflecting the concepts of the real world like person, car, bank account, etc. or
 abstract concepts like requests, processes, etc.
 
-The way to express user-defined types in Go is by means of the _struct_
-keyword. For example, to define a type named _Employee,_ that models an
-employee in a management system with attributes: _id_ , _name_ , and _salary_
-, we can achieve it by:
+In Go, we declare user-defined types with the `struct` keyword. For example, to define a type `Employee` with attributes: `id`, `name`, and `salary` we might do:
 
-Different from other languages like Java, Go's _struct_ can only contain state
-(attributes), thus you can 't directly write methods (behavior) inside the
-_struct_ , but you can rely upon a special syntax for functions that has a
-special argument called a receiver argument.
+<script src="https://gist.github.com/rvarago/82a07c08693a0000cbc3f483398d5eb2.js"></script>
 
-For example, to add a method called _raiseSalary_ that receives a _bonus_
-amount and mutates an instance of type _Employee,_ and a method _format_ that
-accesses an instance of type _Employee_ , you can write:
+Differently from languages like Java, Go's `struct` only contains state (attributes), thus we can't directly write methods (behavior) inside the
+`struct`. Instead we rely upon a special syntax for functions with a special argument, the receiver.
 
-Note that the receiver name can be any valid identifier in Go, I just chose
-_self_ at my own convenience (Python feelings). Also, note that for
-_raiseSalary_ , the receiver is a **pointer** to _Employee_ , that's because
-it needs to mutate the receiver's attributes.
+For example, to add a method called `raiseSalary`, which receives a `bonus` argument and mutates an instance of type `Employee`; and another method `format`, which only reads from an instance of type `Employee`:
 
-#### Encapsulation
+<script src="https://gist.github.com/rvarago/71a306c93c99d28b8a3f5269c9f2b467.js"></script>
 
-The notion of encapsulation is expressed in Go by **packages** that are, up to
-some extent, similar to Java 's packages and C++'s namespaces. But in contrast
-to Java and C++, Go doesn't have access modifiers ( _private_ , _public_ ,
-etc.), so it differentiates between private and public symbols by the case of
-its first letter, where:
+Notice that the name given to the receiver can be any valid identifier, I just chose `self` to illusrate, but we could very well have chosen a better and/or shorter name. Additionally, notice that in `raiseSalary`, the receiver is a **pointer** to an `Employee`, that is needed as we want to mutate `self.salary`.
 
-  * Uppercase: _public_
-  * Lowercase: _private_
+# Encapsulation
 
-A private symbol is only accessible inside its own package, meanwhile, a
-public symbol has visibility both inside and outside its package.
+The notion of encapsulation is expressed in Go by **packages** that are, up to some extent, similar to Java's packages and C++'s namespaces. However, in contrast to Java and C++, Go doesn't provide keywords to express access modifiers (_private_, _public_, etc.), instead it distiguinshes between private and public by the case of the symbol's first letter. Where:
 
-The package name is declared at the start of each file and must be the same of
-its directory name in the file system. You can also have multiple files
-composing a single package.
+  * Uppercase: _public_.
+  * Lowercase: _private_.
 
-An example of a package:
+A private symbol is only accessible inside the package where it is defined, whereas a public symbol is also visible outside its package.
 
-Also, a package has a well-defined initialization ordering, that follows:
+The package name is declared at the start of each file and must be the same of its directory name in the file system. You can also have multiple files inside a single package. A package `employee` might look similar to:
 
-  1. Imported packages
-  2. Package's level variables
-  3.  _init()_ functions
+<script src="https://gist.github.com/rvarago/1cb4a942762fb5ac3af054120798a268.js"></script>
 
-#### Composition and Inheritance
+Moreover, a package has a well-defined order of initialization:
 
-Go doesn't support inheritance or the _is-a_ relationship. Instead, it
-encourages us to apply composition over inheritance and by doing so,
-preventing some classic problems that can arise with inheritance hierarchies
-erroneously implemented.
+  1. Imported packages.
+  2. Variables local to the package.
+  3. `init()` functions.
 
-One of the facilities provided is the possibility to embedding nameless
-_structs_ (and also _interfaces_ , see below) inside other _structs_ (or
-interfaces), and by this, the embedding _struct_ (or interface) has direct
-access to the embedded _struct_ (or interface) by a technique called
-promotion.
+# Composition and Inheritance
 
-For example, you may like to have a type _Manager_ that is-a _Employee_ , you
-can write this:
+Go doesn't support inheritance, or _is-a_ relationships. It rather favours composition over inheritance, and so attempts to prevent some classic problems that may arise from the abuse of inheritance that occurs with bad hierarchies.
 
-Note that you can call methods of _Employee_ with an instance of _Manager_ ,
-but you can't call a function expecting an _Employee_ with an instance of
-_Manager_ , so there aren't any implicit conversion from _Manager_ to
-_Employee_ (even if we 're dealing with pointers), so there isn't an is-a
-relationship here.
+Go allows us to embedded nameless `structs` (or `interfaces`, see below) inside other `structs` (or `interfaces`). The embedding _struct_ (or interface) has direct access to the members of the embedded `struct` (or `interface`) via promotion. For example, we may like to model a type `Manager` that _is-sort-of-a_ `Employee` (oh, boy):
 
-#### Interface and Polymorphism
+<script src="https://gist.github.com/rvarago/376fed717be529e926dc90d9059aad77.js"></script>
 
-However, with interfaces, you can obtain some level of inheritance-like
-behavior.
+Then we can call methods defined for `Employee` with an instance of `Manager`. Although we can't call a function expecting an `Employee` with an instance of `Manager`. That avoids implicit conversions and hence surprising behaviours, so there isn't a strict _is-a_ relationship.
 
-An interface establishes a contract that every type must agree (sign) in order
-to implement the interface. In Go, if a type implements all the methods
-defined by the interface, this type is said to adhere to the interface
-contract and can be used where an interface is expected.
+# Interface and Polymorphism
 
-For instance, an _Employee_ type has a role, so we can make it implement the
-contract established by the _interface_ _Role_ :
+Interfaces provide much of the benefits that we would otherwise have with inheritance. That is with more restrictions and therefore fewer surprises or edge-cases.
 
-When _printRoleName_ is called, the type _Employee_ is implicitly converted to
-the _interface_ _Role_ that it satisfies. Thus, you 're achieving polymorphic
-behavior because the call is dispatched on run time through the examination of
-the actual type and the invocation of the type's right method.
+An interface establishes a contract that every type must abide by if they mean to implement such an interface. In Go, if a type implements all the methods defined by the interface, this type is said to adhere to the interface contract and can be used where an interface is expected.
 
-One of the most interesting aspects of interfaces in Go is that there's no
-need that a type explicitly states that it implements an interface, it just
-needs to define its methods, and by doing this it's implicitly implementing
-the interface. A nice consequence is that we can create the interface
-afterwards the type has been created, so we can generalize the behavior once
-necessary (instead of premature generalization, that can lead to code
-difficult to maintain), which normally occur when we note that we have two or
-more types satisfying a common contract, and it should make sense to
-generalize it by extracting the specification of this behavior to a common
-interface.
+Let's say that an `Employee` type has a role, so we can make it implement the contract established by the `interface` `Role`:
 
-Moreover, in some scenarios, it can be convenient to combine two
-characteristics of Go.
+<script src="https://gist.github.com/rvarago/4c965b0b0bd66eda441ae22f757e059f.js"></script>
 
-For instance, if you have a concrete type that has nothing more than the
-methods defined in an interface, it should make sense to not export the
-concrete type, instead export only the interface. By doing this, you're able
-to change the internal representation of the concrete type to a more suitable
-one and don't affect its users, because they don't know anything about it,
-they just care about the exported interface. This is one of the most appealing
-properties of encapsulation:
+When `printRoleName` is called, the type `Employee` is implicitly converted into the`_interface` `Role` that it satisfies. Thus, we're achieving run-time polymorphism with late binding.
 
-> The ability to change the internal structure of a module without breaking
-its users.
+Go is fairly different from many languages in this regard, where in other languages would commonly favour nominal-typing:
 
-#### Conclusion
+> A type `T` implements the interface `I` if it explicity spells `I`'s name (e.g `T : I`, `T implements I`, etc); and `T` implements the methods defined by `I`.
 
-Although different from other languages (C++, Java, C#, etc.) Go has nice
-features to do OOP, like user-defined types, methods, inheritance, and
-polymorphism. And the manner that Go provides other facilities can improve our
-skills as developers, for example, by reasoning about other approaches to do
-system modeling.
+In contrast, Go prefers structural-typing:
 
-Moreover, Go has other great native constructions like slices, maps, and
-channels that can improve both the correctness and expressiveness of your
-code. It's also possible to use type assertions to inspect the dynamic type of
-objects that implements an interface, which is specially useful for empty
-interfaces.
+> A type `T` implements the interface `I` if `T` implements the methods defined by `I`.
 
-I really encourage you to search for more information about Go and verify
-whether it can help you and your company in your daily programming tasks by
-providing, possibly, alternative ways to solve problems.
+Therefore we don't need to explicitly state that a type implements an interface, it only needs to define its methods and that's all, it's implicitly implemented the interface.
 
-#### References
+A neat consequence is that we can create the interface after having introduced type, so that we can generalize the behavior only when the need for such arises, instead of prematurely generalizing, which can lead to code that is harder to maintain. That normally occur when we notice that we have two or more types satisfying a common contract, and it should make sense to formalize it, by factoring the specification out of this behavior to a common interface.
+
+Furthermore, if we have a concrete type that has nothing more than methods defined by an interface, it might make sense to not export the
+concrete type itself, but rather the interface. By doing this, we're able to change the internal representation of the concrete type without breaking external clients, as they don't know anything about the type, except that it happens to implement the exported interface. That's one of the main selling points for encapsulation:
+
+> The ability to change the internal structure of a module without breaking its clients.
+
+# Conclusion
+
+Although different from other languages (C++, Java, C#, etc.), Go has its own set of features and opnions on how to do OOP, like user-defined types, methods, inheritance, and run-time polymorphism. And how Go provides such tools may improve our skills as developers, as we have to learn other approaches to write software, and incorporte these in our toolboxes.
+
+Moreover, Go offers interesting constructions like slices, maps, channels, etc, which might improve both the correctness and expressiveness of our
+code.
+
+# References
 
 [1] Alan A. A. Donovan, Brian W. Kernighan. "The Go Programming Language".
 
@@ -157,6 +102,5 @@ providing, possibly, alternative ways to solve problems.
 
 [3] <https://golang.org/>
 
-
 ***
-*Originally published at https://medium.com/@rvarago*
+*Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*

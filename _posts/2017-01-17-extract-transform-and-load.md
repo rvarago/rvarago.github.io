@@ -1,142 +1,98 @@
 ---
-layout:	"post"
-title:	"Extract Transform and Load"
+layout: "post"
+title:  "Extract Transform and Load"
 ---
+
+> A critical component of Business Intelligence (BI) process: Extract, Transform and Load (ETL).
 
 * * *
 
-Hello,
-
-In this article, I'm going to present a key part of Business Intelligence (BI)
-process: Extract, Transform and Load (ETL).
-
 ETL is the ordered sequence of steps which retrieves data from production
 database, prepare it to be useful for analysis and finally store it in a
-separated database for decision making tasks.
+separated database for decision-making tasks.
 
-### Motivation and Description
+# Motivation
 
-The competition for market share between companies has increased, which
-demands improvements on business processes and strategies.
+At the beginning of information systems, information was viewed as the result of the productive process and was solely responsible to support it. In an e-commerce example, clothes purchased by a customer were only used by the logistic system to deliver them. Hence it hadn't had any value for future business planning.
 
-Without it, the strive to survive will be useless, hence the company has a
-considerable chance of bankrupt. One manner to achieve this improvement is by
-the introduction of information systems, which automates business processes.
-For example, instead of having a physical store to sell clothes, a company
-might develop its e-commerce to do it at internet. Through it, the customer
-can buy clothes, share his purchases with friends in social networks,
-therefore spreading the company's name and market value too.
+This concept has changed since then. Information is now considered a critical asset and is treated as such.
 
-In the beginning of these systems, information was viewed as a result of the
-productive process and had the only purpose to support it. In the e-commerce
-example, the clothes purchased by a customer were only used by the logistic
-system to deliver them. Hence it hadn't any value for business planning.
+Back to the e-commerce example, records of purchases can now be used
+to analyze customers' preferences, thereby providing services and recommendations focused on the customers' needs.
 
-This conception has changed in the recent years and information is now an
-asset and should be treated and used as such.
+However, the goal of using the information as a guiding factor for decision making
+depends on proper systems that are responsible for consuming the data obtained from
+productive process, storing, and deriving knowledge from it, which can then
+be used by the business's planners.
 
-Returning to our e-commerce example, the registered purchases can now be used
-to analyse customers preferences, thereby developing specific services, like
-special offers, focused always on customers needs. The use of information for
-business planning, is known as BI.
+In this context, we have Data Analytics, a field that aims to extract knowledge from data, so that it
+can be used as input for decision making.
 
-However, this objective of using information as a guide for decision making,
-depends on having the proper systems to consume this information obtained from
-productive process and manipulate it, generating valuable knowledge, which can
-be studied by the business's planners.
+As a first step, we need to retrieve the data, clean it up, and then store in a proper place, e.g. in a data warehouse.
 
-In this context, comes up Data Analytics as a relatively new field of study,
-which aims to extract useful knowledge for decision making from the huge
-amount of data produced by daily productive process. Nonetheless, first we
-need retrieve the data from somewhere, clean it and store in the data
-warehouse which is a separate database for the use of the data in BI.
+# Extract, Transform and Load
 
-### Extract, Transform and Load
+Most of the time, we need to adapt our resources to our needs.
 
-Most of the time, we need adapt our resources to our needs, this is not
-different in Information Technology related fields.
+Usually, databases are optimized for a given set of goals: consistency, no redundancy, fast lookups, etc. For instance, by employing the Online Transaction Processing (OLTP) model.
+A database that follows OLTP is pretty good at executing real-time processing, e.g. lookups by primary key.
 
-In this way, database are commonly made to perform well in the daily tasks
-processed by information systems: maintain consistency in data, avoid
-redundancy to save disk space etc. The most important kind or arrangement to
-achieve it is the well known Online Transaction Processing (OLTP) model.
-Basically, a database which follows OLTP, is very good to execute a huge
-amount of queries that return few registers, mainly find by primary key.
+Meanwhile, in BI systems, batch processing is usually acceptable, e.g by using the Online Analytical Processing (OLAP) model.
 
-Meanwhile, in BI we're looking for execution of few queries which returns a
-huge amount of registers. The generally considered standard model for this
-kind of task is Online Analytical Processing (OLAP).
+Therefore, sometimes we need to translate from OLTP to OLAP models, and that's when ETL comes in handy.
 
-Therefore, we need to translate the OLTP data made in production process to
-the OLAP data necessary to business planning process. Here, arises the ETL,
-which consists on three sequential steps:
+We can summarize ETL by three sequential steps:
 
-  1.  **Extract  **-- Fetch data from production database, applying filters based on the project needs
-  2.  **Transform  **-- Clean the data, denormalize it and convert between representation
-  3.  **Load  **-- Store the the transformed data into the data warehouse, which is a separate database, preferably isolated from production data base
+  1.  **Extract** -- Fetchs data from the production database.
+  2.  **Transform** -- Cleans the data, maybe denormalize and convert it to a more suitable representation.
+  3.  **Load** -- Stores the transformed data into the data warehouse, which is a separate database, preferably isolated from the production database.
 
-For the ETL, there are some tools which help in the process, one of them is
-the Pentaho Data Integration (Kettle) [2] and it's the chosen one for
-illustrate this article.
+For ETL, there is plenty of tools which assist in the process, here I will be using Pentaho Data Integration (Kettle) [2].
 
-### Example
+# Example
 
-For this example, I intend to introduce the Kettle as a tool for ETL, but to
-keep it simple, the example will not interact with any relational database.
-Instead, it'll fetch data from a Comma Separated Value (CSV) file, filter it,
-aggregate and write the result in another CSV file.
+I will introduce Kettle as a tool for ETL, without interacting with a proper relational database. Instead, it'll fetch some data from a Comma Separated Value (CSV) file, filter it, aggregate and then write the result into another CSV file.
 
-I've tested this example using the Kettle at version 4.2.0-stable, but you can
-try it in a more recent version and make the necessary modifications.
+I've tested this example using the Kettle 4.2.0-stable.
 
-The scenario is:
+The use-case:
 
-We have a CSV of the amount of sales made by some sellers represented by
-codes, these sales are separated by years. Our goal is to summarise the amount
-of sales by year for the sellers A and B. This scenario easily scales for a BI
-typical task which is consolidate huge amount of sales data by period in
-dashboards that permit drill down in more granular periods like months or
-weeks.
+> We have a CSV containing the number of sales by salesperson, aggregated by years.
+>
+> Our goal is to summarize the number of sales by year made by the salesperson A and B.
 
-Kettle is basically a Java tool that executes parallel processing of data.
+Kettle is a Java tool for parallel data processing.
 
-Firstly, we have a transformation which is the group of elements built for the
-data processing.
+Firstly, we have a transformation which is groups elements built for the data processing.
 
-Secondly, the data flow like a wind flux from the beginning of the
-transformation until its end.
+Secondly, the data flows through the pipeline, from the beginning of the transformation towards its end.
 
-Finally, every element in Kettle is one of two possible kinds, they're: steps
-and hops. Steps are the ones responsible for processing the incoming data flow
-and producing another data flow as output and two, or more, steps are
-connected with each other by hops.
+Finally, every element in Kettle is one of two possible kinds: steps
+or hops. Steps are responsible for processing the incoming data flow
+and producing the output data flow. And steps are connected through hops.
 
-We have many built-in steps, like filters, database lookup, group by, sort and
-in addition, a simple way to customize the transformation behaviour adding
-Java or JavaScript code inside custom steps.
+We have many built-in steps, e.g. filters, database lookup, group-by, sort-by, folding, etc. Moreover, it's possible to
+customize transformations by embedding Java or JavaScript code inside custom steps.
 
-In the example, we have the transformation made by the steps:
+In the example, we have the transformation made by these steps:
 
-  1.  **INPUT  **-- Reads the input CSV file of sales information
-  2.  **FILTER_CODES  **-- Filters out rows which are not of codes A and B
-  3.  **D**  -- Discards rows which were filtered by FILTER_CODES
-  4.  **SORT_BY_YEARS  **-- Sorts the rows by years in descending manner
-  5.  **AGGREGATE_YEAR**  -- Sums the amounts by years
-  6.  **OUTPUT**  -- Generates the CSV output file
+  1.  **INPUT** -- Reads the input CSV file of sales information.
+  2.  **FILTER_CODES** -- Filters out rows which are not of codes A and B.
+  3.  **D** -- Discards rows which were filtered by FILTER_CODES.
+  4.  **SORT_BY_YEARS** -- Sorts the rows by years in descending manner.
+  5.  **AGGREGATE_YEAR** -- Sums the amounts by years.
+  6.  **OUTPUT** -- Generates the CSV output file.
 
-### Conclusion
+# Conclusion
 
-In this article we've learned what ETL is, its importance in business and we
-used Kettle as a tool for ETL.
+In this article, we've learned what the basic principles of ETL are, its importance for BI, and we used Kettle as a tool to illustrate ETL.
 
-The full example containing the input, transformation and output can be
-obtained [here](https://github.com/rvarago/etl-example).
+The full example containing the input, transformation and output can be obtained [here](https://github.com/rvarago/etl-example).
 
-### Bibliography
+# References
 
 [1] GROSSMANN, W. and RINDERLE-MA, S. Fundamentals of Business Intelligence.
 1E. Published By Springer-Verlag Berlin Heidelberg.
 
-
 ***
-*Originally published at https://medium.com/@rvarago*
+*Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*

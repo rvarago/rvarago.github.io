@@ -1,153 +1,198 @@
 ---
-layout:	"post"
-title:	"Introduction to CMake for C++"
+layout: "post"
+title:  "Introduction to CMake for C++"
 ---
 
-Today, I'm going to talk about how to get started with CMake for building a
-C++ application. Firstly, I'll introduce some CMake commands, then we'll test
-them with a C++ example.
+> Getting started with CMake for building C++ applications.
 
 * * *
 
 > **UPDATE:**
 
-> This article is outdated and the advice given here are no longer considered
-good practices, being deprecated in favor of a style known as "Modern CMake"
-which has a lot of advantages over the way to use CMake shown here. Please,
-consider the following links for introductions on Modern CMake:
+> This text is outdated and the advice given here should no longer be considered good practices. It's being deprecated in favour of a much better style known as "Modern CMake", which has plenty of advantages over the way to use CMake shown here. Please, consider the following links for introductions on Modern CMake:
 
-[ **How to Use Modern CMake for an App + Lib Project**  
- _An example of how to apply some of the so called "Modern CMake" to build a
-simple project composed by an executable…_code.egym.de](https://code.egym.de
-/how-to-use-modern-cmake-for-an-app-lib-project-3c2ee6018cde
-"https://code.egym.de/how-to-use-modern-cmake-for-an-app-lib-project-
-3c2ee6018cde")[](https://code.egym.de/how-to-use-modern-cmake-for-an-app-lib-
-project-3c2ee6018cde)
+> * [How to Use Modern CMake for an App + Lib Project]({{ site.baseurl }}{% link _posts/2018-08-20-how-to-use-modern-cmake-for-an-app-p-lib-project.md %})
+> * [Refactoring a CMake Build System]({{ site.baseurl }}{% link _posts/2019-01-10-refactoring-a-cmake-build-system.md %})
 
-[ **Refactoring a CMake build system**  
- _Some advice to help you when porting a build system based on CMake to use a
-modular approach following the so-called
-…_code.egym.de](https://code.egym.de/refactoring-a-cmake-build-system-
-9898c2030c3a "https://code.egym.de/refactoring-a-cmake-build-system-
-9898c2030c3a")[](https://code.egym.de/refactoring-a-cmake-build-system-
-9898c2030c3a)
+> This article will be kept available, since it's part of the CMake's history, in particular my of my path learning CMake, and it may also be useful for showing the advantages of Modern CMake. Moreover, it may help developers that are working on pre-Modern CMake projects. However, please do consider applying Modern CMake techniques instead.
 
-> This article is going to be kept available, since it's part of the CMake's
-history, and it may also be useful for showing the advantages of Modern CMake.
-Moreover, it may help developers that are working on pre-Modern CMake
-projects. However, please consider applying Modern CMake techniques whenever
-possible.
+# Build System
 
-Hello,
+CMake is a cross-platform tool for building software projects.
 
-Today, I'm going to talk about how to get started with CMake for building a
-C++ application. Firstly, I'll introduce some concepts regarding CMake, then
-we'll run it with a C++ example.
+Normally, a build tool like GNU Make will parse a configuration file (`Makefile`), which describes the commands required to build an artefact based on the source files and other resources that make up the project. CMake is not so different, it also parses a similar configuration file (`CMakeLists.txt`), however, instead of directly build the artefact, it generates another configuration file that will then be used build the artefact.
 
-#### Build System
+That's another level of indirection, which is a fairly popular wat to solve problems in Computer Science.
 
-CMake is a cross-platform tool that automates the building process of software
-projects.
+CMake takes advantage of it by the following:
 
-Normally, a build tool like Make will parse a configuration file ( _Makefile_
-) that contains all the commands required to build an artifact based on the
-source files and other resources inside the project. In the other hand, CMake
-will also parse a configuration file ( _CMakeLists.txt_ ), but instead of
-directly build the artifact, it'll generate another configuration file that
-will, in fact, build the artifact.
+> By using only one configuration file, you can generate multiple configuration files to build your project across multiple platforms (Make, Visual Studio, etc).
 
-The practice to add another level of indirection to solve a problem is very
-common in Computer Science. In the case of CMake, the main advantage is:
+In other words, that makes the build process portable across platforms.
 
-> By just one configuration file __ you'll be able to generate different
-configuration files to build your project for different platforms (Make,
-Visual Studio _,_ etc).
+The configuration file generated from the `CMakeLists.txt` will be forwarded to the **native build system** (a.k.a **generator**) that will then build the project. CMake comes with plenty of generators, such as Make, Visual Studio, etc.
 
-In other words, you are giving portability to your building process.
+More than portability, by using CMake you can considerably simplify your building process for projects composed of files spread over multiple sub-
+directories, e.g. `src` for `.cpp`, `includes` for `.hpp`, `build` for generated artefacts, etc.
 
-The configuration generated from _CMakeLists.txt_ that will build your project
-based on the **native build system** (Make, Visual Studio, etc) is called
-**native configuration file** and the responsible to generate it is called
-**generator**. CMake comes with a diversity of generators and you can follow
-the references to see the list.
-
-More than portability, by using CMake you can considerably simplify your
-building process for projects composed by files spread over multiple sub-
-directories, for example, _src_ for   _.cpp_ , _includes_ for   _.hpp_ , build
-for generated artifacts, etc.
-
-#### Example
+## Example
 
 To illustrate the basic structure of a CMake project, let's write an example.
 
-It consists of a C++ application written in Linux named _rvarago-hello-cmake_
-that will be compiled against the C++ 14 standard with g++, and it 's composed
-of three files: _person.hpp_ , _person.cpp_ , and _main.cpp_. __ The final
-result will be an executable named _hello_.
+It will consist of a C++ application written in Linux named `rvarago-hello-cmake` that shall be compiled against the C++14 standard with g++. The application is composed of three files: `person.hpp`, `person.cpp`, and `main.cpp`. The final artefact will be the executable `hello`.
 
-The native build system will be Make, so CMake will generate a _Makefile_
-based on a _CMakeLists.txt_.
+The native build system will be Make, so CMake will generate a `Makefile` based on a `CMakeLists.txt`.
 
-The project is structured in the following way (output of the _tree_ utility
-in Linux):
+The project is structured in the following layout (output of the `tree` utility in Linux):
 
-![](/assets/img/2018-05-30-introduction-to-cmake-for-cpp_0.png)
+{% include image.html url="2018-05-30-introduction-to-cmake-for-cpp_0.png" %}
 
-  *  _build_ is empty now, but it 'll contain the generated _Makefile_ , the executable, and other resources from the building process. The main reason to have this directory is that we can clean all the outputs from CMake just by erasing the contents of this directory
-  *  _include_ s for the interfaces ( _.hpp_ )
-  *  _src_ for the implementations ( _.cpp_ )
+  * `build` is empty now, but it'll contain the generated `Makefile`, executable, and other resources from the building process. The main reason to have this directory is that we can clean up all the stuff generated by CMake simply by removing the contents of this directory.
+  * `include` is for the interfaces (`.hpp`).
+  * `src` for the implementations (`.cpp`).
 
- _person.hpp_ is the interface for the class _Person_ :
+`person.hpp` is the interface-file for the class `Person`:
 
- _person.cpp_ is its implementation:
+<script src="https://gist.github.com/rvarago/efd8a5dc54c6b72d10f851c6a92266b6.js"></script>
 
- _main.cpp_ represents the client of _Person_ , by depending on _person.hpp_ :
+`person.cpp` is its implementation-file:
 
-At this moment, you can compile your project with the following command:
+<script src="https://gist.github.com/rvarago/d8aaac09644dd852a197fbddb57f0fdc.js"></script>
+
+`main.cpp` has the main function, and it uses `Person`, by depending on `person.hpp`:
+
+<script src="https://gist.github.com/rvarago/07621afda4587c1f9d6ad2bfdab70434.js"></script>
+
+We can now compile our project with the following command:
 
 > g++ -o build/hello src/person.cpp src/main.cpp -I./includes -std=c++14
 
-And you'll get the _hello_ executable inside the _build_ directory.
+And we should end up with the `hello` executable inside the `build` directory.
 
-It's also possible to write a _Makefile_ to use Make to conditionally compile
-the project, but it won 't be a simple task, because we're dealing with files
-spread over multiple directories. This is the scenario where CMake really
+It's also possible to write a `Makefile` to use Make to conditionally compile the project. However, as I said, it won't super simple, especially because we're dealing with files spread over multiple directories and we might want to build our project on different operating systems without much fiddling with the build system. That's when CMake really
 shines.
 
-To build our application, represented by the executable _hello_ , based on the
-source files, we'll need the following _CMakeLists.txt_ :
+To build our application with CMake we may write `CMakeLists.txt` similar to:
 
-To generate the _Makefile_ and other intermediary resources. Firstly, change
-to _build_ and call the _cmake_ utility supplying the path to the
-_CMakeLists.txt_ , and it'll generate the result inside the calling directory,
-that is, _build_ :
+<script src="https://gist.github.com/rvarago/85a7c8dcb06d9b33011a5eaa6bd70493.js"></script>
 
-> cmake ..
+Change your working directory to `build`, and instruct `cmake` to generate the build-files to be consumed by the native build system (GNU Make in my case), by supplying the path to the `CMakeLists.txt`, and it'll generate a bunch of files current directory, that is, `build`:
 
-Now, we have the _Makefile_ generated from _CMakeLists.txt_ , and to compile
-our application, we need to run make:
+> cmake ..
+
+Now, we have the `Makefile` generated from `CMakeLists.txt`, and to finally compile our application, we can invoke `make`:
 
 > make
 
-And you'll see the _hello_ executable inside the _build_ directory.
+And we should see the `hello` executable inside the `build` directory.
 
-#### Conclusion
+# Conclusion
 
-In this article, we've discussed the basics regarding how to get started with
-CMake for automation of building process of C++ applications. We wrote a
-simple example that compiled a basic multi-file application and the CMake to
-generate the _Makefile_ from _CMakeLists.txt_ required to build the
-application with Make as the native build system.
+We've discussed the basics of how to get started with CMake to build C++ applications. We wrote a
+a simple example to compile a multi-file application with CMake.
 
-I hope that with this basic overview of CMake you can be able to continue your
-studies about how to automate and simplify your building process, maybe adding
-[automated unit tests](https://medium.com/@varago.rafael/introduction-to-
-google-c-unit-testing-3d564c30f3b0) to your project.
+# References
 
-#### References
-
-[1] <https://cmake.org/>
-
+[1] [https://cmake.org/](https://cmake.org/)
 
 ***
-*Originally published at https://medium.com/@rvarago*
+*Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*
+---
+layout: "post"
+title:  "Introduction to CMake for C++"
+---
+
+Getting started with CMake for building C++ applications.
+
+* * *
+
+> **UPDATE:**
+
+> This text is outdated and the advice given here should no longer be considered good practices. It's being deprecated in favour of a much better style known as "Modern CMake", which has plenty of advantages over the way to use CMake shown here. Please, consider the following links for introductions on Modern CMake:
+
+> * [How to Use Modern CMake for an App + Lib Project]({{ site.baseurl }}{% link _posts/2018-08-20-how-to-use-modern-cmake-for-an-app-p-lib-project.md %})
+> * [Refactoring a CMake Build System]({{ site.baseurl }}{% link _posts/2019-01-10-refactoring-a-cmake-build-system.md %})
+
+> This article will be kept available, since it's part of the CMake's history, in particular my of my path learning CMake, and it may also be useful for showing the advantages of Modern CMake. Moreover, it may help developers that are working on pre-Modern CMake projects. However, please do consider applying Modern CMake techniques instead.
+
+# Build System
+
+CMake is a cross-platform tool for building software projects.
+
+Normally, a build tool like GNU Make will parse a configuration file (`Makefile`), which describes the commands required to build an artefact based on the source files and other resources that make up the project. CMake is not so different, it also parses a similar configuration file (`CMakeLists.txt`), however, instead of directly build the artefact, it generates another configuration file that will then be used build the artefact.
+
+That's another level of indirection, which is a fairly popular wat to solve problems in Computer Science.
+
+CMake takes advantage of it by the following:
+
+> By using only one configuration file, you can generate multiple configuration files to build your project across multiple platforms (Make, Visual Studio, etc).
+
+In other words, that makes the build process portable across platforms.
+
+The configuration file generated from the `CMakeLists.txt` will be forwarded to the **native build system** (a.k.a **generator**) that will then build the project. CMake comes with plenty of generators, such as Make, Visual Studio, etc.
+
+More than portability, by using CMake you can considerably simplify your building process for projects composed of files spread over multiple sub-
+directories, e.g. `src` for `.cpp`, `includes` for `.hpp`, `build` for generated artefacts, etc.
+
+## Example
+
+To illustrate the basic structure of a CMake project, let's write an example.
+
+It will consist of a C++ application written in Linux named `rvarago-hello-cmake` that shall be compiled against the C++14 standard with g++. The application is composed of three files: `person.hpp`, `person.cpp`, and `main.cpp`. The final artefact will be the executable `hello`.
+
+The native build system will be Make, so CMake will generate a `Makefile` based on a `CMakeLists.txt`.
+
+The project is structured in the following layout (output of the `tree` utility in Linux):
+
+{% include image.html url="2018-05-30-introduction-to-cmake-for-cpp_0.png" %}
+
+  * `build` is empty now, but it'll contain the generated `Makefile`, executable, and other resources from the building process. The main reason to have this directory is that we can clean up all the stuff generated by CMake simply by removing the contents of this directory.
+  * `include` is for the interfaces (`.hpp`).
+  * `src` for the implementations (`.cpp`).
+
+`person.hpp` is the interface-file for the class `Person`:
+
+<script src="https://gist.github.com/rvarago/efd8a5dc54c6b72d10f851c6a92266b6.js"></script>
+
+`person.cpp` is its implementation-file:
+
+<script src="https://gist.github.com/rvarago/d8aaac09644dd852a197fbddb57f0fdc.js"></script>
+
+`main.cpp` has the main function, and it uses `Person`, by depending on `person.hpp`:
+
+<script src="https://gist.github.com/rvarago/07621afda4587c1f9d6ad2bfdab70434.js"></script>
+
+We can now compile our project with the following command:
+
+> g++ -o build/hello src/person.cpp src/main.cpp -I./includes -std=c++14
+
+And we should end up with the `hello` executable inside the `build` directory.
+
+It's also possible to write a `Makefile` to use Make to conditionally compile the project, but it won't be a simple task, because we're dealing with files spread over multiple directories and porting into different operating systems might not be trivial. That's when CMake really
+shines.
+
+To build our application with CMake we may write `CMakeLists.txt` similar to:
+
+<script src="https://gist.github.com/rvarago/85a7c8dcb06d9b33011a5eaa6bd70493.js"></script>
+
+Change your working directory to `build`, and instruct `cmake` to generate the build-files to be consumed by the native build system (GNU Make in my case), by supplying the path to the `CMakeLists.txt`, and it'll generate a bunch of files current directory, that is, `build`:
+
+> cmake ..
+
+Now, we have the `Makefile` generated from `CMakeLists.txt`, and to finally compile our application, we can invoke `make`:
+
+> make
+
+And we should see the `hello` executable inside the `build` directory.
+
+# Conclusion
+
+We've discussed the basics of how to get started with CMake to build C++ applications. We wrote a
+a simple example to compile a multi-file application with CMake.
+
+# References
+
+[1] [https://cmake.org/](https://cmake.org/)
+
+***
+*Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*
