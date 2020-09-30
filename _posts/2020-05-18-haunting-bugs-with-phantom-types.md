@@ -59,7 +59,7 @@ That's still not great and hence we may land into troubles.
 Essentially, strings are far too low-level and make no distinction between raw and sanitized queries. Even worse, a string generally doesn't even hold enough information in its type to clearly state that it represents a query at all. Hence, one might accidentally skip the comment and then break the assumption made by the protocol by calling into `run_query` with a raw query that hasn't been sanitized:
 
 ```cpp    
-run_query(read_query()); # Oops! Forgot to sanitize.
+run_query(read_query()); // Oops! We forgot to sanitize.
 ```
 
 It would be nice if we could harden the implementation, such that this kind of violation would be readily rejected by the compiler.
