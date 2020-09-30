@@ -1,0 +1,44 @@
+<footer class="site-footer h-card">
+        <data class="u-url" href="{{ "/" | relative_url }}"></data>
+      
+        <div class="wrapper">
+      
+          <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <a href="{{ "/" | relative_url }}">
+                    <img src="{{ "/assets/rvarago.jpeg" | relative_url }}" />
+                </a>
+            </div>
+      
+            <div class="footer-col footer-col-2">
+              <ul class="social-media-list">                
+                <li>
+                    <a class="u-url" rel="me" href="https://github.com/{{ site.github_username }}">
+                        <i class="fab fa-github fa-fw"></i>
+                        {{ site.github_username }}
+                    </a>
+                </li>
+                <li>
+                    <a class="u-url" rel="me" href="https://linkedin.com/in/{{ site.linkedin_username }}">
+                        <i class="fab fa-linkedin fa-fw"></i>
+                        {{ site.author }}
+                    </a>                    
+                </li>
+                <li>
+                    <a class="u-url" rel="me" href="https://medium.com/@{{ site.medium_username }}">
+                        <i></i>
+                        @{{ site.medium_username }}
+                    </a>                    
+                </li>
+              </ul>
+            </div>
+      
+            <div class="footer-col footer-col-3">
+                <h2 class="footer-heading">{{ site.title | escape }}</h2>
+              <p>{{ site.description | markdownify }}</p>
+            </div>
+          </div>
+      
+        </div>
+      
+      </footer>
