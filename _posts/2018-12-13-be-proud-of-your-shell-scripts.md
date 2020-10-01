@@ -3,7 +3,7 @@ layout: "post"
 title:  "Be Proud of your Shell Scripts"
 ---
 
-> Automation is not only a fancy trend but rather a reality that plays a vital role in the Software Engineering world. Besides the multitude of "modern" tools, the Shell, our good and old friend from '70s, still plays and will keep playing a major role. Therefore, it deserves more care. Let's be prouder of our Shell Scripts.
+> Automation is not only a fancy trend but rather a reality that plays a vital role in the Software Engineering world. Besides the multitude of "modern" tools, the Shell, our good and old friend from '70s, still plays and will keep playing a major role. Therefore, it deserves more care. Let's be prouder of our shell scripts.
 
 * * *
 
@@ -28,7 +28,7 @@ By putting these tasks in a reproducible and automatic script, we can avoid wast
 
 Moreover, we can now put our minds to work on solving problems and delivering awesome applications to our customers. Well…At the end of the day, that is what matters.
 
-## Shell Scripts Equal Code
+## Shell Scripts _are_ Code
 
 When we're writing production code we strive to apply the best practices of Software Engineering, for instance:
 
@@ -46,80 +46,75 @@ How about naming guidelines? It's been a long time since we decided that naming 
 
 That cryptic style of programming that required one comment per each line of code to explain something that should've been obvious in the code is in the past! Sure? Not exactly, not always.
 
-We've been dedicating loads of efforts in writing clean production code (code that solves the business problem), we've been using awesome tooling to orchestrate our containers in the cloud, etc. Yet we're still writing cryptic Shell Scripts, the scripts that usually responsible for some
-aspects of our application's infrastructure (therefore, part of our applications).
+We have been dedicating loads of efforts in writing clean production code (code that solves the business problem), we have awesome tooling orchestrating our containers in the cloud, and so on. Yet, we're still writing cryptic Shell Scripts, the scripts that usually responsible for some aspects of our application's infrastructure (therefore, part of our applications).
 
 We should NOT do that.
 
-No matter if we're employing cutting-edge technologies to develop our applications, we probably have some Shell Script underneath it here and there (the same argument could be applied to other scripting languages as well). Even for simple tasks like pushing a git tag and then running `kubectl`. They're part of our applications, they're part of the process to get applications up and running. Hence, adding value to our customers.
+No matter if we're employing cutting-edge technologies to develop our applications, we probably have some Shell Script underneath it here and there (the same argument applies to other scripting languages as well). Even for simple tasks like pushing a git tag and then running `kubectl`. They are part of our applications, they usually are the glue which gets applications up and running. Hence, adding value to our customers.
 
 > A Shell Script **is** code and shall be treated with care.
 
-Yes, I know, shells don't offer the most beautiful and modern syntaxes, and they lack many abstractions that modern languages support. Still, it's a tool, which should be carefully used. Come on, writing scripts might be fun too, sort of.
+Granted, programming languages used understood by shells don't have the most pleasant syntaxes compared to modern languages and lack many abstractions as well. Still, it's a tool, which should be carefully used.
+
+Writing shell scripts might be fun too, sort of.
 
 ## Guidelines
 
-Write idiomatic, modular, and maintainable scripts is not the easiest task, but with discipline and practice, it's surely possible to do.
+Writing idiomatic, modular, and maintainable scripts is not the easiest task. It involves a lot of discipline and practice, but we can get close.
 
-I'd like to share some guidelines to help. But before, keep this in mind:
+I would like to share a few guidelines to help. Before that, keep this in mind, please:
 
 > Those are simply guidelines based on my experience, **NOT** rules.
 
 ### Be Restrict
 
-It's pretty easy to commit mistakes when writing Shell Scripts. Let's talk about two of them.
+It's quite easy to commit mistakes when writing shell scripts. Let's talk about two of them and see how to prevent them from happening.
 
 #### Abort on Failure
 
-A Shell Script, at the very basic level, represents a series of commands that are executed one after the other. Each command yields an execution status that says if the command has succeeded, or not. By convention, the execution status `0` means success and all other statuses mean failures.
+Shell scripts are made of a series of commands that execute one after the other. Each command yields an execution status that states whether the command has succeeded or not. Conventionally, execution status `0` means success, whereas anything other than `0`  means failure.
 
-In general, if a command fails, we'd like to stop the script, because we're probably at an invalid state and we shouldn't proceed.
+Generally, when a command fails, we would like to abort the script immediately. That's because we might have entered in an invalid state and we should not proceed further.
 
-But, by default, Shell ignores the execution status, and simply moves forward to the next command and so on.
+However, by default, shells normally ignore execution status within a script. Instead, they simply move forward to the next command as if nothing bad had happened.
 
-Fortunately, it's easy to change this behaviour and fails the script if some command has failed. To do it, we need to enable the `-e` flag by adding the following line before any other command that should be validated:
+Fortunately, its quite simple to change this behaviour, and aborts the script whenever a command fails. We just need to enable set the `-e` flag by before any other command that should be checked for failure (most often at the very begging of the file):
     
     set -e
 
-So, as soon as the first command fails, the Shell will stop the script.
+As soon as the first command fails, the script will abort.
 
-But, in some specific cases, we'd like to continue the script even if some command has failed. For instance, an optional action may or may not be
-executed, thus its status is not relevant. For this scenario, we can use the `||` operator that will yield a success status code even if the command has failed:
+Rarely, yet sometimes desirable, we want to ignore the status of command and continue the script even when such a command fails. Say, some action is expected to occasionally fail so that we can retry later. For those scenarios, we can use the `||` operator:
     
     commandThatMightFail || true 
 
 #### Abort on Undefined Variables
 
-Another common mistake related to Shell Scripts is reading an undefined variable, this usually happens by mistyping the variable name.
+Another mistake we sometimes commit is reading an undefined variable, e.g. by mistyping its name.
 
-When that happens, the default behaviour of the Shell is to expand the reference to an empty string.
+In that case, by default, the expression expands to an empty string. That might come as surprising, and from to my mind, it is. Normally, we would prefer to abort the script as soon as we attempt to reference an undefined variable.
 
-That isn't the behaviour that we normally expect. Normally, we'd like to stop the script as soon as we try to reference an undefined variable.
-
-Fortunately, it's also easy to change it. We just need to enable the `-u` flag by adding the following line before any other command that
-should be validated:
+Fortunately, we can change that. Again, we have to enable the `-u`:
     
     set -u
 
-Now, as soon as the first undefined variable is referred, the script will abort.
+Should we now attempt to reference an undefined variable, then the script will abort.
 
-Once again, there might be specific cases where an undefined variable makes sense, and so, we wouldn't like to stop the script. An example is a variable that represents an optional command-line argument. In this case, we can provide a fallback value to be used when the variable wasn't previously declared:
+Again, there might be specific cases where an undefined variable makes sense (perhaps an optional command-line argument?), and hence we want the script to move on even if we attempt to reference such a variable. Similarly to what we saw before, we can provide a fallback value for when the variable was not previously declared:
     
     ${variable:-defaultValue}
 
 ### Return Proper Execution Status
 
-We're generally working towards more automation, where tools drive other tools, sometimes without human intervention. For instance, we have pipelines, where processes are sequentially executed towards a result, like deploy to production.
+We are generally working towards more automation, where tools drive other tools, and most often without human intervention. Say, we have a bunch of pipelines, where processes execute in sequence to achieve the result, e.g. deploy to production.
 
-To have that level of automation working properly, we need to provide a way such that a tool can monitor the execution of other tools that it invokes and hence decide whether it should take "this" or "that" action, like rollback or commit a deploy to production.
+Therefore, we need to have ways so that tool A can monitor the execution of tool B, and makes decisions based the result of B. Say, if an automated-test failed, then we should rollback, instead of committing a deploy to production.
 
-The most basic way to monitor the execution of a process by inspecting its execution status. A large number of tools are based on the assumption that we're going to provide an execution status, to report success or different kinds of failure.
+The simplest way to monitor the execution of a process is by inspecting its execution status. A large number of tools rely on the assumption that we return proper execution statuses to report success or different sorts of failures.
 
-It's straightforward to provide the execution status in Shell Script, we just need to use the `exit` command, supplying an integer called status code as its argument:
+We return the execution status in shell scripts with the `exit` command, which accepts an integer representing the status code:
     
     exit statusCode 
-
-Of course, we need to remember to add it to each possible branch inside your control flow, where we want to finish the script.
 
 See [FreeBSD sysexits](https://www.freebsd.org/cgi/man.cgi?query=sysexits&apropos=0&sektion=0&manpath=FreeBSD%204.3-RELEASE&format=html) for a list of well-known status codes that we can make use. 
 
@@ -127,9 +122,9 @@ See [FreeBSD sysexits](https://www.freebsd.org/cgi/man.cgi?query=sysexits&apropo
 
 Whenever we see a duplication of the same piece of knowledge in our code base, it's nearly impossible to not extract them into a module and then reuse it at all the places. That gives suitable names to pieces of logic and leverages code sharing and reuse. 
 
-But somehow, it's not always the case when we're talking about Shell Scripts, we don't put so much attention to it, and it's easy to come up with the same step being repeated in different scripts inside the same project, or even inside the same project. We should extract them and reuse. 
+But somehow, it's not always the case when we talk about shell scripts. We sometimes don't put so much attention to it and may end up with similar steps repeated over and over again. Ideally, we should extract commonalities and reuse them.
 
-There are so many benefits of such practice, for example:
+There are many benefits of such practice, for example:
 
   * Attributes names to piece of logics.
   * Consolidates changes into a single place.
@@ -170,12 +165,17 @@ turn_display_on() {
   echo "On" > "${display_id}"
 }
 
-turn_display_on "gen2" # This should send 'On' to 'usb0'.
+main() {
+  turn_display_on "gen2" # This should send 'On' to 'usb0'.
+}
+
+main
 ```
 
-Notice that we invoked `get_device_node_from_generation` from `turn_display_on` within a sub-process by using `$()` where the callee communicates the result back to the caller by `echo`ing.
+The "logical" entry-point is the `main` function, which we immediately invoked upon start-up.
+Moreover, the call to `get_device_node_from_generation` from `turn_display_on` occurs within a sub-process by using `$()`, where the callee communicates the result back to the caller by `echo`ing it without a trailing newline character.
 
-Further, I usually assign the argument (`$1`, `$2`, etc) to a named variable in the first line of each function. That's a matter of style, I like this practice because it's the closest I could get to proper parameters, e.g. `get_device_node_from_generation(generation)`.
+Further, I usually assign the argument (`$1`, `$2`, etc) to a named variable at the beginning of each function. That's a matter of style, and I like it because it's the closest I could get to proper formal-parameters, e.g. `get_device_node_from_generation(generation){ # use generation }`.
 
 ## Example: Deployment System
 
@@ -183,11 +183,11 @@ To illustrate the concepts, I'll provide an example. It's a simplistic version, 
 
 > A Command-Line Interface (CLI) that deploys an application into a given environment.
 
-    For the sake of demonstration, I will be faking the real deployment with simple prints, but it could be adapted to complex use-cases (Docker, Kubernetes, cloud providers, etc).
+    For the sake of demonstration, I will be faking the real deployment with simple prints, but it could evolve to complex use-cases (Docker, Kubernetes, cloud providers, etc).
 
 We could code up an ad-hoc script, in which we would have a single block of commands without a strong notion of a structure. It's enough for simple cases, but it can easily make things hard to understand and maintain once new requirements come in. That's why we want to keep it structured, with concerns encapsulated into functions whose names emphasize their purposes.
 
-We require that our CLI should accept the environment and the application as arguments, switch to the cluster that corresponds to the specified environment, and then install the application into that cluster.
+We require that our CLI should accept the environment and the application as arguments, switch to the cluster corresponding to the given environment, and then install the application into that cluster.
 
 Based on the requirements, we can already identify two major concerns:
 
@@ -207,7 +207,7 @@ Here's how an implementation might look like:
 
 <script src="https://gist.github.com/rvarago/26a1d7000f9f05c48a6db4b666ec080f.js"></script>
 
-The most important thing is that we followed our advice and split the logic into separate functions, which are coordinated by the `main` function ("entry-point" of the script). Each concern is wrapped into a function with a name that describes what it does.
+The most important thing is that we followed our advice and split the logic into separate functions, which are coordinated by the `main` function ("entry-point" of the script). We have wrapped each concern into distinct functions with names telling us what they do
 
 Here's the output when requesting for help:
 
@@ -225,11 +225,11 @@ OPTIONS:
 
 ## Conclusion
 
-Nowadays, we have a vast number of awesome tools that help us to improve our products and make our lives easier by automating manual tasks. But, they don't replace Shell Scripts, which is, most of the time, the least common denominator for Linux based applications. Furthermore, learning how to script can also help you when hacking on Linux, perhaps you could maintain part of a Distro in the future?  
+Nowadays, we have a large number of tools helping us to improve our products, while making our lives easier by automating manual tasks. But, they don't replace Shell Scripts, which is, most of the time, the least common denominator for Linux based applications. Furthermore, learning how to script can also help you when hacking on Linux, perhaps you could maintain part of a Distro in the future?
 
-Although unfortunately, sometimes we may overlook our scripts and forget to follow well-established practices that we're used to applying in our production code. The outcome is: scripts that are difficult to understand, debug, fix, and improve.
+Although unfortunately, sometimes we may overlook our scripts and forget to follow well-established practices that we're used to applying in our production code. The outcome is scripts that are difficult to understand, debug, fix, and ultimately improve.
 
-We should strive to avoid this kind of scenario. We should write clearer scripts and leverage their power to their maximum.
+We should strive to avoid this kind of scenario. We should write cleaner scripts and leverage their power to their maximum.
 
 Granted, the syntax might feel awkward and archaic, but that doesn't mean we absolutely can't enjoy writing our beloved scripts.
 
