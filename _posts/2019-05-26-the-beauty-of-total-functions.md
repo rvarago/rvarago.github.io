@@ -181,7 +181,7 @@ Therefore, our humble hint to check for emptiness might not be as rock-solid as 
 
 ## What Happens in our Original Example? 😄
 
-In [C++](https://en.cppreference.com/w/cpp/container/vector/operator_at) pretty anything can happen whenever we try to access the array outside of its bounds. More formally:
+In [C++](https://en.cppreference.com/w/cpp/container/vector/operator_at) pretty much anything can happen when we try to access an array outside of its bounds. Put more formally:
 
 > Accessing an element of `std::vector<T> vec` at index `i`, which is out-of-bounds (i.e. `i ≥ vec.size()`) is undefined behaviour.
 
@@ -235,9 +235,9 @@ This means that the function is not well-defined (i.e. fails) for one (or more) 
 
 Back to our example:
 
-> An empty `std::vector<int>{}` is a value of the type `std::vector <int>`.
+> An empty `std::vector<int>{}` is a value of the type `std::vector<int>`.
 
-Therefore, we can provide an empty list to `head`, after all that's a valid value like any other value (e.g. `std::vector <int>{1}` or `std::vector<int>{1, 2}`). However, the function not well-defined for an empty, it fails badly.
+Therefore, we can provide an empty list to `head`, after all that's a valid value like any other value (e.g. `std::vector<int>{1}` or `std::vector<int>{1, 2}`). However, the function not well-defined for an empty, it fails badly.
 
 We have to communicate that `head` may fail.
 
