@@ -130,6 +130,8 @@ There are many benefits of such practice, for example:
   * Consolidates changes into a single place.
   * Prevents inconsistency between modules.
 
+> Structure matters.
+
 It's important to write concise functions that have unique concerns. Moreover, avoid coupling by providing to the function the information that it needs by arguments whenever makes sense to reuse the function with another set of conditions. Hence, the function can be easily plugged. But don't accumulate multiple concerns inside the same function.
 
 An important thing to bear in mind when writing a function is to keep the variables declared inside it at the minimum necessary scope. To achieve this behaviour in Shell Scripts, we declare such variables as `local`, so the variables are only visible within the block in which they appear. Therefore, for functions, the scope is the function's body:
@@ -233,7 +235,7 @@ We should strive to avoid this kind of scenario. We should write cleaner scripts
 
 Granted, the syntax might feel awkward and archaic, but that doesn't mean we absolutely can't enjoy writing our beloved scripts.
 
-I've covered just the tip of the iceberg, that are many more topics, such as organizing scripts and sourcing, helpful commands and their syntax, traps, portability, etc. Yet, I encourage the reader to look up for more information and above all things, have fun while doing so. 
+I've covered just the tip of the iceberg, that are many more topics, such as organizing scripts and sourcing, helpful commands and their syntax, traps, portability, etc. Yet, I encourage the reader to look up for more information and above all things, have fun while doing so.
 
 ## References
 
