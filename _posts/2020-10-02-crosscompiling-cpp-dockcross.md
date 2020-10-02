@@ -170,7 +170,7 @@ That's it!
 Inspecting the executable at `build_armv7/app`, we might see:
 
 ```bash
-file build_armv7/app
+$ file build_armv7/app
 build_armv7/app: ELF 32-bit LSB executable, ARM, EABI5 version 1 (GNU/Linux), dynamically linked, interpreter /lib/ld-linux-armhf.so.3, for GNU/Linux 4.10.8, with debug_info, not stripped
 ```
 
