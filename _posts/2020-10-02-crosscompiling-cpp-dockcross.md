@@ -31,12 +31,12 @@ To cross-compile to a different platform, we need a cross-toolchain.
 
 Our C++ source-code goes through a series of transformations before yielding the final executable, approximately:
 
-1. Pre-processor expands directives present the source-code to yield translation-units.
-2. Compiler compiles the translation-units down to assembly instructions.
-3. Assembler assembles the assembly (quite a funny phrase!) instructions into "incomplete" (missing dependencies) executables.
-4. Linker links our "incomplete" executables and their dependencies to generate the final ("complete") executable.
+1. The pre-processor expands directives (lines starting with `#`) presented in the source-code to generate translation-units.
+2. The compiler compiles the translation-units down to assembly instructions.
+3. The assembler assembles the assembly (quite a funny phrase!) instructions into "incomplete" (lacking dependencies) executables.
+4. The lonker links our "incomplete" executables with their dependencies to generate the final ("complete") executable.
 
-Each step in the sequence ("chain") is normally performed by a specific tool. Hence the set of tools used by the chan give the same "toolchain".
+Each step in the sequence ("chain") is normally performed by a specific tool. Hence the set of tools used by the chan receives the name "toolchain".
 
 > A toolchain is a set of distinct software development tools that are linked (or chained) together by specific stages such as GCC, binutils and glibc [1].
 
@@ -51,11 +51,11 @@ There are plenty of ways to get a toolchain. Generally, they boil down to (i) co
 
 Compiling a toolchain from sources might give us more control over the whole process, at the expense of a steeper learning curve. On the other hand, pre-built toolchains might grant us less control but are usually easier to get things up-and-running. Consequently, there's no right choice here, that's intimately related to your requirements.
 
-In the following sections, we will use a pre-built toolchain from [dockcross](https://github.com/dockcross/dockcross) to show how we can quickly get a toy C++ project cross-compiled ARMv7 and executed on a Raspberry PI 3 (rpi3). Additionally, we will execute our cross-compiled program in an emulator running on our development machine, again, using dockcross.
+In the following sections, we will use a pre-built toolchain from [dockcross](https://github.com/dockcross/dockcross) to show how we can quickly get a toy C++ project cross-compiled for ARMv7 and executed on a Raspberry PI 3 (rpi3). Additionally, we will execute our cross-compiled program in an emulator running on our development machine, again, using dockcross.
 
 ## Example: Native-compiling
 
-As a basic example, we have a C++ executable with a unit-test and a dependency on [GoogleTest](https://github.com/google/googletest). The build is orchestrated with CMake, generating all build artefacts into the `build` directory. The whole procedure takes place on x86-64 development machine equipped running a Linux Distribution.
+As a basic example, we have a C++ executable with a unit-test and a dependency on [GoogleTest](https://github.com/google/googletest). The build is orchestrated with CMake, generating all build artifacts into the `build` directory. The whole procedure takes place on an x86-64 development machine running a Linux Distribution.
 
 Layout:
 
@@ -106,7 +106,7 @@ target_link_libraries(app gtest gtest_main)
 add_test(app app)
 ```
 
-Before we get into the cross-compilation dance, let's first native compile:
+Before we get into the cross-compilation dance, let's first compile it natively:
 
 ```bash
 $ cmake -Bbuild/ && cmake --build build/
@@ -138,13 +138,13 @@ Running main() from /dock-cross-example/build/_deps/googletest-src/googletest/sr
 [  PASSED  ] 1 test.
 ```
 
-That's it! We now want to cross-compile the same program and be able to execute on our rpi3, shall we?
+That's it! We now want to cross-compile the same program and be able to execute  it on our rpi3, shall we?
 
 ## Example: Cross-compiling with dockcross
 
 As we said before, we need a cross-toolchain that runs on our x86-64/Linux and generates an executable, which can then execute on our Raspberry PI 3 with ARMv7/Linux. An easy way to get a cross-toolchain up and running is by using [dockcross](https://github.com/dockcross/dockcross).
 
-Essentially, dockcross offers C and C++ pre-built and configured cross-compiling toolchains for several different platforms as Docker images. By using Docker, we can isolate build tools and artefacts and keep our development work-flow clean. And with a bit of discipline, reproducible. 
+Essentially, dockcross offers C and C++ pre-built and configured cross-compiling toolchains for several different platforms as Docker images. By using Docker, we can isolate build tools and artifacts and keep our development work-flow clean. And with a bit of discipline, reproducible. 
 
 To get-started with dockcross, we must have Docker installed. Then, we can fetch a cross-toolchain for ARMv7/Linux with the following commands:
 
@@ -152,7 +152,7 @@ To get-started with dockcross, we must have Docker installed. Then, we can fetch
 $ docker run --rm dockcross/linux-armv7 > ./dockcross-linux-armv7 && chmod +x ./dockcross-linux-armv7
 ```
 
-That should result in the script `dockcross-linux-armv7`, which we gave permissions to execute. That's our entry-point to cross-compiling and much more.
+That should result in the script `dockcross-linux-armv7`, which we gave permissions to execute it. That's our entry-point to cross-compiling and much more.
 
 `dockcross-linux-armv7` receives commands and runs them inside a Docker container, which ships with a pre-built and configured cross-toolchain that we can then use to cross-compile for ARMv7/Linux. Additionally, the Docker container comes with other tools commonly used for C++ development, e.g. CMake.
 
