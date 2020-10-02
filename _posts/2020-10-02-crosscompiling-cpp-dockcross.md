@@ -34,7 +34,7 @@ Our C++ source-code goes through a series of transformations before yielding the
 1. The pre-processor expands directives (lines starting with `#`) presented in the source-code to generate translation-units.
 2. The compiler compiles the translation-units down to assembly instructions.
 3. The assembler assembles the assembly (quite a funny phrase!) instructions into "incomplete" (lacking dependencies) executables.
-4. The lonker links our "incomplete" executables with their dependencies to generate the final ("complete") executable.
+4. The linker links our "incomplete" executables with their dependencies to generate the final ("complete") executable.
 
 Each step in the sequence ("chain") is normally performed by a specific tool. Hence the set of tools used by the chan receives the name "toolchain".
 
@@ -45,7 +45,7 @@ As a side-note, when the host and target platforms do match, we then have the so
 
 > We sometimes refer to the whole build chain as "compilation", and often to cross-toolchain as a cross-compiler. That should be fine™.
 
-We need a cross-toolchain for each specific platform where would like to execute code on, say ARMv7 + Linux.
+We need a cross-toolchain for each specific platform where would like to execute our program on, say ARMv7 + Linux.
 
 There are plenty of ways to get a toolchain. Generally, they boil down to (i) compile one from sources, (ii) use a pre-built toolchain.
 
