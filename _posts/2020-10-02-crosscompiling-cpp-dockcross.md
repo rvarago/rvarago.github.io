@@ -154,7 +154,7 @@ $ docker run --rm dockcross/linux-armv7 > ./dockcross-linux-armv7 && chmod +x ./
 
 That should result in the script `dockcross-linux-armv7`, which we gave permissions to execute. That's our entry-point to cross-compiling and much more.
 
-`dockcross-linux-armv7` receives commands and runs them inside a Docker container, which ships with a pre-built and configured cross-toolchain that we can then use to cross-compile for ARMv7/Linux. Additionally, the Docker container comes with other tools commonly used for C++ development, e.g. as CMake. 
+`dockcross-linux-armv7` receives commands and runs them inside a Docker container, which ships with a pre-built and configured cross-toolchain that we can then use to cross-compile for ARMv7/Linux. Additionally, the Docker container comes with other tools commonly used for C++ development, e.g. CMake.
 
 Let's cross-compile our project and put the build artifacts into the `build_armv7` directory:
 
