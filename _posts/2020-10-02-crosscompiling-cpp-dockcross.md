@@ -9,9 +9,9 @@ title:  "Cross-Compiling C++ Projects with dockcross"
 
 * * *
 
-|![Spooky type](/assets/img/2020-10-02-crosscompiling-cpp-dockcross_header.png)|
+|![Cross-compiling C++ code](/assets/img/2020-10-02-crosscompiling-cpp-dockcross_header.png)|
 |:--:| 
-| *Cross-compiling C++: x86-64/Linux -> ARMv7/Linux.*|
+| *Cross-compiling C++: x86-64/Linux -> ARMv7/Linux. [sketchpad.io](https://sketch.io/sketchpad)*|
 
 Software that executes on a different platform than the one we used to write it has to be cross-compiled.
 
@@ -138,7 +138,7 @@ Running main() from /dock-cross-example/build/_deps/googletest-src/googletest/sr
 [  PASSED  ] 1 test.
 ```
 
-That's it! We now want to cross-compile the same program and be able to execute  it on our rpi3, shall we?
+That's it! We now want to cross-compile the same program and be able to execute it on our rpi3, shall we?
 
 ## Example: Cross-compiling with dockcross
 
@@ -224,7 +224,7 @@ In our example, we cross-compiled for the Raspberry Pi. However, dockcross comes
 dockcross is just _one_ possible option, and not the _single_ option.
 We may also want to consider other solutions as well, for instance [crosstool-NG](https://crosstool-ng.github.io/), [raspberrypi/tools](https://github.com/raspberrypi/tools), a fully-fledge [Yocto](https://www.yoctoproject.org/), [Nix](https://nixos.wiki/wiki/Cross_Compiling), rolling our own Docker images, etc.
 
-Moreover, it might worth exploring how the tooling other programming languages does cross-compilation, e.g [Rust's cross](https://github.com/rust-embedded/cross) or [Go's GOOS/GOARCH](https://golang.org/pkg/runtime/):
+Moreover, it might worth exploring how the tooling other programming languages supports cross-compilation, e.g [Rust's cross](https://github.com/rust-embedded/cross) or [Go's GOOS/GOARCH](https://golang.org/pkg/runtime/):
 
 ```bash
 cross build --target armv7-unknown-linux-gnueabihf  # Rust (+ cross).
