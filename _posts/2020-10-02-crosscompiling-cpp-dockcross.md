@@ -226,7 +226,7 @@ In our example, we cross-compiled for the Raspberry Pi. However, dockcross has s
 Additionally, dockcross ships with more tools that can be useful in the development process. Therefore, I'd encourage to check the documentation and give it a try.
 
 Moreover, dockcross is just _one_ possible option, and not the _single_ option.
-Therefore we may also want to consider other solutions as well, for instance [crosstool-NG](https://crosstool-ng.github.io/), [raspberrypi/tools](https://github.com/raspberrypi/tools), a fully-fledge [Yocto](https://www.yoctoproject.org/), [Nix](https://nixos.wiki/wiki/Cross_Compiling), roll our own Docker images, etc.
+Hence, we may also want to consider other solutions as well, for instance [crosstool-NG](https://crosstool-ng.github.io/), [raspberrypi/tools](https://github.com/raspberrypi/tools), a fully-fledge [Yocto](https://www.yoctoproject.org/), [Nix](https://nixos.wiki/wiki/Cross_Compiling), roll our own Docker images, etc.
 
 Furthermore, it might worth exploring how the tooling around other programming languages support cross-compilation, e.g [Rust's cross](https://github.com/rust-embedded/cross) or [Go's GOOS/GOARCH](https://golang.org/pkg/runtime/):
 
