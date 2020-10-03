@@ -138,7 +138,9 @@ Running main() from /dock-cross-example/build/_deps/googletest-src/googletest/sr
 [  PASSED  ] 1 test.
 ```
 
-That's it! We now want to cross-compile the same program and be able to execute it on our rpi3, shall we?
+That's it!
+
+We now want to cross-compile the same program and be able to execute it on our rpi3, shall we?
 
 ## Example: Cross-compiling with dockcross
 
@@ -221,10 +223,12 @@ We've discussed the role that cross-compiling plays in embedded software develop
 
 In our example, we cross-compiled for the Raspberry Pi. However, dockcross comes with many more cross-toolchains available in different Docker images.
 
-dockcross is just _one_ possible option, and not the _single_ option.
-We may also want to consider other solutions as well, for instance [crosstool-NG](https://crosstool-ng.github.io/), [raspberrypi/tools](https://github.com/raspberrypi/tools), a fully-fledge [Yocto](https://www.yoctoproject.org/), [Nix](https://nixos.wiki/wiki/Cross_Compiling), rolling our own Docker images, etc.
+dockcross comes with more tools that can be useful in the development process. Therefore, I'd encourage to check the documentation and give it a try.
 
-Moreover, it might worth exploring how the tooling other programming languages supports cross-compilation, e.g [Rust's cross](https://github.com/rust-embedded/cross) or [Go's GOOS/GOARCH](https://golang.org/pkg/runtime/):
+Moreover, dockcross is just _one_ possible option, and not the _single_ option.
+We may also want to consider other solutions as well, for instance [crosstool-NG](https://crosstool-ng.github.io/), [raspberrypi/tools](https://github.com/raspberrypi/tools), a fully-fledge [Yocto](https://www.yoctoproject.org/), [Nix](https://nixos.wiki/wiki/Cross_Compiling), roll our own Docker images, etc.
+
+Furthermore, it might worth exploring how the tooling around other programming languages support cross-compilation, e.g [Rust's cross](https://github.com/rust-embedded/cross) or [Go's GOOS/GOARCH](https://golang.org/pkg/runtime/):
 
 ```bash
 cross build --target armv7-unknown-linux-gnueabihf  # Rust (+ cross).
@@ -232,8 +236,6 @@ GOARCH=arm GOOS=linux go build                      # Go.
 ```
 
 Perhaps we could adapt some ideas to C++. Or, depending on your requirements, consider developing with one of those languages.
-
-Furthermore, dockcross comes with more tools that can be useful in the development process. Therefore, I'd encourage to check the documentation and give it a try.
 
 Happy cross-compiling!
 
