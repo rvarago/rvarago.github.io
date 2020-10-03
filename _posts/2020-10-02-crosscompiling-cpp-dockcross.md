@@ -221,12 +221,12 @@ That's neat! Think of unit-tests as part of the CI process.
 
 We've discussed the role that cross-compiling plays in embedded software development. We briefly saw what a toolchain is. Then we glanced over dockcross, which gave us a pre-built cross-compiling toolchain that we later used to cross-compile a toy C++ example and even executed it in an emulator running on our development machine.
 
-In our example, we cross-compiled for the Raspberry Pi. However, dockcross comes with many more cross-toolchains available in different Docker images.
+In our example, we cross-compiled for the Raspberry Pi. However, dockcross has support for many other cross-toolchains, which are available in different Docker images.
 
-dockcross comes with more tools that can be useful in the development process. Therefore, I'd encourage to check the documentation and give it a try.
+Additionally, dockcross ships with more tools that can be useful in the development process. Therefore, I'd encourage to check the documentation and give it a try.
 
 Moreover, dockcross is just _one_ possible option, and not the _single_ option.
-We may also want to consider other solutions as well, for instance [crosstool-NG](https://crosstool-ng.github.io/), [raspberrypi/tools](https://github.com/raspberrypi/tools), a fully-fledge [Yocto](https://www.yoctoproject.org/), [Nix](https://nixos.wiki/wiki/Cross_Compiling), roll our own Docker images, etc.
+Therefore we may also want to consider other solutions as well, for instance [crosstool-NG](https://crosstool-ng.github.io/), [raspberrypi/tools](https://github.com/raspberrypi/tools), a fully-fledge [Yocto](https://www.yoctoproject.org/), [Nix](https://nixos.wiki/wiki/Cross_Compiling), roll our own Docker images, etc.
 
 Furthermore, it might worth exploring how the tooling around other programming languages support cross-compilation, e.g [Rust's cross](https://github.com/rust-embedded/cross) or [Go's GOOS/GOARCH](https://golang.org/pkg/runtime/):
 
