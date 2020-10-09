@@ -361,6 +361,8 @@ We've merely scratched the surface of ADTs. We've introduced some of the notatio
 
 Apart from product and sum types, there are other ADTs (e.g. exponential and derivative), but I'd rather omit those in this introductory (and already lengthy) text, given that products and sums should provide a good framework to get us started on the matter.
 
+> There's even a far deeper and beautiful connection between ADTs and Logical Connectives, namely "Propositions as Types". See [Programming Language Foundations in Agda](https://plfa.github.io/Connectives) for reference.
+
 Applications for ADTs are many, they allow us to model requirements in the type system, rather than relying solely on checks that are carried in run time.
 
 In the end, the goal is to take the type system into our best advantage. Thus the more expressive a type system is, the higher is the chance that it'll help us to prevent some (but surely not all) mistakes.
@@ -385,6 +387,8 @@ Stay tuned.
 [3] [Category Theory for Programmers. Bartosz Milewski.](https://bartoszmilewski.com/2014/10/28/category-theory-for-programmers-the-preface/)
 
 [4] [Basic Category Theory. Tom Leinster.](https://www.cambridge.org/core/books/basic-category-theory/A72533879BBC7BD956CC415777B7DA99)
+
+[5] [Programming Language Foundations in Agda.](https://plfa.github.io/Connectives)
 
 ***
 *Originally published at [https://medium.com/@rvarago](https://medium.com/@rvarago)*
