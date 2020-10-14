@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Function Composition of STL Algorithms with Ranges"
+tags:   stl fp c++
 ---
 
 > STL is a fantastic tool that C++ provides us and using makes our code more expressiveness, cleaner, and correct. However, STL algorithms may sometimes involve a bit of boilerplate, especially when it comes to function composition, where we want to chain a sequence of operations. Fortunately, the Ranges library is about to make it better and simpler.

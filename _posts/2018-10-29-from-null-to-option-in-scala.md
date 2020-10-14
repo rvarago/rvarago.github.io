@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "From null to Option in Scala"
+tags:   adt fp scala
 ---
 
 > NULL, nullptr, null, etc. have been used to represent the absence of values for many years, but there are better alternatives to model this scenario. In Scala, the answer is usually Option.

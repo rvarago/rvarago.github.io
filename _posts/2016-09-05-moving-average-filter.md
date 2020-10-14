@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Moving Average Filter"
+tags:   dsp
 ---
 
 > A simple, yet useful linear filter.

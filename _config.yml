@@ -12,6 +12,7 @@ medium_username: rvarago
 header_pages:
   - index.html
   - about.md
+  - tags.html
 
 markdown: kramdown
 theme: minima

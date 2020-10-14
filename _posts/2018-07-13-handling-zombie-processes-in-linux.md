@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Handling Zombie Processes in Linux"
+tags:   linux
 ---
 
 > What a zombie process in the Linux system is, how it arises and how to kill them for good.

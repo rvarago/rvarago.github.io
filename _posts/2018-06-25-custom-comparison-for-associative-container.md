@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Custom Comparison for Associative Container"
+tags:   stl c++
 ---
 
 > For STL associative containers, the type of keys stored must be comparable. Although in some cases you might want to supply an alternative comparison function.

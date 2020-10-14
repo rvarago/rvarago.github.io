@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Introduction to Google Guice for DI"
+tags:   java
 ---
 
 > Guice is a Java framework that aims to simplify the application of the Dependency Injection pattern to minimize coupling between modules.

@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Be Proud of your Shell Scripts"
+tags:   linux bash
 ---
 
 > Automation is not only a fancy trend but rather a reality that plays a vital role in the Software Engineering world. Besides the multitude of "modern" tools, the Shell, our good and old friend from '70s, still plays and will keep playing a major role. Therefore, it deserves more care. Let's be prouder of our shell scripts.

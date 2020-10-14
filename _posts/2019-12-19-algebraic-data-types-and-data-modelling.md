@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Algebraic Data Types and Data Modelling"
+tags:   type-system adt fp c++ haskell
 ---
 
 > Programming is about composition. We usually tackle a problem by breaking it up into smaller and more manageable tasks, which are then composed together into the final solution. Types can play an important role in assisting us.

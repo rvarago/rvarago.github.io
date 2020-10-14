@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Expressiveness, Nullable Types, and Composition"
+tags:   adt absent fp c++
 ---
 
 > _absent_ is a tiny open-source C++ library meant to simplify the composition of nullable types in a generic, type-safe, and declarative style.

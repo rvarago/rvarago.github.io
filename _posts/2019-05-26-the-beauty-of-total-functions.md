@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "The Beauty of Total Functions"
+tags:   math adt fp c++ haskell
 ---
 
 > The joys of APIs that don't lie to us.

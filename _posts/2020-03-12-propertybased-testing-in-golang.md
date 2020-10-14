@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Property-based Testing in Golang"
+tags:   tests golang
 ---
 
 > Testing is a critical part of software development. Let's see how property-based testing can help us to test our Go programs.

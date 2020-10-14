@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Introduction to CMake for C++"
+tags:   build-system cmake c++
 ---
 
 > Getting started with CMake for building C++ applications.

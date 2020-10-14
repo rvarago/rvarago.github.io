@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Git fix-up Commits: How to Keep your Repository Concise"
+tags:   git
 ---
 
 > Have you ever wasted time looking at your repositories because of commits that didn't add any value to the project's story? Some of the most common start with "fix-up…". By avoiding these commits, the repository tends to become easier to understand, as we can then focus on the bigger story that the project is trying to tell, not small details.

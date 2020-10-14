@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Quick Look at GoogleTest for C++"
+tags:   tests c++
 ---
 
 > A quick look at GoogleTest library for automated testing in C++.

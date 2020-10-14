@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Object Instantiation, Immutability, and the Expression-Oriented Style"
+tags:   fp c++ haskell
 ---
 
 > Declarative Programming encourages us writing programs by composing expressions rather than statements as we usually do in Imperative Programming. Let's briefly see how we can from this style of programming.

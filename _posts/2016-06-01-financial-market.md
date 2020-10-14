@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Financial Market"
+tags:   economics
 ---
 
 > A brief discussion about the Financial Market and its ramifications.

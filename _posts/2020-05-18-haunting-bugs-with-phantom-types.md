@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Haunting Bugs with Phantom Types"
+tags:   type-system adt fp c++
 ---
 
 > Phantom types are useful to encode information about how, when, and where values are supposed to be used, which can catch a class of bugs early.

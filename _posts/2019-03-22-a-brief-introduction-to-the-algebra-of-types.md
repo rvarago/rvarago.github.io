@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "A Brief Introduction to the Algebra of Types"
+tags:   math adt fp c++ haskell
 ---
 
 > It's been common to find talks and articles describing what an Algebraic Data Types (ADT) is. Particularly, we've been testifying sum types finally making their way into mainstream programming languages. We shall briefly discuss ADTs and understand how we can profit from this cool trend.

@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Refactoring a CMake Build System"
+tags:   build-system cmake c++
 ---
 
 > A piece of advice that may help when porting a build system based on CMake to use a modular approach following the so-called Modern CMake set of practices.

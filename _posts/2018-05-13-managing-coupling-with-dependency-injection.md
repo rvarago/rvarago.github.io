@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Managing Coupling with Dependency Injection"
+tags:   c++
 ---
 
 > Managing dependencies between modules is a critical part of software development. The goal is to design flexible programs that are able to change without incurring into high-costs. 

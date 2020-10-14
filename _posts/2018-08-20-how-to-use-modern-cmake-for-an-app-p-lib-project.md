@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "How to Use Modern CMake for an App + Lib Project"
+tags:   build-system cmake c++
 ---
 
 > An example of how to apply some of the so-called "Modern CMake" to build a simple project composed by an executable that uses a library.

@@ -1,11 +1,11 @@
 ---
 layout: "post"
 title:  "Cross-Compiling C++ Projects with dockcross"
+tags:   linux docker build-system embedded c++
 ---
 
 > Cross-compilation has a huge impact on the development of cross-platform C++ embedded software.
 > Therefore we have plenty of tools to help us, and dockcross is one of them, which we will briefly discuss.
-
 
 * * *
 

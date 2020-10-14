@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "A Quick Introduction to Docker"
+tags:   linux docker
 ---
 
 > Docker simplifies application deployments that should run in "lightweight virtual-machines" within isolated environments.

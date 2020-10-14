@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Introduction to OOP in Golang"
+tags:   oop golang
 ---
 
 > Getting started with Object-Oriented Programming (OOP) in Golang (Go).

@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Groovy - Some Cool Features"
+tags:   groovy oop fp
 ---
 
 > Groovy has plenty of cool features, let's look at some of them.

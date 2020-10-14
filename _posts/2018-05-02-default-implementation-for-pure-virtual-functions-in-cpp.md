@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Default Implementation for Pure Virtual Functions in C++"
+tags:   c++
 ---
 
 > C++ allows default implementation for pure virtual member-functions.

@@ -1,6 +1,7 @@
 ---
 layout: "post"
 title:  "Extract Transform and Load"
+tags:   etl db
 ---
 
 > A critical component of Business Intelligence (BI) process: Extract, Transform and Load (ETL).
