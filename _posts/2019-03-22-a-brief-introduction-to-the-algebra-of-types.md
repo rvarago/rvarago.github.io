@@ -216,15 +216,15 @@ ADTs offer a mechanism to design expressive abstractions on top of elementary co
 
 A particularly interesting component that gets mixed in the composition of ADTs is the _recursive_ definition of data structures.
 
-A recursive type is a type whose definition is part of itself. A linked list is a common example, which can be expressed in Haskell as:
+A recursive data type is a type whose definition is part of itself. A linked list is a common example, which can be expressed in Haskell as:
 
 ```haskell
 data [] a = [] | a : [a]
 ```
 
-Meaning that a generic linked list `[]` parametrized over `a` is either empty (`[]`), or (`|`) it contains an element of type `a` (head), concatenated by `:` with a sub-list `[a]` (tail). This definition shows that a linked-list can be expressed a sum type.
+Meaning that a generic linked list `[]` parametrized over `a` is either empty (`[]`), or (`|`) it contains an element of type `a` (head), concatenated by `:` with a sub-list `[a]` (tail). For instance, a list with elements `1` and `2` is represented as `[1,2]`, which is sugar for `1 : 2 : []`.
 
-The expression for the cardinality looks like the following recurrence relation:
+The definition shows that a linked list can be expressed a sum type. And the expression for its cardinality looks like the following recurrence relation:
 
 > #List a = 1 + a * (#List a)
 >
@@ -236,9 +236,11 @@ The expression for the cardinality looks like the following recurrence relation:
 >
 > ⇨ #List a = 1 + a + a^2 + a^3 + ... + a^n 
 
-Meaning that a list of elements `a` is either empty (`1`), or has one element (`a`), or two elements (`a^2`), or three elements (`a^3`), ..., or *n* elements (`a^n`). 
+That is:
 
-Binary trees can also be expressed as recursive types. We can represent a binary tree in Haskell as:
+> A list of elements of type `a` is either empty (`1`), or has one element (`a`), or two elements (`a^2`), or three elements (`a^3`), ..., or *n* elements (`a^n`). 
+
+Further, a binary tree can also be expressed as a recursive data type in Haskell:
     
 ```haskell
 data BinaryTree a = Leaf a | Node (BinaryTree a) a (BinaryTree a)
