@@ -236,6 +236,8 @@ The expression for the cardinality looks like the following recurrence relation:
 >
 > ⇨ #List a = 1 + a + a^2 + a^3 + ... + a^n 
 
+Meaning that a list of elements `a` is either empty (`1`), or has one element (`a`), or two elements (`a^2`), or three elements (`a^3`), ..., or *n* elements (`a^n`). 
+
 Binary trees can also be expressed as recursive types. We can represent a binary tree in Haskell as:
     
 ```haskell
