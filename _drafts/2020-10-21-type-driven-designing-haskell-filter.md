@@ -139,7 +139,7 @@ By being extremely precise, we start our design with types, letting them guide o
 
 > The type-checker becomes our programming assistant.
 
-That's the basics of Type-Driven Development, or rather the part of the whole story that we are concerned in this post.
+That's the basics of Type-Driven Development (or Design?), or rather the part of the whole story that we are concerned in this post.
 
 Let's see how we may apply the idea to develop our own version `filter`, which we will initially call `magic`.
 
@@ -372,7 +372,7 @@ newtype Qtd = Qtd Int
 
 Equipped with parametricity and types that precisely maps to our domain objects, we have managed to encode useful information at the type-level, which was then translated into discipline imposed on the implementation, ultimately letting the types drive our design.
 
-By following a type-driven design approach, we have used types to express a plan (**what** we want to accomplish), then we implement the program (**how** we want to accomplish) in such a way that the types must be satisfied. The type-checker became our assistant and verified properties for us.
+By following a type-driven design approach, we have used types to express a plan (**what** we want to accomplish), then we implement the program (**how** we want to accomplish) in such a way that the types must be satisfied. The type-checker becomes our assistant and verifies properties along the process for us.
 
 However, that comes at a cost. Arguably, both type-signatures and implementations may have become more complex, and we mixed two concerns (predicate + transformation). Being pragmatic, sometimes a less precise design *may* serve us just as good.
 
@@ -380,13 +380,15 @@ Even though we have used Haskell in this exposition, the underlying principles s
 
 It is important to emphasize that:
 
-> Type-Driven Design does not substitute proper automated tests, rather they collaborate. Moreover, a proper suite of unit-tests could have easily caught the mistakes in the wrong implementation. Conclusively, it is much better to combine types **with** tests.
+> Type-Driven Development does not substitute proper automated tests, rather they collaborate. Moreover, a proper suite of unit-tests could have easily caught the mistakes in the wrong implementation.
+> 
+> Conclusively, it is much better to combine types **with** tests.
 
 Nevertheless, I very much like letting types help with my design. Especially the relief when the type-checker refuses my code due to a type-mismatch caused by a wrong refactoring.
 
 Furthermore, types serve as "extra-specification", which is automatically verified by the compiler. Consequently, as a good specification, it can help other programmers reading our code and trying to reason about it in isolation (locally).
 
-> Types are not only about imposing discipline on programs, but also about communicating ideas and guide usage.
+> Types are not only about imposing discipline on programs, but also about communicating ideas and guiding usage.
 
 For example, a function such as:
 
