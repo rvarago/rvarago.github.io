@@ -98,7 +98,7 @@ What should the following program print?
 
 That would either be `[2, 4]` (`even` evaluates to true) or `[1, 3, 5]` (`even` evaluates to false).
 
-It turns out that `filter` returns `[2, 4]`! That is, all elements `x` for which the predicate `even x` evaluates to true.
+Turns out that `filter` returns `[2, 4]`! That is, all elements `x` for which the predicate `even x` evaluates to true.
 
 Consequently, here's how an implementation of `filter` might look like:
 
