@@ -51,7 +51,7 @@ Unless we build an encapsulation layer on top of this type to enforce its validi
 
 ## Make it Optional, or Shouldn't I?
 
-One way to act upon the issue is by re-writing the type and lif members that are _per-state-nullable_ into pointers and use `nullptr` to express emptiness.
+One way to act upon the issue is by re-writing the type and lift its members that are _per-state-nullable_ into pointers and use `nullptr` to express emptiness.
 
 Alternatively, and normally more robustly, we could lift such members into [optional types]({{ site.baseurl }}{% link _posts/2019-03-22-a-brief-introduction-to-the-algebra-of-types.md %}):
 
@@ -69,9 +69,9 @@ template <typename T>
 
 Now, we represent "empty" types with null options, i.e. `std::nullopt`. The code compiles just as fine even for a type `T` where a default constructor is not available.
 
-However, I would argue that it simply patches the issue up, rather than properly fixing it. We are still able to represent invalid scenarios, i.e. we can access `payload` when `state` equals to `Failure`.
+However, I would argue that it simply patches the issue up (maybe even makes things worse), rather than properly fixing it. We are still able to represent invalid scenarios, i.e. we can access `payload` when `state` equals to `Failure`.
 
-I strongly believe we can do much better.
+I firmly believe we can do much better.
 
 We might want to trigger a compilation error when the user attempts to trigger such invalid operations as opposed to an error that only shows up during runtime when it might be too late (or worse, missed).
 
@@ -85,7 +85,7 @@ From an ADT's perspective, the fundamental issue is that the type `ReadResult<T>
 
 The trailing _2_ is due to the two possible values of `State` (either `Success` **or** `Failure`), hence _#State = 2_.
 
-To express the idea of "letting each state have only the members that make sense to it", we can use a **sum** type:
+To express the idea of "letting each state having only the members that make sense to it", we can use a **sum** type:
 
 ```cpp    
 template <typename T>  
@@ -139,13 +139,13 @@ type ReadResult a = Either String a
 
 The idea of composing product and sum types is fairly powerful and can unlock new design possibilities that are interesting to have in our toolbox.
 
-ADTs are particularly suitable when designing state machines (e.g. game engines, communication protocols, etc. That is the case when states are allowed to share some attributes (product), but some attributes only make sense in specific states (sum).
+ADTs are particularly suitable when designing state machines, e.g. game engines, communication protocols, etc. That is the case when states are allowed to share some attributes (product), but some attributes only make sense in specific states (sum).
 
-Furthermore, there are other, albeit more exotic, kinds of ADTs built on top of products and sums, for instance, PI types, where types can depend on values. PI types can help us to define powerful invariants that are verified at compile-time. I would recommend checking them out.
+Furthermore, there are other, albeit more exotic, kinds of ADTs built on top of products and sums, for instance, PI types, where types can depend on values, which can help us to define powerful invariants that are verified at compile-time.
 
-ADTs are useful tools to keep in mind. Quite often they can be used to solve real-world problems and help us to write more expressive and correct code by binding possible states and their values together. By allowing the type-system to work on our behalf, we can banish illegal states even before it our code gets executed.
+ADTs are useful tools to keep in mind, as they can be used to solve real-world problems and help us to write more expressive and correct code by binding possible states and their values together. By allowing the type-system to work on our behalf, we can banish illegal states even before our code gets executed.
 
-Lastly, it's up to you, my fellow developer, to decide which tools fit better into each requirement that you happen to be working on. Know your alternatives (no pun intended) and choose them wisely.
+Lastly, it's up to you, my fellow developer, to decide which tools fit better into each requirement that you happen to be working on. Know your alternatives and choose them wisely.
 
 ## References
 
