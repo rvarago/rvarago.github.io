@@ -337,7 +337,7 @@ even x = if x `mod` 2 == 0
             else Nothing
 ```
 
-Notice that nothing has changed, except that we are wrapping the integer `x` in an `EvenInt`.
+Notice that nothing has changed, except that we are wrapping the primitive integer `x` in an `EvenInt`.
 
 Once we call `even x`, we not only know whether `x` is even or not, we are now also preserving this evidence (knowledge)! We can thus pass the evidence to other functions down the chain.
 
@@ -355,7 +355,7 @@ We have restored our ability to reason locally about our code.
 
 ## Conclusion
 
-The principles behind pretty much everything that we have seen in this post are **parametricity** and **proper mapping of concepts into types**.
+The principles behind pretty much everything that we have seen in this post are **parametricity** and **proper mapping of concepts into strong types**.
 
 When we quantify a property for all types, we are making a bold statement, which has to hold for whatever concrete type we feed into the property.
 
@@ -399,12 +399,12 @@ buy :: ProductId -> Qtd -> IO ()
 Further, it would be harder to use incorrectly:
 
 ```haskell
-let bookId = 10 :: Int
-let totalBooks = 3 :: Int
+let bookId = ProductId 10     -- Instead of `bookId = 10 :: Int`.
+let totalBooks = Qtd 3        -- instead of `totalBooks = 3 ::Int`.
 buy totalBooks bookId         -- Oops! I meant `buy bookId totalBooks`.
 ```
 
-This snippet would erroneously compile in the former version of `buy`, but correctly fail with a clear type-error in the latter.
+This snippet would erroneously compile in the former version of `buy` (with primitive integers), but correctly fail with a clear type-error in the latter (with stronger types) and thereby preventing a bug.
 
 In a future post, I intend to write more about type-driven development, and other use-cases of it. Stay tuned!
 
