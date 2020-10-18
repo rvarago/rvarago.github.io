@@ -4,7 +4,9 @@ title:  "Type-driven Designing Haskell's Filter"
 tags:   type-system fp haskell
 ---
 
-> A type-system imposes discipline on programs. And we can make the best out of it by employing correct, precise, and expressive types; sometimes even letting the type-system assisting us in our design. Equipped with well-crafted user-defined types, we can then make some illegal states unrepresentable. Further, types are great to disambiguate and communicate ideas to fellow programmers.
+> A type-system imposes discipline on programs. And we can make the best out of it by employing correct, precise, and expressive types; sometimes even letting the type-system assisting us in our design. Equipped with well-crafted user-defined types, we can then make some illegal states unrepresentable.
+>
+> Additionally, types are great to disambiguate and communicate ideas to fellow programmers.
 
 * * *
 
@@ -12,7 +14,7 @@ tags:   type-system fp haskell
 |:--:|
 | *Types impose constraints and enforce invariants. [sketchpad.io](https://sketch.io/sketchpad)*|
 
-Functional Programming comes with its vocabulary (actually, any programming paradigm, for what's worth), and sometimes we might be able to figure out everything that has to be figured about a higher-order function just by looking at its name.
+Functional Programming comes with its vocabulary (actually, any programming paradigm, for what's worth), and sometimes we might be able to figure out everything that is to be known about a higher-order function just by looking at its name.
 
 Consider `map` as an example:
 
@@ -28,11 +30,11 @@ Even if `map` were called `magic`, we could guess what it does:
 
 `magic` returns a list of elements of type `b`. But it has to work for all types `b` that users of `magic` will ever pass in, without exceptions.
 
-Hence `magic` can't just conjure up a value of type `b` out of thin-air; say if we had specialized `b` to be `Int`, then we would have known everything about it, namely its constructors, and thus we could have simply returned `0` (or any other integer). However, by parameterizing for all types `b` we have made a strong statement: it has to work **for all** types `b`, and therefore we are not allowed to make assumptions about the capabilities of `b`'.
+Hence `magic` can't just conjure up a value of type `b` out of thin-air. Say, if we had specialized `b` to be `Int`, then we would have known everything about it, namely its constructors, and thus we could have simply returned `0` (or any other integer). However, by parameterizing for all types `b` we have made a strong statement: it has to work **for all** types `b`, and therefore we are not allowed to make assumptions about the capabilities of `b`.
 
-The only way to produce a value of type `b` is by applying the function `a -> b` that we have received as an argument. To apply the function `a -> b`, we first need a value of type `a`, which again has to work for all types `a`, and thus we cannot produce values of type `a`.
+The only way to produce a value of type `b` is by applying the function `a -> b` that we have received as an argument. And to apply the function `a -> b`, we first need a value of type `a`, which again has to work for all types `a`, and thus we cannot produce values of type `a`.
 
-Fortunately, we have a list of elements of type `a` and we know everything that has to be known about lists, namely how to traverse it through recursion. Therefore we can traverse the list of elements of type `a`, feeding each element into `a -> b`, and collecting the resulting `b`s into a list. That is our return value.
+Fortunately, we have a list of elements of type `a` and we know everything that is to be known about lists, namely how to traverse it through recursion. Therefore we can traverse the list of elements of type `a`, feeding each element into `a -> b`, and collecting the resulting `b`s into a list, which we then return.
 
 The central part is:
 
@@ -63,7 +65,7 @@ Let's use `map` to add 10 to each element of a list of integers ranging from 1 t
 
 That was `map`.
 
-But luckily we have plenty of other higher-order functions. Particularly interesting for this post, we shall be considering `filter`:
+Luckily we have plenty of other higher-order functions. And of particular interest for this post, we shall be considering `filter`:
 
 ```haskell
 filter :: (a -> Bool) -> [a] -> [a]
@@ -79,9 +81,9 @@ Next to its name, I tend to look for clues at its type.
 
 > Give me a function of type `a -> Bool` (i.e a predicate) and a list of elements of type `a`, then I shall return you a list of elements of type `a`.
 
-`filter` returns a list of type `[a]`, presumably drawn from the input list, which also has the type `[a]`. How? The type of the predicate does not tell us much in this regard, it's "just" a boolean. Perhaps `filter` keeps elements for which the predicate evaluates to true. Although, in theory, it could very well keep elements for which the predicate evaluates to false.
+`filter` returns a list of type `[a]`, presumably drawn from the input list, which also has the type `[a]`. How? The type of the predicate does not tell us much in this regard, it's "just" a boolean. Perhaps `filter` keeps elements for which the predicate evaluates to **true**. Although, in theory, it could very well keep elements for which the predicate evaluates to **false**.
 
-More concretely, given a function `even` that checks whether a given integer `x` is even:
+More concretely, given a function `even` that checks whether an integer `x` is even:
 
 ```haskell
 even :: Int -> Bool
@@ -94,7 +96,7 @@ What should the following program print?
 λ filter even [1..5]
 ```
 
-That would either be `[2, 4]` (predicate evaluates to true) or `[1, 3, 5]` (predicate evaluates to false).
+That would either be `[2, 4]` (`even` evaluates to true) or `[1, 3, 5]` (`even` evaluates to false).
 
 It turns out that `filter` returns `[2, 4]`! That is, all elements `x` for which the predicate `even x` evaluates to true.
 
@@ -127,7 +129,7 @@ The type of `filter` could have told us more about what it does, and as a valuab
 
 [Making illegal states unrepresentable](https://blog.janestreet.com/effective-ml-revisited/) is a famous statement, with powerful consequences. The intuition behind it is as follows:
 
-> We want to be as precise as we can when we pick up the types that we use in our APIs, such that classes of invalid usages of the API would be refused by the type-checker and therefore the program would not compile.
+> We want to be as precise as we can when designing the types that we use in our APIs, such that classes of invalid usages of the API would be refused by the type-checker and therefore the program would not compile successfully.
 
 In other words:
 
@@ -149,7 +151,7 @@ magic :: (a -> Bool) -> [a] -> [a]
 
 We produce a list of `a`s from another list of `a`s.
 
-However, we want to distinguish between the type of the input list and the type of the output list, and therefore we will not be able to simply return the input list unfiltered. Taking inspiration in `map`, let's change the return type from `[a]` to `[b]`:
+However, we want to distinguish between the type of the input list and the type of the output list, and hereby not be able to simply return the input list unfiltered. Taking inspiration in `map`, let's change the return type from `[a]` to `[b]`:
 
 ```haskell
 magic :: (a -> Bool) -> [a] -> [b]
@@ -168,9 +170,9 @@ Generally, we cannot prove that types `a` and `b` are the same, and thus the typ
 
 Oh, wait! We cannot just produce values of type `b` out of nowhere. Further, without any means of producing values of type `b`, we cannot implement `magic` at all. We have made progress, but we are not quite there yet.
 
-Standing on the shoulder of giants once more, we see that `map` requires a function `a -> b`, which is the unique source of wisdom that knows how to produce values of type `b`. Instead of `a -> b`, `magic` requires `a -> Bool`, as it needs to filter elements (that is its purpose, after all).
+Standing on the shoulder of giants once more, we see that `map` requires a function `a -> b`, which is the unique source of wisdom that knows how to produce values of type `b` from `a`. Instead of `a -> b`, `magic` requires `a -> Bool`, as it needs to filter elements (that is its purpose, after all).
 
-Consequently, we can accept a function that knows how to produce `b`s from `a`s. Perhaps something along the following lines would do it:
+Consequently, we can accept an additional function that knows how to produce `b`s from `a`s. Perhaps something along the following lines would do it:
 
 ```haskell
 magic :: (a -> Bool) -> (a -> b) -> [a] -> [b]
@@ -305,13 +307,13 @@ Furthermore, let's say that `bar` also depends on `x` being even to complete its
 
 The decision might be trivial in small programs, `bar` could simply trust `foo` and not call `even` again. However, as the program grows, with calls going through different modules (say `foo` calls `foo1`, which calls `foo2`, ..., which calls `foo10`, which then finally calls `bar`), then matters become far more complicate.
 
-As time goes by, we might decide to refactor the code. Perhaps we notice that `foo` itself does not *really* care whether `x` is even so that we remove the call to `even` inside `foo`, without updating `bar` to call `even`. Sadly, an "innocent" refactoring at one point breaks code located in a fairly remote place.
+As time goes by, we might decide to refactor the code. Perhaps we notice that `foo` itself does not *really* care whether `x` is even so that we remove the call to `even` inside `foo`, without updating `bar`, which now must call `even`. Sadly, an "innocent" refactoring at one point breaks code located in a fairly remote place.
 
-> Spooky action at a distance!
+> Spooky action at a distance! The enemy of local reasoning.
 
-Fundamentally, `bar` had a pre-condition on `x` being even, but it did not make that pre-condition explicit. In other words, `bar` did not encode its pre-condition in the type-system.
+Fundamentally, `bar` had a pre-condition on `x` being even, but it did not make that pre-condition explicit. Not at least as far as the type-system is aware.
 
-The predicate version of `even` (`even :: Int -> Bool`) cannot bring much farther. However, its alternative `even :: Int -> Maybe Int` can! We just need to push it a little more.
+The predicate version of `even` (`even :: Int -> Bool`) cannot help us at all. However, its alternative `even :: Int -> Maybe Int` can! We just need to push it a little more.
 
 As we have said before, a `Just x` produced by `even x` can be regarded as **evidence** that `x` is even. Hence, by following a type-driven approach, we could pick a type other than `Int` for `a` in `Maybe a`. That is, a "special" type like `a`, but equipped with the semantic:
 
@@ -339,7 +341,7 @@ even x = if x `mod` 2 == 0
 
 Notice that nothing has changed, except that we are wrapping the primitive integer `x` in an `EvenInt`.
 
-Once we call `even x`, we not only know whether `x` is even or not, we are now also preserving this evidence (knowledge)! We can thus pass the evidence to other functions down the chain.
+Once we call `even x`, we not only know whether `x` is even or not, we are now also preserving this evidence (knowledge) in the return type `EvenInt`! We can thus pass the evidence to other functions down the chain, which would accept `EventInt`s, instead of plain `Int`s.
 
 Particularly, back to our example, `bar` would accept an `EvenInt`:
 
@@ -351,7 +353,9 @@ Therefore `foo` would mandatorily need to call `even x` in order to get an `Even
 
 We have restored our ability to reason locally about our code.
 
-> `even` might be called a smart-constructor, where we attach extra meaning to some primitive type (e.g. `Int`) by wrapping it inside another type (e.g. `EvenInt`) with more constraints (meaning) than the primitive type it wraps. Furthermore, the type `EvenInt` and its smart-constructor `even` should be properly encapsulated inside a module to limit visibility, such that `even` would be the only place where we can obtain instances of `EvenInt`.
+> `even` might be called a smart-constructor, where we attach extra meaning to some primitive type (e.g. `Int`) by wrapping it inside another type (e.g. `EvenInt`) with more constraints (meaning) than the primitive type it wraps.
+>
+> Furthermore, the type `EvenInt` and its smart-constructor `even` should be properly encapsulated inside a module to limit visibility, such that `even` would be the only place where we can obtain instances of `EvenInt`.
 
 ## Conclusion
 
@@ -359,14 +363,14 @@ The principles behind pretty much everything that we have seen in this post are 
 
 When we quantify a property for all types, we are making a bold statement, which has to hold for whatever concrete type we feed into the property.
 
-Further, when we introduce a type that precisely and unambiguously models a given concept in our domain and restricted where and how we are allowed to produce values of that type, we can treat such values as evidence that we have satisfied some property. Say, if a domain involves *identifiers* and *quantities*, instead of representing both identifier and quantity as a raw integers, we are probably better off by introducing the types `Id` and `Qtd`, wrapping primitive integers. Luckily, programming languages such as Haskell come with a concise notation for it:
+Further, when we introduce a data type that precisely and unambiguously models a given concept in our domain and restricted where and how we are allowed to produce values of that type, we can treat such values as evidence that we have satisfied some property. Say, if a domain involves *identifiers* and *quantities*, instead of representing both identifier and quantity as a raw integers, we are probably better off by introducing the types `Id` and `Qtd`, wrapping primitive integers. Luckily, programming languages such as Haskell come with a concise notation for it:
 
 ```haskell
 newtype Id = Id Int
 newtype Qtd = Qtd Int
 ```
 
-Equipped with parametricity types that precisely maps to our domain objects, we have managed to encode useful information at the type-level, which was then translated into discipline imposed on the implementation, ultimately letting the types drive our design.
+Equipped with parametricity and types that precisely maps to our domain objects, we have managed to encode useful information at the type-level, which was then translated into discipline imposed on the implementation, ultimately letting the types drive our design.
 
 By following a type-driven design approach, we have used types to express a plan (**what** we want to accomplish), then we implement the program (**how** we want to accomplish) in such a way that the types must be satisfied. The type-checker became our assistant and verified properties for us.
 
@@ -376,7 +380,7 @@ Even though we have used Haskell in this exposition, the underlying principles s
 
 It is important to emphasize that:
 
-> Type-Driven Design does not substitute proper automated tests, rather they collaborate. Moreover, a proper suite of unit-tests could have caught the mistakes in the wrong implementation. Therefore it is much better to combine types with tests.
+> Type-Driven Design does not substitute proper automated tests, rather they collaborate. Moreover, a proper suite of unit-tests could have easily caught the mistakes in the wrong implementation. Conclusively, it is much better to combine types **with** tests.
 
 Nevertheless, I very much like letting types help with my design. Especially the relief when the type-checker refuses my code due to a type-mismatch caused by a wrong refactoring.
 
@@ -404,9 +408,7 @@ let totalBooks = Qtd 3        -- instead of `totalBooks = 3 ::Int`.
 buy totalBooks bookId         -- Oops! I meant `buy bookId totalBooks`.
 ```
 
-This snippet would erroneously compile in the former version of `buy` (with primitive integers), but correctly fail with a clear type-error in the latter (with stronger types) and thereby preventing a bug.
-
-In a future post, I intend to write more about type-driven development, and other use-cases of it. Stay tuned!
+This snippet would erroneously compile in the former version of `buy` (with primitive integers), but correctly fail with a clear type-error in the latter (with stronger types) and thereby preventing a bug from slipping in.
 
 ## References
 
