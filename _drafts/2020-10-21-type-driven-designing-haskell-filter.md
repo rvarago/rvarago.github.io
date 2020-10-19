@@ -42,7 +42,9 @@ The central part is:
 
 When we implemented `map`, we stated that it will work for all types `a` and `b`, and we did not impose any constraint on `a` or `b`, e.g. via typeclasses, therefore nothing can be assumed about `a` and `b`. Put differently, when implementing `map` we did not know what concrete types will replace `a` and `b`, that's up to users of `map`. They will decide this **later** when using our `map` function.
 
-> This is all assuming that bottoms do not exist in Haskell, e.g. `map _ _ = undefined` is not permitted. In this discussion, I will be ignoring bottoms completely.
+> This is all assuming that bottoms do not exist in Haskell, e.g. `map _ _ = undefined` is not permitted.
+> 
+> In this discussion, I will be ignoring bottoms completely.
 
 We have looked at `map` from a user's perspective. However, thanks to constraints imposed by parametric polymorphism, we also have gained an intuition on how to implement `map` "for free".
 
@@ -110,7 +112,9 @@ filter p (x:xs)
   | otherwise = filter p xs
 ```
 
-> **Disclaimer:** I am not trying to make a case against `filter` at all. I use it and I like it. Rather, I want to discuss the importance and beauty of types when it comes to type-driven API design. `filter` just happens to serve as a fairly **contrived** example that came to my mind.
+> **Disclaimer:** I am not trying to make a case against `filter` at all. I use it and I like it. Rather, I want to discuss the importance and beauty of types when it comes to type-driven API design.
+> 
+> `filter` just happens to serve as a fairly **contrived** example that came to my mind.
 
 Differently of `map`, the type of `filter` imposes fewer constraints on the implementation, which opens up for the possibility of mistakes. Say, for any type `a`, `filter` produces a list of elements of type `a`, but it still cannot conjure up values of type `a`. However, it happens to have an input list of values of the same type `a`, which it could just blindly (and mistakenly) return:
 
@@ -135,9 +139,9 @@ In other words:
 
 > The sooner I catch an error, the happier I am.
 
-By being extremely precise, we start our design with types, letting them guide our implementation and enforce invariants. The more precise the types we use are, the more constraints we can impose and more knowledge we provide to the type-checker, which verifies these constraints for us.
+By being carefully precise, we start our design with types, letting them guide our implementation and enforce invariants. The more precise the types we use are, the more constraints we can impose and more knowledge we provide to the type-checker, which verifies these constraints for us.
 
-> The type-checker becomes our programming assistant.
+> The type-checker is our programming assistant.
 
 That's the basics of Type-Driven Development (or Design?), or rather the part of the whole story that we are concerned in this post.
 
@@ -166,13 +170,17 @@ magic _ xs = xs
 
 Generally, we cannot prove that types `a` and `b` are the same, and thus the type-checker readily refuses our program. That's a win!
 
-> Again, it all boils down to the fact that parametricity is a strong promise. When we say that a function has to work for all types `a`, we cannot make assumptions on any capability offered by concrete types, which we don't know about beforehand. In particular, we do not know what the constructors of some concrete type `a` will look like, and thus we cannot even produce values of type `a`. Parametric polymorphism is a powerful and remarkably well-crafted tool to design type-safe APIs.
+> Again, it all boils down to the fact that parametricity is a strong promise.
+>
+> When we say that a function has to work for all types `a`, we cannot make assumptions on any capability offered by concrete types, which we don't know about beforehand. In particular, we do not know what the constructors of some concrete type `a` will look like, and thus we cannot even produce values of type `a`.
+>
+> Parametric polymorphism is a powerful and remarkably well-crafted tool to design type-safe APIs.
 
 Oh, wait! We cannot just produce values of type `b` out of nowhere. Further, without any means of producing values of type `b`, we cannot implement `magic` at all. We have made progress, but we are not quite there yet.
 
 Standing on the shoulder of giants once more, we see that `map` requires a function `a -> b`, which is the unique source of wisdom that knows how to produce values of type `b` from `a`. Instead of `a -> b`, `magic` requires `a -> Bool`, as it needs to filter elements (that is its purpose, after all).
 
-Consequently, we can accept an additional function that knows how to produce `b`s from `a`s. Perhaps something along the following lines would do it:
+Consequently, we could accept an additional function that knows how to produce `b`s from `a`s. Perhaps something along the following lines would do it:
 
 ```haskell
 magic :: (a -> Bool) -> (a -> b) -> [a] -> [b]
@@ -196,7 +204,7 @@ According to the [Algebra of Types](({{ site.baseurl }}{% link _posts/2019-12-19
 data Maybe a = Just a | Nothing -- Either holds an element of type `a`, or nothing at all.
 ```
 
-Namely, we could pick a function `a -> Maybe b`, returning `Just b` for an element that we should kept, and `Nothing` when the element should be discarded:
+Namely, we could pick a function `a -> Maybe b`, returning `Just b` for an element that we should keep in return list, and `Nothing` for a element we should throw out:
 
 ```haskell
 magic :: (a -> Maybe b) -> [a] -> [b]
@@ -398,11 +406,11 @@ buy totalBooks bookId         -- Oops! I meant `buy bookId totalBooks`.
 
 This snippet would erroneously compile in the former version of `buy` (with primitive integers), but correctly fail with a clear type-error due to type mismatch in the latter (with stronger types), such as:
 
-> Couldn't match expected type `ProductId` with actual type `Qtd'
+> Couldn't match expected type `ProductId` with actual type `Qtd`.
  
  Thereby preventing a bug from slipping in.
 
-By following a type-driven design approach, we have used types to express a plan (**what** we want to accomplish), then we implement the program (**how** we want to accomplish) in such a way that the types must be satisfied. The type-checker becomes our assistant and verifies properties along the process for us.
+By following a type-driven design approach, we have used types to express a plan (**what** we want to accomplish), then we implement the program (**how** we want to accomplish) in such a way that the types (plan) must be satisfied. The type-checker becomes our assistant and verifies properties along the process for us.
 
 However, that comes at a cost. Arguably, both type-signatures and implementations may have become more complex, and we mixed two concerns (predicate + transformation). Being pragmatic, sometimes a less precise design *may* serve us just as good.
 
