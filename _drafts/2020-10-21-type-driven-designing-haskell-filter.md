@@ -30,7 +30,7 @@ Even if `map` were called `magic`, we could guess what it does:
 
 `magic` returns a list of elements of type `b`. But it has to work for all types `b` that users of `magic` will ever pass in, without exceptions.
 
-Hence `magic` can't just conjure up a value of type `b` out of thin-air. Say, if we had specialized `b` to be `Int`, then we would have known everything about it, namely its constructors, and thus we could have simply returned `0` (or any other integer). However, by parameterizing for all types `b` we have made a strong statement: it has to work **for all** types `b`, and therefore we are not allowed to make assumptions about the capabilities of `b`.
+Hence `magic` can't just conjure up a value of type `b` out of thin air. Say, if we had specialized `b` to be `Int`, then we would have known everything about it, namely its constructors, and thus we could have simply returned `0` (or any other integer). However, by parameterizing for all types `b` we have made a strong statement: it has to work **for all** types `b`, and therefore we are not allowed to make assumptions about the capabilities of `b`.
 
 The only way to produce a value of type `b` is by applying the function `a -> b` that we have received as an argument. And to apply the function `a -> b`, we first need a value of type `a`, which again has to work for all types `a`, and thus we cannot produce values of type `a`.
 
@@ -42,7 +42,7 @@ The central part is:
 
 When we implemented `map`, we stated that it will work for all types `a` and `b`, and we did not impose any constraint on `a` or `b`, e.g. via typeclasses, therefore nothing can be assumed about `a` and `b`. Put differently, when implementing `map` we did not know what concrete types will replace `a` and `b`, that's up to users of `map`. They will decide this **later** when using our `map` function.
 
-> This is all assuming that bottoms don't exist in Haskell, e.g. `map _ _ = undefined` is not permitted. In this discussion, I will be ignoring bottoms completely.
+> This is all assuming that bottoms do not exist in Haskell, e.g. `map _ _ = undefined` is not permitted. In this discussion, I will be ignoring bottoms completely.
 
 We have looked at `map` from a user's perspective. However, thanks to constraints imposed by parametric polymorphism, we also have gained an intuition on how to implement `map` "for free".
 
@@ -133,7 +133,7 @@ The type of `filter` could have told us more about what it does, and as a valuab
 
 In other words:
 
-> The earlier I catch an error, the happier I am.
+> The sooner I catch an error, the happier I am.
 
 By being extremely precise, we start our design with types, letting them guide our implementation and enforce invariants. The more precise the types we use are, the more constraints we can impose and more knowledge we provide to the type-checker, which verifies these constraints for us.
 
@@ -178,7 +178,7 @@ Consequently, we can accept an additional function that knows how to produce `b`
 magic :: (a -> Bool) -> (a -> b) -> [a] -> [b]
 ```
 
-In addition to the predicate `a -> Bool`, we now require a second function `a -> b`, which we could apply to each element `a` at which the predicate holds.
+In addition to the predicate `a -> Bool`, we require a second function `a -> b`, which we could apply to each element `a` at which the predicate holds.
 
 Even though that would work, it might be slightly inconvenient to use (e.g. we need to access the same element `a` twice), and confusing to understand (we have two functions as parameters).
 
@@ -186,7 +186,7 @@ Still, we have made some more progress.
 
 What if we could collapse `a -> Bool` and `a -> b` into a single function while preserving their semantics? It turns out that we can! But how?
 
-> The function we want must be able to tell whether an element of type `a` should be "kept" (or be "discarded"). Moreover, if the element is to be kept, then the function must map it into another element of type `b`.
+> The function we want must be able to tell whether an element of type `a` should be "kept" (or be "thrown out"). Moreover, if the element is to be kept, then the function must map it into another element of type `b`.
 
 According to the [Algebra of Types](({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %})), we can use `Maybe`.
 
@@ -313,7 +313,7 @@ As time goes by, we might decide to refactor the code. Perhaps we notice that `f
 
 Fundamentally, `bar` had a pre-condition on `x` being even, but it did not make that pre-condition explicit. Not at least as far as the type-system is aware.
 
-The predicate version of `even` (`even :: Int -> Bool`) cannot help us at all. However, its alternative `even :: Int -> Maybe Int` can! We just need to push it a little more.
+The predicate version `even :: Int -> Bool` cannot help us at all, because booleans are not expressive enough to preserve the knowledge that we need. However, its alternative `even :: Int -> Maybe Int` can! We just need to push it a little more.
 
 As we have said before, a `Just x` produced by `even x` can be regarded as **evidence** that `x` is even. Hence, by following a type-driven approach, we could pick a type other than `Int` for `a` in `Maybe a`. That is, a "special" type like `a`, but equipped with the semantic:
 
@@ -363,28 +363,14 @@ The principles behind pretty much everything that we have seen in this post are 
 
 When we quantify a property for all types, we are making a bold statement, which has to hold for whatever concrete type we feed into the property.
 
-Further, when we introduce a data type that precisely and unambiguously models a given concept in our domain and restricted where and how we are allowed to produce values of that type, we can treat such values as evidence that we have satisfied some property. Say, if a domain involves *identifiers* and *quantities*, instead of representing both identifier and quantity as a raw integers, we are probably better off by introducing the types `Id` and `Qtd`, wrapping primitive integers. Luckily, programming languages such as Haskell come with a concise notation for it:
+Further, when we introduce a data type that precisely and unambiguously models a given concept in our domain and restricted where and how we are allowed to produce values of that type, we can treat such values as evidence that we have satisfied some property. Say, if a domain involves *product identifiers* and *quantities*, instead of representing both identifier and quantity as raw integers, we are probably better off by introducing the types similar to `ProductId` and `Qtd`, wrapping primitive integers. Luckily, programming languages such as Haskell come with a concise notation for it:
 
 ```haskell
-newtype Id = Id Int
+newtype ProductId = ProductId Int
 newtype Qtd = Qtd Int
 ```
 
 Equipped with parametricity and types that precisely maps to our domain objects, we have managed to encode useful information at the type-level, which was then translated into discipline imposed on the implementation, ultimately letting the types drive our design.
-
-By following a type-driven design approach, we have used types to express a plan (**what** we want to accomplish), then we implement the program (**how** we want to accomplish) in such a way that the types must be satisfied. The type-checker becomes our assistant and verifies properties along the process for us.
-
-However, that comes at a cost. Arguably, both type-signatures and implementations may have become more complex, and we mixed two concerns (predicate + transformation). Being pragmatic, sometimes a less precise design *may* serve us just as good.
-
-Even though we have used Haskell in this exposition, the underlying principles should hopefully translate to other languages, such as Rust, Scala, etc. Further, languages with even more powerful type-systems (e.g. Agda and Idris, both with native support for dependent types) allow us to encode many more properties.
-
-It is important to emphasize that:
-
-> Type-Driven Development does not substitute proper automated tests, rather they collaborate. Moreover, a proper suite of unit-tests could have easily caught the mistakes in the wrong implementation.
-> 
-> Conclusively, it is much better to combine types **with** tests.
-
-Nevertheless, I very much like letting types help with my design. Especially the relief when the type-checker refuses my code due to a type-mismatch caused by a wrong refactoring.
 
 Furthermore, types serve as "extra-specification", which is automatically verified by the compiler. Consequently, as a good specification, it can help other programmers reading our code and trying to reason about it in isolation (locally).
 
@@ -410,7 +396,27 @@ let totalBooks = Qtd 3        -- instead of `totalBooks = 3 ::Int`.
 buy totalBooks bookId         -- Oops! I meant `buy bookId totalBooks`.
 ```
 
-This snippet would erroneously compile in the former version of `buy` (with primitive integers), but correctly fail with a clear type-error in the latter (with stronger types) and thereby preventing a bug from slipping in.
+This snippet would erroneously compile in the former version of `buy` (with primitive integers), but correctly fail with a clear type-error due to type mismatch in the latter (with stronger types), such as:
+
+> Couldn't match expected type `ProductId` with actual type `Qtd'
+ 
+ Thereby preventing a bug from slipping in.
+
+By following a type-driven design approach, we have used types to express a plan (**what** we want to accomplish), then we implement the program (**how** we want to accomplish) in such a way that the types must be satisfied. The type-checker becomes our assistant and verifies properties along the process for us.
+
+However, that comes at a cost. Arguably, both type-signatures and implementations may have become more complex, and we mixed two concerns (predicate + transformation). Being pragmatic, sometimes a less precise design *may* serve us just as good.
+
+Even though we have used Haskell in this exposition, the underlying principles should hopefully translate to other languages, such as Rust, Scala, etc. Further, languages with even more powerful type-systems (e.g. Agda and Idris, both with native support for dependent types) allow us to encode many more properties.
+
+It is important to emphasize that:
+
+> Type-Driven Development does not substitute proper automated tests, rather they collaborate. Moreover, a proper suite of unit-tests could (and should) have easily caught the mistakes in the wrong implementation.
+> 
+> Conclusively, it is much better to combine types **with** tests.
+
+Nevertheless, I very much like letting types help with my design. Especially the relief when the type-checker refuses my code due to a type-mismatch caused by a wrong refactoring.
+
+It is all about extra safety guarantees, increasing our confidence that the code is correct.
 
 ## References
 
