@@ -197,7 +197,7 @@ magic :: (a -> Bool) -> (a -> b) -> [a] -> [b]
 
 In addition to the predicate `a -> Bool`, we require a second function `a -> b`, which we could apply to each element `a` at which the predicate holds.
 
-Even though that would work, it might be inconvenient to use (e.g. `magic` needs to access the same element `a` twice, first to check and then to map), and confusing to understand (we have two functions as parameters).
+Even though that would work, it might be inconvenient to use (e.g. `magic` needs to access the same element `x` twice, first to check and then to map), and confusing to understand (we have two functions as parameters).
 
 Still, we have made some more progress.
 
@@ -209,7 +209,7 @@ What if we could collapse `a -> Bool` and `a -> b` into a single and simpler fun
 
 According to the [Algebra of Types]({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %}), we can use `Maybe`.
 
-`Maybe` is an ADT equipped two constructors:
+`Maybe` is an ADT equipped with two constructors:
 
 ```haskell
 data Maybe a = Just a | Nothing -- Either holds an element of type `a`, or nothing at all.
