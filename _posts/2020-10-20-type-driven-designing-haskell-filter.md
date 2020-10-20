@@ -1,6 +1,6 @@
 ---
 layout: "post"
-title:  "Type-driven Designing Haskell's Filter"
+title:  "Type-driven Designing Haskell's filter"
 tags:   type-system fp haskell
 ---
 
@@ -207,7 +207,7 @@ What if we could collapse `a -> Bool` and `a -> b` into a single and simpler fun
 >
 > Moreover, if the element is to be kept, then the function must map it into another element of type `b`.
 
-According to the [Algebra of Types](({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %})), we can use `Maybe`.
+According to the [Algebra of Types]({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %}), we can use `Maybe`.
 
 `Maybe` is an ADT equipped two constructors:
 
@@ -444,7 +444,7 @@ Summing up, it is all about bringing extra safety guarantees and thus increase o
 
 ## References
 
-[1] [Programming Language Foundations in Agda ](https://plfa.github.io/).
+[1] [Programming Language Foundations in Agda](https://plfa.github.io/).
 
 [3] [Idris: A Language for Type-Driven Development](https://www.idris-lang.org/).
 
