@@ -1,6 +1,6 @@
 ---
 layout: "post"
-title:  "Type-driven Designing Haskell's filter"
+title:  "Type-driven Designing Haskell's Filter"
 tags:   type-system fp haskell
 ---
 
@@ -444,7 +444,7 @@ Summing up, it is all about bringing extra safety guarantees and thus increase o
 
 ## References
 
-[1] [Programming Language Foundations in Agda](https://plfa.github.io/).
+[1] [Programming Language Foundations in Agda ](https://plfa.github.io/).
 
 [3] [Idris: A Language for Type-Driven Development](https://www.idris-lang.org/).
 
