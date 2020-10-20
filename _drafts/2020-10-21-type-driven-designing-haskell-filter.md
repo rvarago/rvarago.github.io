@@ -14,7 +14,7 @@ tags:   type-system fp haskell
 |:--:|
 | *Types impose constraints and enforce invariants. [sketchpad.io](https://sketch.io/sketchpad)*|
 
-Functional Programming comes with its vocabulary (actually, any programming paradigm, for what's worth), and sometimes we might be able to figure out everything that is to be known about a higher-order function just by looking at its name.
+Functional Programming comes with its vocabulary (actually, any programming paradigm, for what's worth), and oftentimes we might be able to figure out everything that is to be known about a higher-order function just by looking at its name.
 
 Consider `map` as an example:
 
@@ -30,17 +30,20 @@ Even if `map` were called `magic`, we could guess what it does:
 
 `magic` returns a list of elements of type `b`. But it has to work for all types `b` that users of `magic` will ever pass in, without exceptions.
 
-Hence `magic` can't just conjure up a value of type `b` out of thin air. Say, if we had specialized `b` to be `Int`, then we would have known everything about it, namely its constructors, and thus we could have simply returned `0` (or any other integer). However, by parameterizing for all types `b` we have made a strong statement: it has to work **for all** types `b`, and therefore we are not allowed to make assumptions about the capabilities of `b`.
+Hence `magic` can't just conjure up a value of type `b` out of thin air. Say, if we had specialized `b` to be `Int`, then we would have known everything about it, namely its constructors, and thus we could have simply returned `0` (or any other integer).
+
+However, by parameterizing for all types `b` we have made a strong statement: it has to work **for all** types `b`, and therefore we are not allowed to make assumptions about the capabilities offered by a concrete type that will replace `b`.
 
 The only way to produce a value of type `b` is by applying the function `a -> b` that we have received as an argument. And to apply the function `a -> b`, we first need a value of type `a`, which again has to work for all types `a`, and thus we cannot produce values of type `a`.
 
-Fortunately, we have a list of elements of type `a` and we know everything that is to be known about lists, namely how to traverse it through recursion. Therefore we can traverse the list of elements of type `a`, feeding each element into `a -> b`, and collecting the resulting `b`s into a list, which we then return.
+Fortunately, we have a list of elements of type `a` and we know everything that is to be known about lists, namely how to traverse it through recursion.
+Therefore we can traverse the list of elements of type `a`, feeding each element into `a -> b`, and collecting the resulting `b`s into a list, which we then return.
 
 The central part is:
 
 > Parametric polymorphism imposes strong constraints on the implementation.
 
-When we implemented `map`, we stated that it will work for all types `a` and `b`, and we did not impose any constraint on `a` or `b`, e.g. via typeclasses, therefore nothing can be assumed about `a` and `b`. Put differently, when implementing `map` we did not know what concrete types will replace `a` and `b`, that's up to users of `map`. They will decide this **later** when using our `map` function.
+When we implemented `map`, we stated that it will work for all types `a` and `b`, and we did not impose any requirement on `a` or `b`, e.g. via typeclasses, therefore nothing can be assumed about `a` or `b`. Put differently, when implementing `map` we did not know what concrete types will replace `a` and `b`, that decision is up to users of `map`. They will decide this **later**, when finally using our `map` function.
 
 > This is all assuming that bottoms do not exist in Haskell, e.g. `map _ _ = undefined` is not permitted.
 > 
@@ -83,7 +86,8 @@ Next to its name, I tend to look for clues at its type.
 
 > Give me a function of type `a -> Bool` (i.e a predicate) and a list of elements of type `a`, then I shall return you a list of elements of type `a`.
 
-`filter` returns a list of type `[a]`, presumably drawn from the input list, which also has the type `[a]`. How? The type of the predicate does not tell us much in this regard, it's "just" a boolean. Perhaps `filter` keeps elements for which the predicate evaluates to **true**. Although, in theory, it could very well keep elements for which the predicate evaluates to **false**.
+`filter` returns a list of type `[a]`, presumably drawn from the input list, which also has the type `[a]`. How?
+The type of the predicate does not tell us much in this regard, it returns *just* a boolean. Perhaps `filter` keeps elements for which the predicate evaluates to **true**. Although, in theory, it could very well keep elements for which the predicate evaluates to **false**.
 
 More concretely, given a function `even` that checks whether an integer `x` is even:
 
@@ -422,9 +426,9 @@ It is important to emphasize that:
 > 
 > Conclusively, it is much better to combine types **with** tests.
 
-Nevertheless, I very much like letting types help with my design. Especially the relief when the type-checker refuses my code due to a type-mismatch caused by a wrong refactoring.
+Nevertheless, I very much like letting types help with my design. Especially the relief when the type-checker rejects my broken code due to a type-mismatch caused by a wrong refactoring.
 
-It is all about extra safety guarantees, increasing our confidence that the code is correct.
+Having said that, is all about bringing extra safety guarantees, increasing our confidence that the code is correct.
 
 ## References
 
