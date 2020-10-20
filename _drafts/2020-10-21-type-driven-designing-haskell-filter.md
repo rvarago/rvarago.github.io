@@ -43,7 +43,9 @@ The central part is:
 
 > Parametric polymorphism imposes strong constraints on the implementation.
 
-When we implemented `map`, we stated that it will work for all types `a` and `b`, and we did not impose any requirement on `a` or `b`, e.g. via typeclasses, therefore nothing can be assumed about `a` or `b`. Put differently, when implementing `map` we did not know what concrete types will replace `a` and `b`, that decision is up to users of `map`. They will decide this **later**, when finally using our `map` function.
+When we implemented `map`, we stated that it will work for all types `a` and `b`, and we did not impose any requirement on `a` or `b`, e.g. via typeclasses, therefore nothing can be assumed about `a` or `b`.
+
+In other words, when implementing `map` we did not know what concrete types will replace `a` and `b`, that decision deferred to users of `map`. They will decide this **later**, when actually using our `map` function.
 
 > This is all assuming that bottoms do not exist in Haskell, e.g. `map _ _ = undefined` is not permitted.
 > 
@@ -137,7 +139,7 @@ The type of `filter` could have told us more about what it does, and as a valuab
 
 [Making illegal states unrepresentable](https://blog.janestreet.com/effective-ml-revisited/) is a famous statement, with powerful consequences. The intuition behind it is as follows:
 
-> We want to be as precise as we can when designing the types that we use in our APIs, such that classes of invalid usages of the API would be refused by the type-checker and therefore the program would not compile successfully.
+> We want to be as precise as we can when designing the types that we use in our APIs, such that classes of invalid usages of the API would be rejected by the type-checker and therefore the program would not compile successfully.
 
 In other words:
 
@@ -172,11 +174,12 @@ magic :: (a -> Bool) -> [a] -> [b]
 magic _ xs = xs
 ```
 
-Generally, we cannot prove that types `a` and `b` are the same, and thus the type-checker readily refuses our program. That's a win!
+Generally, we cannot prove that types `a` and `b` are the same, and thus the type-checker readily reject our program. That's a win!
 
 > Again, it all boils down to the fact that parametricity is a strong promise.
 >
-> When we say that a function has to work for all types `a`, we cannot make assumptions on any capability offered by concrete types, which we don't know about beforehand. In particular, we do not know what the constructors of some concrete type `a` will look like, and thus we cannot even produce values of type `a`.
+> When we say that a function has to work for all types `a`, we cannot make assumptions on any capability offered by concrete types, which we don't know about beforehand.
+> In particular, we do not know what the constructors of some concrete type `a` will look like, and thus we cannot even produce values of type `a`.
 >
 > Parametric polymorphism is a powerful and remarkably well-crafted tool to design type-safe APIs.
 
@@ -198,7 +201,9 @@ Still, we have made some more progress.
 
 What if we could collapse `a -> Bool` and `a -> b` into a single function while preserving their semantics? It turns out that we can! But how?
 
-> The function we want must be able to tell whether an element of type `a` should be "kept" (or be "thrown out"). Moreover, if the element is to be kept, then the function must map it into another element of type `b`.
+> The function we want must be able to tell whether an element of type `a` should be "kept" (or be "thrown out").
+>
+> Moreover, if the element is to be kept, then the function must map it into another element of type `b`.
 
 According to the [Algebra of Types](({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %})), we can use `Maybe`.
 
@@ -361,7 +366,7 @@ Particularly, back to our example, `bar` would accept an `EvenInt`:
 bar :: EvenInt -> IO ()
 ```
 
-Therefore `foo` would mandatorily need to call `even x` in order to get an `EvenInt` from it, which `for` would then supply to `bar`. If `foo` had failed to call `even` and instead tried to pass a primitive `Int` to `bar`, then the code would have failed to compile.
+Therefore `foo` would mandatorily need to call `even x` in order to get an `EvenInt` from it, which `foo` would then supply to `bar`. If `foo` had failed to call `even` and instead tried to pass a primitive `Int` to `bar`, then the code would have failed to compile.
 
 We have restored our ability to reason locally about our code.
 
@@ -375,14 +380,17 @@ The principles behind pretty much everything that we have seen in this post are 
 
 When we quantify a property for all types, we are making a bold statement, which has to hold for whatever concrete type we feed into the property.
 
-Further, when we introduce a data type that precisely and unambiguously models a given concept in our domain and restricted where and how we are allowed to produce values of that type, we can treat such values as evidence that we have satisfied some property. Say, if a domain involves *product identifiers* and *quantities*, instead of representing both identifier and quantity as raw integers, we are probably better off by introducing the types similar to `ProductId` and `Qtd`, wrapping primitive integers. Luckily, programming languages such as Haskell come with a concise notation for it:
+When we introduce a data type that precisely and unambiguously models a given concept in our domain and restricted where and how we are allowed to produce values of that type, we can treat such values as evidence that we have satisfied some property.
+Say, if a domain involves *product identifiers* and *quantities*, instead of representing both product identifier and quantity as raw integers, we are probably better off introducing the types `ProductId` and `Qtd`, wrapping primitive integers.
+
+Luckily, programming languages such as Haskell come with a concise notation for very purpose:
 
 ```haskell
 newtype ProductId = ProductId Int
 newtype Qtd = Qtd Int
 ```
 
-Equipped with parametricity and types that precisely maps to our domain objects, we have managed to encode useful information at the type-level, which was then translated into discipline imposed on the implementation, ultimately letting the types drive our design.
+Equipped with parametricity and types that precisely maps to our domain objects, we have managed to encode useful information at the type-level, which was then translated into discipline imposed on the implementation. Ultimately, we let types drive our design.
 
 Furthermore, types serve as "extra-specification", which is automatically verified by the compiler. Consequently, as a good specification, it can help other programmers reading our code and trying to reason about it in isolation (locally).
 
@@ -412,11 +420,11 @@ This snippet would erroneously compile in the former version of `buy` (with prim
 
 > Couldn't match expected type `ProductId` with actual type `Qtd`.
  
- Thereby preventing a bug from slipping in.
+Thereby preventing a bug from slipping in.
 
 By following a type-driven design approach, we have used types to express a plan (**what** we want to accomplish), then we implement the program (**how** we want to accomplish) in such a way that the types (plan) must be satisfied. The type-checker becomes our assistant and verifies properties along the process for us.
 
-However, that comes at a cost. Arguably, both type-signatures and implementations may have become more complex, and we mixed two concerns (predicate + transformation). Being pragmatic, sometimes a less precise design *may* serve us just as good.
+However, that comes at a cost. Arguably, both type-signatures and implementations may have become more complex, and we may have mixed two concerns (predicate + transformation). Being pragmatic, in some cases a less precise design *may* serve us just as good.
 
 Even though we have used Haskell in this exposition, the underlying principles should hopefully translate to other languages, such as Rust, Scala, etc. Further, languages with even more powerful type-systems (e.g. Agda and Idris, both with native support for dependent types) allow us to encode many more properties.
 
@@ -426,7 +434,7 @@ It is important to emphasize that:
 > 
 > Conclusively, it is much better to combine types **with** tests.
 
-Nevertheless, I very much like letting types help with my design. Especially the relief when the type-checker rejects my broken code due to a type-mismatch caused by a wrong refactoring.
+Nevertheless, I very much like letting types help with my design. Especially the relief when the type-checker denies my broken code due to a type-mismatch caused by a wrong refactoring.
 
 Having said that, is all about bringing extra safety guarantees, increasing our confidence that the code is correct.
 
