@@ -4,7 +4,7 @@ title:  "Type-driven Designing Haskell's Filter"
 tags:   type-system fp haskell
 ---
 
-> A type-system imposes discipline on programs. And we can make the best out of it by employing correct, precise, and expressive types; sometimes even letting the type-system assisting us in our design. Equipped with well-crafted user-defined types, we can then make some illegal states unrepresentable.
+> A type-system imposes discipline on programs. And we can make the best out of it by employing correct, precise, and expressive types; ultimately even letting the type-system assisting us in our design. Equipped with well-crafted user-defined types, we can then make some illegal states unrepresentable.
 >
 > Additionally, types are great to disambiguate and communicate ideas to fellow programmers.
 
@@ -45,7 +45,7 @@ The central part is:
 
 When we implemented `map`, we stated that it will work for all types `a` and `b`, and we did not impose any requirement on `a` or `b`, e.g. via typeclasses, therefore nothing can be assumed about `a` or `b`.
 
-In other words, when implementing `map` we did not know what concrete types will replace `a` and `b`, that decision deferred to users of `map`. They will decide this **later**, when actually using our `map` function.
+In other words, when implementing `map` we did not know what concrete types will replace `a` and `b`, that decision deferred to users of `map`. They will decide this **later** when using our `map` function.
 
 > This is all assuming that bottoms do not exist in Haskell, e.g. `map _ _ = undefined` is not permitted.
 > 
@@ -106,7 +106,7 @@ What should the following program print?
 
 That would either be `[2, 4]` (`even` evaluates to true) or `[1, 3, 5]` (`even` evaluates to false).
 
-Turns out that `filter` returns `[2, 4]`! That is, all elements `x` for which the predicate `even x` evaluates to true.
+Turns out that `filter` returns `[2, 4]`! That is, all elements `x` from the input list `[1, 2, 3, 4, 5]` for which the predicate `even x` evaluated to true.
 
 Consequently, here's how an implementation of `filter` might look like:
 
@@ -146,8 +146,10 @@ In other words:
 > The sooner I catch an error, the happier I am.
 
 By being carefully precise, we start our design with types, letting them guide our implementation and enforce invariants. The more precise the types we use are, the more constraints we can impose and more knowledge we provide to the type-checker, which verifies these constraints for us.
-
-> The type-checker is our programming assistant.
+ 
+> The type-checker is our programming assistant. 
+>
+> We are pair programming with the compiler.
 
 That's the basics of Type-Driven Development (or Design?), or rather the part of the whole story that we are concerned in this post.
 
@@ -195,11 +197,11 @@ magic :: (a -> Bool) -> (a -> b) -> [a] -> [b]
 
 In addition to the predicate `a -> Bool`, we require a second function `a -> b`, which we could apply to each element `a` at which the predicate holds.
 
-Even though that would work, it might be slightly inconvenient to use (e.g. we need to access the same element `a` twice), and confusing to understand (we have two functions as parameters).
+Even though that would work, it might be inconvenient to use (e.g. `magic` needs to access the same element `a` twice, first to check and then to map), and confusing to understand (we have two functions as parameters).
 
 Still, we have made some more progress.
 
-What if we could collapse `a -> Bool` and `a -> b` into a single function while preserving their semantics? It turns out that we can! But how?
+What if we could collapse `a -> Bool` and `a -> b` into a single and simpler function while preserving their semantics? Turns out that we can!
 
 > The function we want must be able to tell whether an element of type `a` should be "kept" (or be "thrown out").
 >
@@ -213,13 +215,13 @@ According to the [Algebra of Types](({{ site.baseurl }}{% link _posts/2019-12-19
 data Maybe a = Just a | Nothing -- Either holds an element of type `a`, or nothing at all.
 ```
 
-Namely, we could pick a function `a -> Maybe b`, returning `Just b` for an element that we should keep in return list, and `Nothing` for a element we should throw out:
+Namely, we could pick a function `a -> Maybe b`, returning `Just b` for an element that we should keep in return list, and `Nothing` for a element that we should throw out:
 
 ```haskell
 magic :: (a -> Maybe b) -> [a] -> [b]
 ```
 
-It is subtly different from `map`, yet close.
+It is similar to `map`, but not quite.
 
 > Now, the only way to produce a value of type `b` is by feeding a value of type `a` into `a -> Maybe b`. Further, we only have a `b` when `a -> Maybe b` returns `Just b`.
 
@@ -269,7 +271,7 @@ Finally, the type `(a -> Maybe b) -> [a] -> [b]` suggests what `magic` does and 
 select :: (a -> Maybe b) -> [a] -> [b]
 ```
 
-Luckily, we do not even need to implement `select` ourselves. Haskell ships with [`Data.Maybe.mapMaybe`](https://hackage.haskell.org/package/base-4.14.0.0/docs/Data-Maybe.html#v:mapMaybe), which does the same thing.
+Luckily, we do not even need to implement `select` ourselves, since Haskell ships with [`Data.Maybe.mapMaybe`](https://hackage.haskell.org/package/base-4.14.0.0/docs/Data-Maybe.html#v:mapMaybe), which does the same thing.
 
 ## Implementing `filter` in terms of `select`
 
@@ -332,7 +334,9 @@ Fundamentally, `bar` had a pre-condition on `x` being even, but it did not make 
 
 The predicate version `even :: Int -> Bool` cannot help us at all, because booleans are not expressive enough to preserve the knowledge that we need. However, its alternative `even :: Int -> Maybe Int` can! We just need to push it a little more.
 
-As we have said before, a `Just x` produced by `even x` can be regarded as **evidence** that `x` is even. Hence, by following a type-driven approach, we could pick a type other than `Int` for `a` in `Maybe a`. That is, a "special" type like `a`, but equipped with the semantic:
+> As we have said before, a `Just x` produced by `even x` can be considered as **evidence** that `x` is even.
+
+Hence, by following a type-driven approach, we could pick a type other than `Int` for `a` in `Maybe a`. That is, a *special* type like `a`, but equipped with the semantic:
 
 > Any value of this type must be even.
 
@@ -370,7 +374,7 @@ Therefore `foo` would mandatorily need to call `even x` in order to get an `Even
 
 We have restored our ability to reason locally about our code.
 
-> `even` might be called a smart-constructor, where we attach extra meaning to some primitive type (e.g. `Int`) by wrapping it inside another type (e.g. `EvenInt`) with more constraints (meaning) than the primitive type it wraps.
+> `even` might be called a smart-constructor, where we attach extra meaning to some primitive type (e.g. `Int`) by wrapping it inside another type (e.g. `EvenInt`) with more constraints (meaning) than the primitive type that it wraps.
 >
 > Furthermore, the type `EvenInt` and its smart-constructor `even` should be properly encapsulated inside a module to limit visibility, such that `even` would be the only place where we can obtain instances of `EvenInt`.
 
@@ -383,7 +387,7 @@ When we quantify a property for all types, we are making a bold statement, which
 When we introduce a data type that precisely and unambiguously models a given concept in our domain and restricted where and how we are allowed to produce values of that type, we can treat such values as evidence that we have satisfied some property.
 Say, if a domain involves *product identifiers* and *quantities*, instead of representing both product identifier and quantity as raw integers, we are probably better off introducing the types `ProductId` and `Qtd`, wrapping primitive integers.
 
-Luckily, programming languages such as Haskell come with a concise notation for very purpose:
+Luckily, programming languages such as Haskell come with a concise notation for this very purpose:
 
 ```haskell
 newtype ProductId = ProductId Int
@@ -430,13 +434,13 @@ Even though we have used Haskell in this exposition, the underlying principles s
 
 It is important to emphasize that:
 
-> Type-Driven Development does not substitute proper automated tests, rather they collaborate. Moreover, a proper suite of unit-tests could (and should) have easily caught the mistakes in the wrong implementation.
+> Type-Driven Development does not substitute proper automated tests, rather they collaborate. Moreover, unit-tests could (and should) have caught the mistakes in the wrong implementation.
 > 
 > Conclusively, it is much better to combine types **with** tests.
 
-Nevertheless, I very much like letting types help with my design. Especially the relief when the type-checker denies my broken code due to a type-mismatch caused by a wrong refactoring.
+Nevertheless, I very much like letting types help with my design. Mainly the relief when the type-checker denies my broken code due to a type-mismatch caused by a wrong refactoring.
 
-Having said that, is all about bringing extra safety guarantees, increasing our confidence that the code is correct.
+Summing up, it is all about bringing extra safety guarantees and thus increase our confidence that the code is correct.
 
 ## References
 
