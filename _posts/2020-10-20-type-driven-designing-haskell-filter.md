@@ -215,7 +215,7 @@ According to the [Algebra of Types]({{ site.baseurl }}{% link _posts/2019-12-19-
 data Maybe a = Just a | Nothing -- Either holds an element of type `a`, or nothing at all.
 ```
 
-Namely, we could pick a function `a -> Maybe b`, returning `Just b` for an element that we should keep in return list, and `Nothing` for a element that we should throw out:
+Namely, we could pick a function `a -> Maybe b`, where given a value `x` of type `a`, the function either returns `Just b` if we should keep `x` in the return list, or `Nothing` if we should throw `x` out:
 
 ```haskell
 magic :: (a -> Maybe b) -> [a] -> [b]
@@ -332,7 +332,9 @@ As time goes by, we might decide to refactor the code. Perhaps we notice that `f
 
 Fundamentally, `bar` had a pre-condition on `x` being even, but it did not make that pre-condition explicit. Not at least as far as the type-system is aware.
 
-The predicate version `even :: Int -> Bool` cannot help us at all, because booleans are not expressive enough to preserve the knowledge that we need. However, its alternative `even :: Int -> Maybe Int` can! We just need to push it a little more.
+The predicate version `even :: Int -> Bool` cannot help us at all, because booleans are not expressive enough to preserve the knowledge that we need.
+
+However, its alternative `even :: Int -> Maybe Int` can! We just need to push it a little farther.
 
 > As we have said before, a `Just x` produced by `even x` can be considered as **evidence** that `x` is even.
 
