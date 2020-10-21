@@ -364,7 +364,7 @@ even x = if x `mod` 2 == 0
 
 Notice that nothing has changed, except that we are wrapping the primitive integer `x` in an `EvenInt`.
 
-Once we call `even x`, we not only know whether `x` is even or not, we are now also preserving this evidence (knowledge) in the return type `EvenInt`! We can thus pass the evidence to other functions down the chain, which would accept `EventInt`s, instead of plain `Int`s.
+Once we call `even x`, we not only know whether `x` is even or not, we are also preserving this evidence (knowledge) in the return type `EvenInt`! We can thus pass the evidence to other functions down the chain, which would accept `EventInt`s, instead of plain `Int`s, and thereby be sure that the argument is even indeed.
 
 Particularly, back to our example, `bar` would accept an `EvenInt`:
 
@@ -372,7 +372,9 @@ Particularly, back to our example, `bar` would accept an `EvenInt`:
 bar :: EvenInt -> IO ()
 ```
 
-Therefore `foo` would mandatorily need to call `even x` in order to get an `EvenInt` from it, which `foo` would then supply to `bar`. If `foo` had failed to call `even` and instead tried to pass a primitive `Int` to `bar`, then the code would have failed to compile.
+The precondition that `bar` has on `x` to be even is made explicit on the type of `x`.
+
+Therefore `foo` must call `even x` in order to get an `EvenInt` from it, which `foo` then supplies to `bar`. If `foo` had failed to call `even` and instead tried to pass a primitive `Int` to `bar`, then the code would not have compiled.
 
 We have restored our ability to reason locally about our code.
 
