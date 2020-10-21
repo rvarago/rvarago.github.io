@@ -176,7 +176,7 @@ magic :: (a -> Bool) -> [a] -> [b]
 magic _ xs = xs
 ```
 
-Generally, we cannot prove that types `a` and `b` are the same, and thus the type-checker readily reject our program. That's a win!
+Generally, we cannot prove that types `a` and `b` are the same (remember, the decision of which concrete types will replace `a` and `b` is made later, and not by us implementing `magic`, but by the *users* of `magic`), and thus the type-checker correctly rejects our program. That's a win!
 
 > Again, it all boils down to the fact that parametricity is a strong promise.
 >
