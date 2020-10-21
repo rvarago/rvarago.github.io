@@ -61,7 +61,7 @@ map _ [] = []                   -- Base case: empty list in, then empty list out
 map f (x:xs) = f x : map f xs   -- Recursive case: applies `f` to the first element (`x`) and prepends it with the result of the recursive invocation of `map` with the rest (i.e. tail) of the elements in the list (`xs`).
 ```
 
-Let's use `map` to add 10 to each element of a list of integers ranging from 1 to 5 (`λ` is my GHCi's prompt):
+Let's use `map` to add 10 to each element of a list of integers ranging from 1 to 5 (`λ` is my GHCi prompt):
 
 ```haskell
 λ map (+10) [1..5]
