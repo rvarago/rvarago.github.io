@@ -328,11 +328,13 @@ Furthermore, let's say that `bar` also depends on `x` being even to complete its
 
 The decision might be trivial in small programs, `bar` could simply trust `foo` and not call `even` again. However, as the program grows, with calls going through different modules (say `foo` calls `foo1`, which calls `foo2`, ..., which calls `foo10`, which then finally calls `bar`), then matters become far more complicate.
 
-As time goes by, we might decide to refactor the code. Perhaps we notice that `foo` itself does not *really* care whether `x` is even so that we remove the call to `even` inside `foo`, without updating `bar`, which now must call `even`. Sadly, an "innocent" refactoring at one point breaks code located in a fairly remote place.
+As time goes by, we might decide to refactor the code. Perhaps we notice that `foo` itself does not *really* care whether `x` is even anymore, so we clean it up and naively remove the call to `even` inside `foo`, but forget to update `bar` (which now must call `even`). Sadly, an "innocent" refactoring at one point broke the code located in a fairly remote place.
 
 > Spooky action at a distance! The enemy of local reasoning.
 
 Fundamentally, `bar` had a pre-condition on `x` being even, but it did not make that pre-condition explicit. Not at least as far as the type-system is aware.
+
+We want to restructure our code in such a way that failing to pass an even integer to `bar` triggers a compilation error.
 
 The predicate version `even :: Int -> Bool` cannot help us at all, because booleans are not expressive enough to preserve the knowledge that we need.
 
