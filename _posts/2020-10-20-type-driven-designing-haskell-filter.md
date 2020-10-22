@@ -438,6 +438,8 @@ This snippet would erroneously compile in the former version of `buy` (with prim
  
 Thereby preventing a bug from slipping in.
 
+> Prefer to turn potential run-time errors into compile-time errors. Allow the compiler to give you feedback about your code.
+
 By following a type-driven design approach, we have used types to express a plan (**what** we want to accomplish), then we implement the program (**how** we want to accomplish) in such a way that the types (plan) must be satisfied. The type-checker becomes our assistant and verifies properties along the process for us.
 
 However, that comes at a cost. Arguably, both type-signatures and implementations may have become more complex, and we may have mixed two concerns (predicate + transformation). Being pragmatic, in some cases a less precise design *may* serve us just as good.
