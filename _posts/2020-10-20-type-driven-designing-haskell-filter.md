@@ -201,7 +201,7 @@ Even though that would work, it might be inconvenient to use (e.g. `magic` needs
 
 Still, we have made some more progress.
 
-What if we could collapse `a -> Bool` and `a -> b` into a single and simpler function while preserving their semantics? Turns out that we can!
+What if we could collapse `a -> Bool` and `a -> b` into a single and simpler function while preserving their semantics? Turns out we can!
 
 > The function we want must be able to tell whether an element of type `a` should be "kept" (or be "thrown out").
 >
@@ -265,7 +265,9 @@ Cool. We have implemented `magic` and designed its API with more constraints in-
 
 Win-win, we may say.
 
-Finally, the type `(a -> Maybe b) -> [a] -> [b]` suggests what `magic` does and even gives us an idea on how it does. Ultimately, it may offer us ideas on how to name it! Here, I have chosen `select`:
+Finally, the type `(a -> Maybe b) -> [a] -> [b]` suggests what `magic` does and even gives us an idea on how it does. Ultimately, it may offer us ideas on how to name it!
+
+Here, I have chosen `select`:
 
 ```haskell
 select :: (a -> Maybe b) -> [a] -> [b]
@@ -293,7 +295,7 @@ filterInTermsOfSelect p = select toMaybe
                                                 else Nothing
 ```
 
-## Trading a Boolean for Evidence
+## Trading Booleans for Evidence
 
 At this point, let's pause for a moment and revisit the two versions of the function `even` that we have previously defined:
 
@@ -366,7 +368,13 @@ Notice that nothing has changed, except that we are wrapping the primitive integ
 
 Once we call `even x`, we not only know whether `x` is even or not, we are also preserving this evidence (knowledge) in the return type `EvenInt`! We can thus pass the evidence to other functions down the chain, which would accept `EventInt`s, instead of plain `Int`s, and thereby be sure that the argument is even indeed.
 
-Particularly, back to our example, `bar` would accept an `EvenInt`:
+> `EvenInt` is the subset of `Int` such that members (values) of type `EvenInt` must be even integers. That is, `EvenInt` *narrows* (restricts) the domain of valid values of type `Int`.
+>
+> In symbols:
+>
+> `EvenInt = {x ∈ Int | x is even}`
+
+Back to our example, `bar` would accept an `EvenInt`:
 
 ```haskell
 bar :: EvenInt -> IO ()
