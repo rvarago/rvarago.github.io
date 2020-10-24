@@ -85,6 +85,8 @@ struct X {
 
 That's pretty much the reason why we call them phantom types, their type-parameters don't manifest in the type itself with no meaning at the "value-level", they are rather used only at the "type-level". At first sight, we could simply strip `T` off and nothing would change.
 
+> The sole purpose of phantom types is to help the type-checker during static analysis.
+
 Instead of declaring member-variables of type `T`, the real purpose of `T` is to encode extra-information into `X<T>` that will only be used at the type-level during type-checking as part of the larger compilation process. Such information gives enough power to the type-checker, so it can enforce what the protocol expects.
 
 Armed with phantom types, we can start re-writing our SQL query example:
