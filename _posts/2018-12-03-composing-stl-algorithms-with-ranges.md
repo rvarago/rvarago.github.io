@@ -53,7 +53,7 @@ Before talking about ranges, we shall first look at a small example of what we c
 
 > Given a sequence of `user`s wrapping `id` and `age`:
 
-```cppp
+```cpp
 struct user {
     long id;
     long age;
