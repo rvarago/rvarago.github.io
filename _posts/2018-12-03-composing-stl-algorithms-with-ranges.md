@@ -158,11 +158,13 @@ Therefore, STL containers are themselves ranges.
 
 So far, it simply moved the iterators from the API into the implementation, but it goes far beyond.
 
-By working directly with ranges, instead of iterators, we've enabled the chaining of operations that we wanted. The range-v3 library already provides overloads to the STL algorithms with ranges for us, delegating to the proper iterator-based versions internally.
+By working directly with ranges, as opposed to through iterators, we move closer to the chaining of operations that we wanted.
+
+The range-v3 library already provides overloads to the STL algorithms with ranges for us, delegating to the proper iterator-based versions internally.
 
 # Iterator Adapters
 
-The second interesting aspect of working with ranges is the possibility of enriching with some behaviour. Such iterator with behaviour gives rise to an **iterator adapter**.
+The second, and perhaps more interesting, aspect of working with ranges is the possibility of enriching them with some extra behaviour. We can such "iterator with behaviour" as **iterator adapter**.
 
 A refresher on iterators:
 
@@ -178,7 +180,15 @@ How about combining iterator adapters with ranges? That brings us to **range ada
 
 # Range Adapters
 
-A range adapter combines a range with an iterator adapter to produce yet another range. And by associating ranges with adapters, the result is itself a range, which can be further adapted again, and so on. Therefore, composability comes easily by elegantly chaining range adapters with the "operator pipe": `|`.
+A range adapter combines a range with an iterator adapter to produce yet another range.
+
+And by associating ranges with adapters, the result is itself a range, which can be further adapted again, and so on and so forth. 
+
+The coolest part is that the adaption happens lazily. We fundamentally build a tree of expressions (filtering, transformation, etc) that are only evaluated when demanded (e.g. when creating a new vector from an adaptor), which allows single-pass traversals with fusion and some other interesting optimizations.
+
+Putting that all together, we gain what is arguably a more ergonomic API without sacrificing efficiency. 
+
+> At its core, the lazyness of range adaptors makes for a rather concise and functional composition of STL algorithms, which can be done quite elegantly by chaining range adapters with the "pipe operator": `|`.
 
 # View Adapters
 
