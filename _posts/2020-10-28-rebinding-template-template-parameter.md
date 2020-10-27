@@ -18,7 +18,7 @@ That is not particularly complicated and probably not very interesting. Still, i
 
 **Challenge:**
 
-> Given a template parameter `T` matching some type such as `Container<A>` I want a `Container<B>`.
+> Given a template parameter `T` matching some type such as `T<A>` I want a `T<B>`.
 
 Let's start off writing compile-time tests that shall demonstrate the API that we want to end up with and later check its implementation:
 
@@ -41,12 +41,12 @@ With an idea on what the API of `rebind` will look like, we are ready to impleme
 template <typename T>
 struct rebind;
 
-template <template<typename> typename Container, typename A>
-struct rebind<Container<A>> {
+template <template<typename> typename T, typename A>
+struct rebind<T<A>> {
     using value_type = A;
 
     template <typename B>
-    using to = Container<B>;
+    using to = T<B>;
 };
 ```
 
@@ -112,12 +112,12 @@ struct rebind {
     static_assert(reject<T>, "T must match T<A>");
 };
 
-template <template<typename> typename Container, typename A>
-struct rebind<Container<A>> {
+template <template<typename> typename T, typename A>
+struct rebind<T<A>> {
     using value_type = A;
 
     template <typename B>
-    using to = Container<B>;
+    using to = T<B>;
 };
 
 template <typename T, typename B>
@@ -164,8 +164,7 @@ std::optional<std::string> const out_opt = transform(in_opt, [](auto const x) {r
 
 In this purposefully short post, we have seen how to write a type trait `rebind` to rebind a template template parameter `T<A>` to different type `B` resulting in a new type `T<B>`, which might be useful when writing generic code.
 
-For simplicity, we have limited ourselves to types with single parameters (e.g. `Container<A>`). However, we could extend `rebind` to work with variadic templates (e.g. `Container<A, As...>` and store `As...` in an `std::tuple<As...>`) without much hassle.
-
+For simplicity, we have limited ourselves to types with single parameters (e.g. `T<A>`). However, we could extend `rebind` to work with variadic templates (e.g. `T<A, As...>` and store `As...` in an `std::tuple<As...>`) without much hassle.
 ## References
 
 [1] [C++ reference: Template parameters and template arguments](https://en.cppreference.com/w/cpp/language/template_parameters).
