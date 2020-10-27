@@ -14,7 +14,7 @@ tags:   c++ meta-programming
 
 While upsetting my compiler and having some fun with template metaprogramming in C++, I stumbled upon the need of rebinding the inner type `A` of a template template parameter `T<A>` into a different type `B`, resulting in `T<B>`.
 
-That is not particularly interesting and probably not very fruitful. Still, it is a fun exercise and might be useful once in a while when writing generic code. Thus I have decided to code up a small type trait and share it.
+That is not particularly complicated and probably not very interesting. Still, it is a fun exercise and might be useful once in a while when writing generic code. Thus I have decided to code up a small type trait and share it.
 
 **Challenge:**
 
@@ -67,7 +67,7 @@ using rebind_to = typename rebind<T>::to<B>;
 
 Then, we can write `rebind_to<std::vector<int>, float>>` as opposed to `rebind<std::vector<int>>::to<float>`, which is a bit shorter.
 
-## Improving the Error Message
+# Improving Error Messages
 
 Our implementation relies on the "catch-all" primary template, which we should not instantiate.
 
@@ -83,7 +83,7 @@ We may improve it by statically asserting that our primary template is never use
 ```cpp
 template <typename T>
 struct rebind {
-    static_assert(reject<T>, "T must be of form T<A>");
+    static_assert(reject<T>, "T must match T<A>");
 };
 ```
 
@@ -97,8 +97,8 @@ inline constexpr auto reject = false;
 Now, we should see the following error message whenever we pass an invalid parameter:
 
 ```bash
-error: static assertion failed: T must be of form T<A>
-    static_assert(reject<T>, "T must be of form T<A>")
+error: static assertion failed: T must match T<A>
+    static_assert(reject<T>, "T must match T<A>")
 ```
 
 # Final Code
@@ -109,7 +109,7 @@ inline constexpr auto reject = false;
 
 template <typename T>
 struct rebind {
-    static_assert(reject<T>, "T must be of form T<A>");
+    static_assert(reject<T>, "T must match T<A>");
 };
 
 template <template<typename> typename Container, typename A>
@@ -137,12 +137,12 @@ We may implement `transform` as:
 ```cpp
 template <typename OptionalA, typename UnaryFunction,
     typename OptionalB = rebind_to<OptionalA, decltype(std::invoke(std::declval<UnaryFunction>(), *std::declval<OptionalA>()))>>
-[[nodiscard]] constexpr auto fmap(OptionalA opt, UnaryFunction fn) -> OptionalB {
+[[nodiscard]] constexpr auto transform(OptionalA opt, UnaryFunction fn) -> OptionalB {
     if (!opt) {
         return OptionalB{};
     }
     else {
-        return OptionalB{std::invoke(std::move(fn), *std::move(opt))};
+        return OptionalB{std::invoke(fn, *opt)};
     }
 }
 ```
@@ -158,16 +158,16 @@ std::optional<int> const in_opt{1};
 std::optional<std::string> const out_opt = transform(in_opt, [](auto const x) {return std::to_string(x + 1);}); // std::optional<std::string>{"2"}
 ```
 
-> IMO, a member-function (e.g. `transform`, `map`) in `std::optional<T>` or, perhaps preferably, language support for extension methods would lead to a much nicer syntax (`in_opt.transform([](auto const x) {return std::to_string(x + 1);})`), and easy of chaining (`in_opt.transform(to_this).transform(to_that)`).
+> From my perspective, a [member-function](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0798r3.html) (e.g. `transform`, `map`) in `std::optional<T>` or, perhaps preferably, language support for something like [extension methods](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4474.pdf) would lead to a much nicer syntax (`in_opt.transform([](auto const x) {return std::to_string(x + 1);})`) and cleaner chaining (`in_opt.transform(to_this).transform(to_that)`).
 
 ## Conclusion
 
-In this purposefully short post, we have seen how to write a type trait `rebind` to rebind a template template parameter `T<A>` to different type `T<B>`, which might be useful when writing generic code.
+In this purposefully short post, we have seen how to write a type trait `rebind` to rebind a template template parameter `T<A>` to different type `B` resulting in a new type `T<B>`, which might be useful when writing generic code.
 
 For simplicity, we have limited ourselves to types with single parameters (e.g. `Container<A>`). However, we could extend `rebind` to work with variadic templates (e.g. `Container<A, As...>` and store `As...` in an `std::tuple<As...>`) without much hassle.
 
 ## References
 
-[1] [cppreference: Template parameters and template arguments](https://en.cppreference.com/w/cpp/language/template_parameters).
+[1] [C++ reference: Template parameters and template arguments](https://en.cppreference.com/w/cpp/language/template_parameters).
 
 [2] [Expressiveness, Nullable Types, and Composition]({{ site.baseurl }}{% link _posts/2019-11-14-expressiveness-nullable-types-and-composition.md %}).
