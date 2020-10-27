@@ -1,4 +1,6 @@
 .bundle/
 .jekyll-cache/
 _site
-
+default.nix
+gemset.nix
+prepare.sh
