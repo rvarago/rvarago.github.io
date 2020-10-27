@@ -83,33 +83,33 @@ We may improve it by statically asserting that our primary template is never use
 ```cpp
 template <typename T>
 struct rebind {
-    static_assert(reject<T>, "T must match T<A>");
+    static_assert(deny<T>, "T must match T<A>");
 };
 ```
 
-Where `reject` is a variable template whose sole purpose is to delay the evaluation of the `static_assert` to the point when we *do* attempt to, mistakenly, instantiate the primary template:
+Where `deny` is a variable template whose sole purpose is to delay the evaluation of the `static_assert` to the point when we *do* attempt to, mistakenly, instantiate the primary template:
 
 ```cpp
 template <typename...>
-inline constexpr auto reject = false;
+inline constexpr auto deny = false;
 ```
 
 Now, we should see the following error message whenever we pass an invalid parameter:
 
 ```bash
 error: static assertion failed: T must match T<A>
-    static_assert(reject<T>, "T must match T<A>")
+    static_assert(deny<T>, "T must match T<A>")
 ```
 
 # Final Code
 
 ```cpp
 template <typename...>
-inline constexpr auto reject = false;
+inline constexpr auto deny = false;
 
 template <typename T>
 struct rebind {
-    static_assert(reject<T>, "T must match T<A>");
+    static_assert(deny<T>, "T must match T<A>");
 };
 
 template <template<typename> typename T, typename A>
