@@ -71,7 +71,7 @@ Then, we can write `rebind_to<std::vector<int>, float>>` as opposed to `rebind<s
 
 Our implementation relies on the "catch-all" primary template, which we should not instantiate.
 
-However, when we attempt to use `rebind` with an invalid type, then the compiler will try to instantiate the primary template, which we had not defined and therefore the user will likely be present with a rather obscure compile-error:
+However, when we attempt to use `rebind` with an invalid type, then the compiler will try to instantiate the primary template, which we had not defined; therefore we will likely get a rather unclear compilation-error message:
 
 ```bash
 error: incomplete type 'rebind<int>' used in nested name specifier
