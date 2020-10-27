@@ -132,7 +132,7 @@ An example where we *may* want to use `rebind` is to implement a generic `transf
 
 > **Disclaimer:** A C++20 concept for optional-like/nullable would probably fit the bill **far** better.
 
-We may implement `transform` as:
+We may implement a simplified (omitting forwarding references, etc) version of `transform` as:
 
 ```cpp
 template <typename OptionalA, typename UnaryFunction,
@@ -147,7 +147,7 @@ template <typename OptionalA, typename UnaryFunction,
 }
 ```
 
-The signature looks scary, especially the last template parameter `OptionalB`, which is arguably an abuse of default parameters. That is only meant to have the type `OptionalB` available in both return type and body, and therefore avoid repeating the same expression twice.
+The signature might look scary, especially the last template parameter `OptionalB`, which is arguably an abuse of default parameters. That is only meant to have the type `OptionalB` available in both return type and body, and therefore avoid repeating the same expression twice.
 
 Fundamentally, `OptionalA` has the type `T<A>` and we can de-reference it with `*` to access the inner `A` which we feed into `UnaryFunction` of type `A -> B` to obtain a `B` that we finally lift into the expected return type `OptionalB` of type `T<B>`.
 
@@ -158,7 +158,7 @@ std::optional<int> const in_opt{1};
 std::optional<std::string> const out_opt = transform(in_opt, [](auto const x) {return std::to_string(x + 1);}); // std::optional<std::string>{"2"}
 ```
 
-> From my perspective, a [member-function](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0798r3.html) (e.g. `transform`, `map`) in `std::optional<T>` or, perhaps preferably, language support for something like [extension methods](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4474.pdf) would lead to a much nicer syntax (`in_opt.transform([](auto const x) {return std::to_string(x + 1);})`) and cleaner chaining (`in_opt.transform(to_this).transform(to_that)`).
+> From my perspective, a [member-function](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0798r3.html) in `std::optional<T>` or, perhaps preferably, language support for something like [extension methods](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4474.pdf) would lead to a much nicer syntax (`in_opt.transform([](auto const x) {return std::to_string(x + 1);})`) and cleaner chaining (`in_opt.transform(to_this).transform(to_that)`).
 
 ## Conclusion
 
