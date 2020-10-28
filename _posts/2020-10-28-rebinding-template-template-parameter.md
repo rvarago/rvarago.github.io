@@ -29,7 +29,7 @@ static_assert(std::is_same_v<rebind<std::vector<int>>::to<float>, std::vector<fl
 
 We have given the name `rebind` to our type trait.
 
-Given a template template parameter `T<A>`, we have that `rebind<T<A>>` should expose two member-aliases: `value_type` and `to`.
+Given a template template parameter `T<A>`, we have that `rebind<T<A>>` should expose two member types: `value_type` and `to`.
 
 We access the inner type `A` as `value_type` and rebind the template template parameter to another inner type `B` like `T<B>` as `to<B>`.
 
@@ -54,7 +54,7 @@ As usual, we pattern match on templates.
 
 We have a primary template of `rebind` which we left empty, and a partial specialization for the case where we have a type matching `T<A>`.
 
-In the partial specialization, we destructure the parameters and store them in the member-aliases `value_type` and `to`. Since `to` rebinds the inner type `A` into another type `B`, it needs to accept `B` as a template parameter as well.
+In the partial specialization, we destructure the parameters and store them in the member types `value_type` and `to`. Since `to` rebinds the inner type `A` into another type `B`, it needs to accept `B` as a template parameter as well.
 
 If we run our tests, they should pass.
 
@@ -158,7 +158,7 @@ std::optional<int> const in_opt{1};
 std::optional<std::string> const out_opt = transform(in_opt, [](auto const x) {return std::to_string(x + 1);}); // std::optional<std::string>{"2"}
 ```
 
-> From my perspective, a [member-function](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0798r3.html) in `std::optional<T>` or, perhaps preferably, language support for something like [extension methods](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4474.pdf) would lead to a much nicer syntax (`in_opt.transform([](auto const x) {return std::to_string(x + 1);})`) and cleaner chaining (`in_opt.transform(to_this).transform(to_that)`).
+> From my perspective, a [member function](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0798r3.html) in `std::optional<T>` or, perhaps preferably, language support for something like [extension methods](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4474.pdf) would lead to a much nicer syntax (`in_opt.transform([](auto const x) {return std::to_string(x + 1);})`) and cleaner chaining (`in_opt.transform(to_this).transform(to_that)`).
 
 ## Conclusion
 
