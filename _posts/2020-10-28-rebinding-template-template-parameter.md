@@ -58,7 +58,7 @@ In the partial specialization, we destructure the parameters and store them in t
 
 If we run our tests, they should pass.
 
-As a convenience we can add an alias for `rebind_to` that should ease usage, mainly when dealing with dependent names:
+As a convenience we can add an alias `rebind_to` that should ease usage, mainly when dealing with dependent names:
 
 ```cpp
 template <typename T, typename B>
@@ -71,7 +71,7 @@ Then, we can write `rebind_to<std::vector<int>, float>>` as opposed to `rebind<s
 
 Our implementation relies on the "catch-all" primary template, which we should not instantiate.
 
-However, when we attempt to use `rebind` with an invalid type, then the compiler will try to instantiate the primary template, which we had not defined; therefore we will likely get a rather unclear compilation-error message:
+However, when we attempt to use `rebind` with an invalid type, the compiler will then try to instantiate the primary template, which we had not defined; therefore we will likely get a rather unclear compilation-error message:
 
 ```bash
 error: incomplete type 'rebind<int>' used in nested name specifier
@@ -124,9 +124,9 @@ template <typename T, typename B>
 using rebind_to = typename rebind<T>::to<B>;
 ```
 
-# Implementing `transform` with `rebind`
+# Implementing `transform` for `std::optional<A>`-like types with `rebind`
 
-An example where we *may* want to use `rebind` is to implement a generic `transform`.
+An example where we *may* want to use `rebind` is to implement a generic `transform` for `std::optional<A>`-like types.
 
 `transform` allows us to map over a type such as `std::optional<A>` with a function `A → B` to produce an `std::optional<B>`. However, we want to extend it to support other types that are "similar" to `std::optional<A>`, i.e. all types that model the same concept.
 
@@ -147,9 +147,9 @@ template <typename OptionalA, typename UnaryFunction,
 }
 ```
 
-The signature might look scary, especially the last template parameter `OptionalB`, which is arguably an abuse of default parameters. That is only meant to have the type `OptionalB` available in both return type and body, and therefore avoid repeating the same expression twice.
+The signature might look scary, especially the last template parameter `OptionalB`, which is arguably an abuse of default parameters. That is only meant to have the name `OptionalB` available in both return type and body, and thus avoid repeating the same expression twice.
 
-Fundamentally, `OptionalA` has the type `T<A>` and we can de-reference it with `*` to access the inner `A` which we feed into `UnaryFunction` of type `A -> B` to obtain a `B` that we finally lift into the expected return type `OptionalB` of type `T<B>`.
+Fundamentally, `OptionalA` has the type `T<A>` and we de-reference it with `*` to access the inner `A` which we feed into `UnaryFunction` of type `A -> B` to obtain a `B` that we finally lift into the expected return type `OptionalB` of type `T<B>`.
 
 We might use `transform` as:
 
@@ -162,9 +162,10 @@ std::optional<std::string> const out_opt = transform(in_opt, [](auto const x) {r
 
 ## Conclusion
 
-In this purposefully short post, we have seen how to write a type trait `rebind` to rebind a template template parameter `T<A>` to different type `B` resulting in a new type `T<B>`, which might be useful when writing generic code.
+In this purposefully short post, we have seen how to write a type trait `rebind` to rebind a template template parameter `T<A>` to different inner type `B` resulting in a new type `T<B>`, which might be useful when writing generic code.
 
 For simplicity, we have limited ourselves to types with single parameters (e.g. `T<A>`). However, we could extend `rebind` to work with variadic templates (e.g. `T<A, As...>` and store `As...` in an `std::tuple<As...>`) without much hassle.
+
 ## References
 
 [1] [C++ reference: Template parameters and template arguments](https://en.cppreference.com/w/cpp/language/template_parameters).
