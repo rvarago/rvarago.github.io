@@ -128,7 +128,7 @@ using rebind_to = typename rebind<T>::to<B>;
 
 An example where we *may* want to use `rebind` is to implement a generic `transform` for `std::optional<A>`-like types.
 
-`transform` allows us to map over a type such as `std::optional<A>` with a function `A → B` to produce an `std::optional<B>`. However, we want to extend it to support other types that are "similar" to `std::optional<A>`, i.e. all types that model the same concept.
+`transform` allows us to map over a type such as `std::optional<A>` with a function `A → B` to produce an `std::optional<B>`, or return an empty `std::optional<B>` if the input `std::optional<A>` is empty. However, we want to extend it to support other types that are "similar" to `std::optional<A>`, i.e. all types that model the same concept.
 
 > **Disclaimer:** A C++20 concept for optional-like/nullable would probably fit the bill **far** better.
 
@@ -139,10 +139,10 @@ template <typename OptionalA, typename UnaryFunction,
     typename OptionalB = rebind_to<OptionalA, decltype(std::invoke(std::declval<UnaryFunction>(), *std::declval<OptionalA>()))>>
 [[nodiscard]] constexpr auto transform(OptionalA opt, UnaryFunction fn) -> OptionalB {
     if (!opt) {
-        return OptionalB{};
+        return OptionalB{}; // empty optional in, then empty optional out.
     }
     else {
-        return OptionalB{std::invoke(fn, *opt)};
+        return OptionalB{std::invoke(fn, *opt)}; // apply `fn` to the value inside `opt` and wrap it in a new optional.
     }
 }
 ```
