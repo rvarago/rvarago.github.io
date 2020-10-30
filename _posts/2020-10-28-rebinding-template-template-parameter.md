@@ -128,7 +128,9 @@ using rebind_to = typename rebind<T>::to<B>;
 
 An example where we *may* want to use `rebind` is to implement a generic `transform` for `std::optional<A>`-like types.
 
-`transform` allows us to map over a type such as `std::optional<A>` with a function `A → B` to produce an `std::optional<B>`, or return an empty `std::optional<B>` if the input `std::optional<A>` is empty. However, we want to extend it to support other types that are "similar" to `std::optional<A>`, i.e. all types that model the same concept.
+`transform` allows us to map over a type such as `std::optional<A>` with a function `A → B` to produce an `std::optional<B>`, or return an empty `std::optional<B>` if the input `std::optional<A>` is empty.
+
+However, we want to extend it to support other types that are "similar" to `std::optional<A>`, i.e. all types that model the same optional-like concept.
 
 > **Disclaimer:** A C++20 concept for optional-like/nullable would probably fit the bill **far** better.
 
@@ -154,9 +156,32 @@ Fundamentally, `OptionalA` has the type `T<A>` and we de-reference it with `*` t
 We might use `transform` as:
 
 ```cpp
-std::optional<int> const in_opt{1};
-std::optional<std::string> const out_opt = transform(in_opt, [](auto const x) {return std::to_string(x + 1);}); // std::optional<std::string>{"2"}
+int main(int, char*[]) {
+    std::optional<double> const in_opt{1.5};
+    std::optional<int> const out_opt = transform(in_opt, [](double const x) {return static_cast<int>(x) + 2;}); // std::optional<int>{3}
+    return out_opt.value();
+}
 ```
+
+The assembly instructions generated from the [Compiler Explorer](https://godbolt.org/) when compiling with *x86-64 gcc 10.2* and *-std=c++17 -O1 -Wall -Wextra -Werror*:
+
+```assembly
+main:
+        mov     eax, 3
+        ret
+_GLOBAL__sub_I_main:
+        sub     rsp, 8
+        mov     edi, OFFSET FLAT:_ZStL8__ioinit
+        call    std::ios_base::Init::Init() [complete object constructor]
+        mov     edx, OFFSET FLAT:__dso_handle
+        mov     esi, OFFSET FLAT:_ZStL8__ioinit
+        mov     edi, OFFSET FLAT:_ZNSt8ios_base4InitD1Ev
+        call    __cxa_atexit
+        add     rsp, 8
+        ret
+```
+
+That means that the compiler managed to evaluate the whole expression at compile-time, yielding the value *3*.
 
 > From my perspective, a [member function](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0798r3.html) in `std::optional<T>` or, perhaps preferably, language support for something like [extension methods](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4474.pdf) would lead to a much nicer syntax (`in_opt.transform([](auto const x) {return std::to_string(x + 1);})`) and cleaner chaining (`in_opt.transform(to_this).transform(to_that)`).
 
