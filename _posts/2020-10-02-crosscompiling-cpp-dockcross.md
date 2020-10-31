@@ -33,10 +33,10 @@ Our C++ source-code goes through a series of transformations before yielding the
 
 1. The pre-processor expands directives (lines starting with `#`) presented in the source-code to generate translation-units.
 2. The compiler compiles the translation-units down to assembly instructions.
-3. The assembler assembles the assembly (quite a funny phrase!) instructions into "incomplete" (lacking dependencies) executables.
-4. The linker links our "incomplete" executables with their dependencies to generate the final ("complete") executable.
+3. The assembler assembles the assembly (quite a funny phrase!) instructions into "incomplete" (lacking dependencies) binaries.
+4. The linker links our "incomplete" binaries with their dependencies to generate the final ("complete") executable.
 
-Each step in the sequence ("chain") is normally performed by a specific tool. Hence the set of tools used by the chan receives the name "toolchain".
+Each step in the sequence ("chain") is normally performed by a specific tool. Hence the set of tools used by the chain receives the name "toolchain".
 
 > A toolchain is a set of distinct software development tools that are linked (or chained) together by specific stages such as GCC, binutils and glibc [1].
 
