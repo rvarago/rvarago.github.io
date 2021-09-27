@@ -15,7 +15,7 @@ header_pages:
   - tags.html
 
 markdown: kramdown
-theme: jekyll-theme-hacker
+theme: minima
 exclude:
   - Gemfile
   - Gemfile.lock
