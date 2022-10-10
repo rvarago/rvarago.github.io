@@ -8,7 +8,7 @@ tags: java ocaml plt design-pattern visitor
 
 ---
 
-| ![Match](/assets/img/2022-10-12-emulating-pattern-match.png) |
+| ![Match](/assets/img/2022-10-10-emulating-pattern-match.png) |
 | :----------------------------------------------------------: |
 | _Match as a function (a + b) -> (a -> r) -> (b -> r) -> r._  |
 
