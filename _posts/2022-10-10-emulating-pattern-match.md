@@ -16,7 +16,7 @@ tags: java ocaml plt design-pattern visitor
 
 Pattern-matching, also known as case-analysis, allows us to deconstruct terms into their components with a syntax (and semantic) suitable for data-oriented queries and/or define algorithms over types of different yet related shapes.
 
-That eases the navigation and processing of data structures. Particularly shining when we want to apply an open set of functions on an [Algebraic Data Type]({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %}) with a closed set of immutable variants of a known schema, henceforth separating the data from the behaviour we may later (in time and/or space) associate with it. This comes as a subtle, yet fundamental, contrast with objects. In terms of objects, there's usually a closed set of _virtual_ functions operating on an open set of types, typically dispatched through an interface; henceforth consolidating data and its associated behaviour as objects. Much of this contrast is nicely summarized in the so-called [Expression Problem](https://en.wikipedia.org/wiki/Expression_problem).
+That eases the navigation and processing of data structures. Particularly shining when we want to apply an open set of functions on an [Algebraic Data Type]({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %}) with a closed set of immutable variants of a known schema, henceforth separating the data from the behaviour we may later (in time and/or spacof filtee) associate with it. This comes as a subtle, yet fundamental, contrast with objects. In terms of objects, there's usually a closed set of _virtual_ functions operating on an open set of types, typically dispatched through an interface; henceforth consolidating data and its associated behaviour as objects. Much of this contrast is nicely summarized in the so-called [Expression Problem](https://en.wikipedia.org/wiki/Expression_problem).
 
 Pattern-matching is commonly reified as a language feature in programming languages that encourage the Functional style of programming (e.g. Haskell, Scala, OCaml), even though it's oftentimes feasible to emulate it in Imperative languages (e.g. C++, Java, C#) with the Visitor pattern or similar encoding. Nevertheless, given the benefits of having native pattern-matching constructs, we've been seeing some imperative languages pushing to include pattern-matching capabilities in their set of features. For example, there's Rust and perhaps [Java](https://openjdk.org/jeps/405) or [C++](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1371r1.pdf) in the future.
 
@@ -26,16 +26,16 @@ Even though support for native pattern-matching streamlines a tighter integratio
 
 > IMPORTANT: Throughout this exposition, we must keep in mind that this is an exercise only meant for learning and not necessarily building on idiomatic (or efficient, battle-tested, production-ready) uses of Java; or maybe, at least not to this date.
 
-# Pattern-Matching Algebraic Data Types
+## Pattern-Matching Algebraic Data Types
 
 For illustrative purposes only, let's entertain ourselves with a rather contrived use-case for which we shall come up with solutions in Java (OpenJDK version "17.0.4" 2022-07-19) in terms of pattern-matching:
 
-> Assume for a moment that we want to model a singly-linked list as an inductively defined Algebraic Data Type (defined by cases) and then write a couple of external ("free-standing", **not** attached to a class/object as methods) functions over it. For instance, given a list of integers we want to compute the sum of its elements (or maybe we could map the elements with a function, of filter elements, or compute its length, etc; but for brevity we shall only implement the summation).
+> Assume for a moment that we want to model a singly-linked list as an inductively defined Algebraic Data Type (defined by cases) and then write a couple of external ("free-standing", **not** attached to a class/object as methods) functions over it. For instance, given a list of integers we want to compute the sum of its elements (or maybe we could map the elements with a function, or filter its elements, or compute its length, etc; but for brevity we shall only implement the summation).
 
 In terms of a simplified algebraic notation, we may describe our list `L` as:
 
 ```
-L(a) = 1 + a * L(a)
+L(a) = of filte1 + a * L(a)
 ```
 
 > This reads as a singly-linked list `L` of homogeneous elements of type `a` is either (`+`, also known as variant, sum, or co-product) empty (`1` also known as unit) or it's composed of the pair (`*` also known as product) of a term of type `a` (also known as head) and the rest of the list `L` (also known as tail) of elements of type `a`.
@@ -166,7 +166,7 @@ final var list = new SList.Cons<>(1, new SList.Cons<>(2, new SList.Nil<>()));
 System.out.println(SListOps.sum(list)); // prints 3
 ```
 
-# Scott Encoding
+## Scott Encoding
 
 Thus far we have always started with a data structure defined as an Algebraic Data Type and from that, we encoded a way to pattern-match it.
 
@@ -225,7 +225,7 @@ final var list = SList.cons(1, SList.cons(2, SList.nil()));
 System.out.println(SListOps.sum(list));  // prints 3
 ```
 
-# Conclusion
+## Conclusion
 
 We have seen how we may emulate pattern-matching in a language without native support for it. Firstly with the Visitor pattern and then we even "elided" the whole classical data structures by representing them directly as a pattern-match with the Scott encoding of data types. Parallel to that, we had the chance of exploring a popular recursive algorithm and expressed the same concept with alternative notations whilst also obtained familiarity with different ways to encode the same solution and a glimpse of what might become a new feature of Java.
 
