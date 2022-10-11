@@ -35,7 +35,7 @@ For illustrative purposes only, let's entertain ourselves with a rather contrive
 In terms of a simplified algebraic notation, we may describe our list `L` as:
 
 ```
-L(a) = of filte1 + a * L(a)
+L(a) = 1 + a * L(a)
 ```
 
 > This reads as a singly-linked list `L` of homogeneous elements of type `a` is either (`+`, also known as variant, sum, or co-product) empty (`1` also known as unit) or it's composed of the pair (`*` also known as product) of a term of type `a` (also known as head) and the rest of the list `L` (also known as tail) of elements of type `a`.
