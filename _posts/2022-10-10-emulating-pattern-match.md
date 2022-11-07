@@ -32,7 +32,7 @@ For illustrative purposes only, let's entertain ourselves with a rather contrive
 
 > Assume for a moment that we want to model a singly-linked list as an inductively defined Algebraic Data Type (defined by cases) and then write a couple of external ("free-standing", **not** attached to a class/object as methods) functions over it. For instance, given a list of integers we want to compute the sum of its elements (or maybe we could map the elements with a function, or filter its elements, or compute its length, etc; but for brevity we shall only implement the summation).
 
-In terms of a simplified [algebraic]({{ site.baseurl }}{% link _posts/../2019-03-22-a-brief-introduction-to-the-algebra-of-types.md %}) notation, we may describe our list `L` as:
+In terms of a simplified [algebraic]({{ site.baseurl }}{% link _posts/2019-03-22-a-brief-introduction-to-the-algebra-of-types.md %}) notation, we may describe our list `L` as:
 
 ```
 L(a) = 1 + a * L(a)
@@ -245,7 +245,7 @@ All in all, I hope you've enjoyed reading this post as much as I enjoyed writing
 
 [1] [Algebraic Data Type and DAta Modelling]({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %})
 
-[2] [A Brief Introduction to the Algebra of Types]({{ site.baseurl }}{% link _posts/../2019-03-22-a-brief-introduction-to-the-algebra-of-types.md %})
+[2] [A Brief Introduction to the Algebra of Types]({{ site.baseurl }}{% link _posts/2019-03-22-a-brief-introduction-to-the-algebra-of-types.md %})
 
 [3] [Expression Problem C2](https://wiki.c2.com/?ExpressionProblem)
 
