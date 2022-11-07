@@ -18,7 +18,7 @@ Pattern-matching, also known as case-analysis, allows us to deconstruct terms in
 
 This eases the navigation and processing of data structures. It's particularly useful when we want to apply an open set of functions on an [Algebraic Data Type]({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %}) with a closed set of immutable variants of a known schema, henceforth separating the data from the behaviour we may later (in time and/or spacof filtee) associate with it. This comes as a subtle, yet fundamental, contrast with objects. In terms of objects, there's usually a closed set of _virtual_ functions operating on an open set of types, typically dispatched through an interface, thereby consolidating data and its associated behaviour as objects. Much of this contrast is nicely summarized in the so-called [Expression Problem](https://en.wikipedia.org/wiki/Expression_problem).
 
-Pattern-matching is commonly reified as a language feature in programming languages that encourage the functional style of programming (e.g. Haskell, Scala, OCaml), even though it's oftentimes feasible to emulate it in Imperative languages (e.g. C++, Java, C#) with the Visitor pattern or similar encoding. Nevertheless, given the benefits of having native pattern-matching constructs, we've been seeing some imperative languages pushing to include pattern-matching capabil[Algebraic Data Type]({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %})ities in their set of features. For example, there's Rust and perhaps [Java](https://openjdk.org/jeps/405) or [C++](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1371r1.pdf) in the future.
+Pattern-matching is commonly reified as a language feature in programming languages that encourage the functional style of programming (e.g. Haskell, Scala, OCaml), even though it's oftentimes feasible to emulate it in Imperative languages (e.g. C++, Java, C#) with the Visitor pattern or similar encoding. Nevertheless, given the benefits of having native pattern-matching constructs, we've been seeing some imperative languages pushing to include pattern-matching capabilities in their set of features. For example, there's Rust and perhaps [Java](https://openjdk.org/jeps/405) or [C++](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1371r1.pdf) in the future.
 
 > Actually, Java has had some narrow [support](https://www.artima.com/weblogs/viewpost.jsp?thread=168839) for pattern-matching within `catch` clauses where we match against a set of exceptions and react upon a successful match depending on the surrounding context.
 
@@ -243,7 +243,7 @@ All in all, I hope you've enjoyed reading this post as much as I enjoyed writing
 
 # References
 
-[1] [Algebraic Data Type and DAta Modelling]({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %})
+[1] [Algebraic Data Type and Data Modelling]({{ site.baseurl }}{% link _posts/2019-12-19-algebraic-data-types-and-data-modelling.md %})
 
 [2] [A Brief Introduction to the Algebra of Types]({{ site.baseurl }}{% link _posts/2019-03-22-a-brief-introduction-to-the-algebra-of-types.md %})
 
