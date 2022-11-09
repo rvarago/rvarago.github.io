@@ -188,7 +188,7 @@ interface SList<T> {
 }
 ```
 
-No records! Actually, there are no longer data structures in the conventional sense of the word, only factory methods as opposed to records and closures filling in the role of data containers by capturing `head` and `tail`.
+No records! Actually, there are no longer data structures as we usually know them, only factory methods as opposed to records and closures filling in the role of data containers by capturing `head` and `tail`.
 
 Unfortunately, as previously states, this snippet does not compile at the moment. This happens because Java forbids lambda expressions from implementing generic interface **methods** (when the method introduces type parameters). However, we can work around it by expanding the sugared syntax for lambdas into anonymous inner classes:
 
@@ -216,7 +216,7 @@ interface SList<T> {
 }
 ```
 
-That's a bit more verbose, alas it compiles!
+That's a bit more verbose, but it compiles!
 
 With the working syntax ready, nothing changes in the `sum` function. The only step left is to patch the call-site to use the new factories instead of instantiating records:
 
