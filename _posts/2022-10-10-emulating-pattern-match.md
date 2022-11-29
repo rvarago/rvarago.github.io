@@ -194,7 +194,7 @@ interface SList<T> {
 }
 ```
 
-> Notice that we have dropped the `sealed` marker, since there's really no type implementing the `SList<T>` interface anymore.
+> Notice that we have dropped the `sealed` marker, since there's really no type declaration implementing the `SList<T>` interface anymore.
 
 No records! Actually, there are no longer any data structures as we probably think of them. Instead, we have only factory methods as opposed to records and closures filling in the role of data containers by capturing (or closing over) `head` and `tail`.
 
