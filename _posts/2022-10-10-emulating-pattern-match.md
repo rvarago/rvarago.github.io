@@ -20,7 +20,7 @@ This improves the navigation and processing of data structures through external 
 
 Pattern-matching is commonly reified as a language feature in programming languages that encourage the functional style of programming (e.g. Haskell, Scala, OCaml), even though it's oftentimes feasible to emulate it in Imperative languages (e.g. C++, Java, C#) with the Visitor pattern or similar encoding. Nevertheless, given the benefits of having native pattern-matching constructs, we've been seeing some widely used imperative languages pushing to include pattern-matching capabilities in their set of features. For example, there's Rust and perhaps Java or [C++](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1371r1.pdf) in the future.
 
-> Actually, Java has had some narrow [support](https://www.artima.com/weblogs/viewpost.jsp?thread=168839) for pattern-matching within `catch` clauses where we match against a set of exceptions and react upon a successful match depending on the handler.
+> Actually, Java has had some narrow [support](https://www.artima.com/weblogs/viewpost.jsp?thread=168839) for pattern-matching within `catch` clauses, where we match against a set of exceptions and react upon a successful match depending on the corresponding handler.
 
 Support for native pattern-matching streamlines a tighter integration with the rest of the programming language and therefore may offer a more comprehensive and ergonomic experience with higher levels of expressiveness.
 
