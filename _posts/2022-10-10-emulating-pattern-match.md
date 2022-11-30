@@ -63,7 +63,7 @@ sealed interface SList<T> {
 }
 ```
 
-> The _sealed_ marker informs the type-checker (and the human reader) that there's a closed, known set of types satisfying the `SList<T>` interface; and equipped with this knowledge, the checker can ensure niceties such as exhaustive coverage, etc.
+> The `sealed` marker informs the type-checker (and the human reader) that there's a closed, known set of types satisfying the `SList<T>` interface; and equipped with this knowledge, the checker can ensure niceties such as exhaustive coverage, etc.
 
 With the type defined, we move on to actually implementing `sum` within which we pattern-match.
 
