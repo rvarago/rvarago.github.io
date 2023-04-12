@@ -120,7 +120,7 @@ generateId' prefix parameters = prefix <> ":" <> suffix
     normalize parameterrs = sort parameters
 ```
 
-Or -- don't explicitly pass `parameters` along:
+Or -- don't explicitly pass the `parameters` along:
 
 ```haskell
 import Data.List (intercalate, sort)
@@ -151,7 +151,7 @@ Etc.
 
 > Disclaimer: These are just some of the ways to express the same contrived algorithm. The point is not to cover all styles or decide which style is the best, but rather to illustrate how we may express it with `where` clauses.
 
-So, we broke up the implementation of `generated` in terms of smaller pieces that helped us to organize the functionality. Yet they might not be suitable to live at the same scope as the `generated`, but rather within it.
+So, we broke up the implementation of `generateId` in terms of smaller pieces that helped us to organize the functionality. Yet they might not be suitable to live at the same scope as the `generatedId`, but rather within it.
 
 ## Conclusion
 
