@@ -157,9 +157,7 @@ So, we broke up the implementation of `generated` in terms of smaller pieces tha
 
 We've shown three examples of local functions defined with `where` clauses. I'd say that whether to use it or not depends on the case in hand, as sometimes we might be better off with `let` expressions, lambdas, "fully-fledged" functions, unfolding the logic in-place, etc.
 
-There's more to `where`, such as manually ascribing it a type (instead of letting GHC infers it) and how that interacts with `ScopedTypeVariables` or maybe shortening the examples with `LambdaCase`, etc. Nevertheless, those are topics for another day.
-
-> This was the first installment of a series where I intend to talk about features that I may deem "little" yet useful for everyday programming.
+There's more to `where` clauses, such as manually ascribing types to functions defined within it (instead of letting GHC infers them) and how that interacts with `ScopedTypeVariables` or maybe shortening the examples with `LambdaCase`, etc. Nevertheless, those are topics for another day.
 
 # References
 
