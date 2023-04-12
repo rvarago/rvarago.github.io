@@ -25,9 +25,11 @@ As a functional language, it's no surprise that Haskell has a syntax that makes 
 
 Sometimes we want to break down a high-level function `f` into smaller low-level functions `g, h, ...`, but perhaps these low-level functions aren't interesting enough to deserve standing out in the module.
 
-Maybe because they're tightly specific to the outer-function only, or too short, or ambiguous with other low-level functions that would emerge from other outer-functions within the module, etc.
+Maybe because they're tightly specific to `f` only, or too short, or ambiguous with other low-level functions that would emerge from other outer-functions within the module, etc.
 
-Thus, we want these functions to retain their visibility **within the scope of `f`**. From now on ,we refer to such functions as "local functions".
+Thus, we want to let these low-level functions available only to `f`. So, we will make their scopes as small as possible, and that is **within the scope of `f` itself**.
+
+> From now on, we refer to such low-level functions as "local functions" (inner, contained, child), as in "local with regard to another (outer, containing, parent) function".
 
 With local functions, we:
 
@@ -49,7 +51,7 @@ map' _ [] = []
 map' f (x : xs) = f x : map' f xs
 ```
 
-We threaded `f` through the recursive call. However, `f` doesn't change across recursive invocations to `map'`.
+We threaded `f` through the recursive call `map' f xs`. However, `f` doesn't change across recursive invocations to `map'`.
 
 Perhaps we prefer not to _explicitly_ pass it. We can write a `go` helper that closes over `f` to achieve that:
 
@@ -61,7 +63,9 @@ map'' f = go
     go (x : xs) = f x : go xs
 ```
 
-Now, `map''` isn't recursive any longer, because it pushes the recursive step into `go` and this one captures `f` from the outer-scope freeing us from explicitly passing it as an argument of the recursion call.
+> Here and elsewhere, I named the helper as `go`, but any other name would have done the trick.
+
+Now, `map''` isn't recursive any longer. Instead, it pushes the recursive step into `go` and this one captures `f` from the outer-scope freeing us from explicitly passing it as an argument of the recursion call `go xs`.
 
 ### Making recursive functions tail-call
 
@@ -92,7 +96,7 @@ Say that want to generate a simple identifier for a list of strings that should 
 > Given the `prefix` and the list of `parameter_1`, ..., `parameter_N`, the identifier shall be `prefix:{parameter_1|...|parameter_N}`.
 >
 > Example:
-> `prefix` <- `device` and `parameter_1` = `Debian` and `parameter_2` = `Arch Linux`, the identifier shall be `device:{Arch Linux,Debian}`.
+> `prefix` <- `device` and `parameter_1` <-`Debian` and `parameter_2` <- `Arch Linux`, the identifier shall be `device:{Arch Linux,Debian}`.
 
 We may implement it as:
 
@@ -145,11 +149,15 @@ generateId''' prefix parameters = formatted
 
 Etc.
 
+> Disclaimer: These are just some of the ways to express the same contrived algorithm. The point is not to cover all styles or decide which style is the best, but rather to illustrate how we may express it with `where` clauses.
+
 So, we broke up the implementation of `generated` in terms of smaller pieces that helped us to organize the functionality. Yet they might not be suitable to live at the same scope as the `generated`, but rather within it.
 
 ## Conclusion
 
 We've shown three examples of local functions defined with `where` clauses. I'd say that whether to use it or not depends on the case in hand, as sometimes we might be better off with `let` expressions, lambdas, "fully-fledged" functions, unfolding the logic in-place, etc.
+
+There's more to `where`, such as manually ascribing it a type (instead of letting GHC infers it) and how that interacts with `ScopedTypeVariables` or maybe shortening the examples with `LambdaCase`, etc. Nevertheless, those are topics for another day.
 
 > This was the first installment of a series where I intend to talk about features that I may deem "little" yet useful for everyday programming.
 
