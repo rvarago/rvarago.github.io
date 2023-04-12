@@ -10,7 +10,7 @@ tags: haskell
 
 ## Introduction
 
-Haskell is a remarkable functional programming language with lazy evolution. It's also well-known for pushing the boundaries of "what programming languages can be" by offering features not typically seen in other languages, such as Type-Families, GADTs, and Linear Types.
+Haskell is a remarkable functional programming language. It's also well-known for pushing the boundaries of "what programming languages can be" by offering features not typically seen in other languages, such as Type-Families, GADTs, and Linear Types.
 
 However, Haskell also equips developers with loads of, perhaps "smaller", tools that we may take for granted and thus never explicitly think of them as such, and yet they are usually present in our code. This series aims to list some of those "smaller" features that I find particularly helpful.
 
