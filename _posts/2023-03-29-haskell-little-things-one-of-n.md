@@ -157,6 +157,8 @@ So, we broke up the implementation of `generateId` in terms of smaller pieces th
 
 We've shown three examples of local functions defined with `where` clauses. I'd say that whether to use it or not depends on the case in hand, as sometimes we might be better off with `let` expressions, lambdas, "fully-fledged" functions, unfolding the logic in-place, etc.
 
+I'm particularly into `where` clauses because not only does it allow me to scope helpers into functions and keep definition and usage closer, but also because I can refer (use, call) to the local functions before actually defining them. That helps me to concentrate on the high-level algorithm (policy) and only when I need, do I scroll down to check the details (mechanisms). By that time, I already know how they are used (context) and I suppose that helps me to stay focused and work more effectively -- with less back and forth.
+
 There's more to `where` clauses, such as manually ascribing types to functions defined within it (instead of letting GHC infers them) and how that interacts with `ScopedTypeVariables` or maybe shortening the examples with `LambdaCase`, etc. Nevertheless, those are topics for another day.
 
 # References
