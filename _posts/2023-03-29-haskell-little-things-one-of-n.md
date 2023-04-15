@@ -63,7 +63,7 @@ map'' f = go
     go (x : xs) = f x : go xs
 ```
 
-> Here and elsewhere, I named the helper as `go`, but any other name would have done the trick.
+> Here and elsewhere, I named the helper as `go`, but any other name (maybe a more descriptive one?) would have done the trick.
 
 Now, `map''` isn't recursive any longer. Instead, it pushes the recursive step into `go` and this one captures `f` from the outer-scope freeing us from explicitly passing it as an argument of the recursion call `go xs`.
 
