@@ -1,0 +1,141 @@
+---
+layout: post
+title: "Oops, I forgot to --publish! How can I connect to the container then?"
+tags: containers networking
+---
+
+> Today we're going to briefly look at a fun way to connect over the network to an unpublished port of a process running inside a Docker container.
+
+---
+
+Sometimes we get too immersed in the development/testing cycle and may realize that we've missed an important step only when it's a little too late.
+
+Let's say we have a networked service running inside a Docker container. Here exemplified by [Apache's `httpd`](https://httpd.apache.org) with the following `Dockerfile`:
+
+```dockerfile
+FROM httpd@sha256:518e9447a236de47cc2fb4f2dbf06466b6cd5cf50f9951742f9a20af76e8118d
+
+COPY ./public-html/ /usr/local/apache2/htdocs/
+```
+
+And `./publish-html/index.html`:
+
+```html
+<html>
+The answer?
+</html>
+```
+
+After building the image and running the container:
+
+```
+λ docker build -t httpd-fun .
+λ docker run --rm --name httpd-fun httpd-fun
+```
+
+
+Due to _reasons_, we need to make a couple of in-place changes to the container for **experimentation**. Here exemplified by "revealing *the answer*":
+
+```sh
+λ docker exec httpd-fun sed -i '/^The answer\?/ s/$/ <strong>42<\/strong>/' /usr/local/apache2/htdocs/index.html
+```
+
+After all that, we try to fetch the HTML page from our host machine:
+
+```sh
+λ curl http://localhost:80
+```
+
+And... Oops:
+
+```sh
+curl: (7) Failed to connect to localhost port 80 after 0 ms: Connection refused
+```
+
+There's nothing listening on `localhost:80`!
+
+Sure, that's expected. We didn't publish the container's port `80` onto our host.
+
+At this point, we could re-run the container with the port published, say `-p 8080:80` to expose `80` inside the container to `8080` on our host. However, we'd lose the changes we've made so far to the container and that might not acceptable. We'd prefer to keep the changes throughout the experimentation session.
+
+There are different options to proceed (commit the container, shell out to iptables, etc.), but we're going to limit ourselves to just two.
+
+## Connecting to the container IP
+
+To start off, perhaps the container's IP is routable from the host machine. If that's the case, then we can:
+
+1. Find the IP of `httpd-fun`:
+
+```sh
+λ docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' httpd-fun
+172.17.0.2
+```
+
+2. Send an HTTP request to the service to its IP as opposed to `localhost`:
+
+```sh
+λ curl http://172.17.0.2:80
+```
+
+3. Profit:
+
+```html
+<html>
+The answer? <strong>42</strong>
+</html>
+```
+
+Although straightforward, that's not always feasible.
+
+## Connecting through a proxy container
+
+Another option is to run a second container with the port published, from which, [by default](https://docs.docker.com/network), there's connectivity with `httpd-fun`, and then proxy connections from the former to the latter:
+
+1. Find the network name of `httpd-fun` (to later ensure that exists connectivity between the containers):
+
+```sh
+λ docker container inspect -f '{{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}}' httpd-fun
+bridge
+```
+
+2. Run a secondary container with the published to the host:
+
+```sh
+λ docker run -it --rm -p 8080:8080 --network bridge --name httpd-fun-proxy alpine@sha256:6457d53fb065d6f250e1504b9bc42d5b6c65941d57532c072d929dd0628977d0 /bin/sh
+```
+
+This provides a shell in an alpine container where `8080` on the host goes to `8080` in the container.
+
+3. For the proxy, we can install [socat](https://linux.die.net/man/1/socat):
+
+```sh
+# apk update && apk add socat
+```
+
+And spin it up:
+
+```sh
+# socat -v TCP-LISTEN:8080,fork,reuseaddr TCP-CONNECT:172.17.0.2:80
+```
+
+This starts `socat`, enables verbose logging, binds a socket at `localhost:8080` for multiple TCP connections, and forwards incoming connections to `172.17.0.2:80` (the container's IP and the port where `httpd` listens).
+
+4. Send an HTTP request to `localhost:8080`:
+
+```sh
+λ curl http://localhost:8080
+```
+
+5. Profit:
+
+```html
+<html>
+The answer? <strong>42</strong>
+</html>
+```
+
+## Conclusion
+
+We've played with ways to reach out via the network on a container where we'd forgot to publish a necessary port, which can be helpful during one-shot debugging sessions. For that, we made use of the versalitile `socat`, a powerful tool to have in our toolbox. 
+
+Finally, it's important to keep track of what we changed and, once the session is over, declare the necessary modifications in the Dockerfile (or similar system) and build a new image with what is necessary to restore immutability.
