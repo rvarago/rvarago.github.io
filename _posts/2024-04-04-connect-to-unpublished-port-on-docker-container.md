@@ -65,10 +65,12 @@ To start off, perhaps the container's IP is routable from the host machine. If t
 
 1\. Find the IP of `httpd-fun`:
 
+{% raw %}
 ```console
 λ docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' httpd-fun
 172.17.0.2
 ```
+{% endraw %}
 
 2\. Send an HTTP request to the service to its IP as opposed to `localhost`:
 
@@ -92,10 +94,12 @@ Another option is to run a second container with the port published, from which,
 
 1\. Find the network name of `httpd-fun` (to ensure that exists connectivity between the containers):
 
+{% raw %}
 ```console
-λ docker container inspect -f '{{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}}' httpd-fun
+λ docker inspect -f '{{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}}' httpd-fun
 bridge
 ```
+{% endraw %}
 
 2\. Run a secondary container with the published to the host:
 
@@ -108,13 +112,13 @@ This provides a shell in an alpine container where `8080` on the host goes to `8
 3\. For the proxy, we can install [socat](https://linux.die.net/man/1/socat):
 
 ```console
-# apk update && apk add socat
+\# apk update && apk add socat
 ```
 
 And spin it up:
 
 ```console
-# socat -v TCP-LISTEN:8080,fork,reuseaddr TCP-CONNECT:172.17.0.2:80
+\# socat -v TCP-LISTEN:8080,fork,reuseaddr TCP-CONNECT:172.17.0.2:80
 ```
 
 This starts `socat`, enables verbose logging, binds a socket at `localhost:8080` for multiple TCP connections, and forwards incoming connections to `172.17.0.2:80` (the container's IP and the port where `httpd` listens).
