@@ -28,27 +28,26 @@ The answer?
 
 After building the image and running the container:
 
-```
+```console
 λ docker build -t httpd-fun .
 λ docker run --rm --name httpd-fun httpd-fun
 ```
 
-
 Due to _reasons_, we need to make a couple of in-place changes to the container for **experimentation**. Here exemplified by "revealing *the answer*":
 
-```sh
+```console
 λ docker exec httpd-fun sed -i '/^The answer\?/ s/$/ <strong>42<\/strong>/' /usr/local/apache2/htdocs/index.html
 ```
 
 After all that, we try to fetch the HTML page from our host machine:
 
-```sh
+```console
 λ curl http://localhost:80
 ```
 
 And... Oops:
 
-```sh
+```console
 curl: (7) Failed to connect to localhost port 80 after 0 ms: Connection refused
 ```
 
@@ -60,24 +59,24 @@ At this point, we could re-run the container with the port published, say `-p 80
 
 There are different options to proceed (commit the container, shell out to iptables, etc.), but we're going to limit ourselves to just two.
 
-## Connecting to the container IP
+## Connecting to the container's IP
 
 To start off, perhaps the container's IP is routable from the host machine. If that's the case, then we can:
 
-1. Find the IP of `httpd-fun`:
+1\. Find the IP of `httpd-fun`:
 
-```sh
+```console
 λ docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' httpd-fun
 172.17.0.2
 ```
 
-2. Send an HTTP request to the service to its IP as opposed to `localhost`:
+2\. Send an HTTP request to the service to its IP as opposed to `localhost`:
 
-```sh
+```console
 λ curl http://172.17.0.2:80
 ```
 
-3. Profit:
+3\. Profit:
 
 ```html
 <html>
@@ -91,42 +90,42 @@ Although straightforward, that's not always feasible.
 
 Another option is to run a second container with the port published, from which, [by default](https://docs.docker.com/network), there's connectivity with `httpd-fun`, and then proxy connections from the former to the latter:
 
-1. Find the network name of `httpd-fun` (to later ensure that exists connectivity between the containers):
+1\. Find the network name of `httpd-fun` (to ensure that exists connectivity between the containers):
 
-```sh
+```console
 λ docker container inspect -f '{{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}}' httpd-fun
 bridge
 ```
 
-2. Run a secondary container with the published to the host:
+2\. Run a secondary container with the published to the host:
 
-```sh
+```console
 λ docker run -it --rm -p 8080:8080 --network bridge --name httpd-fun-proxy alpine@sha256:6457d53fb065d6f250e1504b9bc42d5b6c65941d57532c072d929dd0628977d0 /bin/sh
 ```
 
 This provides a shell in an alpine container where `8080` on the host goes to `8080` in the container.
 
-3. For the proxy, we can install [socat](https://linux.die.net/man/1/socat):
+3\. For the proxy, we can install [socat](https://linux.die.net/man/1/socat):
 
-```sh
+```console
 # apk update && apk add socat
 ```
 
 And spin it up:
 
-```sh
+```console
 # socat -v TCP-LISTEN:8080,fork,reuseaddr TCP-CONNECT:172.17.0.2:80
 ```
 
 This starts `socat`, enables verbose logging, binds a socket at `localhost:8080` for multiple TCP connections, and forwards incoming connections to `172.17.0.2:80` (the container's IP and the port where `httpd` listens).
 
-4. Send an HTTP request to `localhost:8080`:
+4\. Send an HTTP request to `localhost:8080`:
 
-```sh
+```console
 λ curl http://localhost:8080
 ```
 
-5. Profit:
+5\. Profit:
 
 ```html
 <html>
