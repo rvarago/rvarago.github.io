@@ -29,8 +29,7 @@ The answer?
 After building the image and running the container:
 
 ```console
-λ docker build -t httpd-fun .
-λ docker run --rm --name httpd-fun httpd-fun
+λ docker build -t httpd-fun . && docker run --rm --name httpd-fun httpd-fun
 ```
 
 Due to _reasons_, we need to make a couple of in-place changes to the container for **experimentation**. Here exemplified by "revealing *the answer*":
@@ -67,7 +66,8 @@ To start off, perhaps the container's IP is routable from the host machine. If t
 
 {% raw %}
 ```console
-λ docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' httpd-fun
+λ docker container inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' httpd-fun
+
 172.17.0.2
 ```
 {% endraw %}
@@ -96,7 +96,8 @@ Another option is to run a second container with the port published, from which,
 
 {% raw %}
 ```console
-λ docker inspect -f '{{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}}' httpd-fun
+λ docker container inspect -f '{{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}}' httpd-fun
+
 bridge
 ```
 {% endraw %}
@@ -112,13 +113,13 @@ This provides a shell in an alpine container where `8080` on the host goes to `8
 3\. For the proxy, we can install [socat](https://linux.die.net/man/1/socat):
 
 ```console
-\# apk update && apk add socat
+# apk update && apk add socat
 ```
 
 And spin it up:
 
 ```console
-\# socat -v TCP-LISTEN:8080,fork,reuseaddr TCP-CONNECT:172.17.0.2:80
+# socat -v TCP-LISTEN:8080,fork,reuseaddr TCP-CONNECT:172.17.0.2:80
 ```
 
 This starts `socat`, enables verbose logging, binds a socket at `localhost:8080` for multiple TCP connections, and forwards incoming connections to `172.17.0.2:80` (the container's IP and the port where `httpd` listens).
@@ -135,6 +136,41 @@ This starts `socat`, enables verbose logging, binds a socket at `localhost:8080`
 <html>
 The answer? <strong>42</strong>
 </html>
+```
+
+## Automating the process
+
+We can even take this all a step further and put together a shell script to automate the spinning of the proxy container (that we may tweak according to our needs):
+
+{% raw %}
+```sh
+#!/bin/sh
+
+# proxy-container
+#
+# USAGE
+# proxy-container target-container-name target-container-port proxy-container-port
+
+TARGET_CONTAINER_NAME="${1}"
+TARGET_CONTAINER_PORT="${2}"
+PROXY_CONTAINER_PORT="${3}"
+
+target_container_ip="$(docker container inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${TARGET_CONTAINER_NAME})"
+target_container_net="$(docker container inspect -f '{{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}}' ${TARGET_CONTAINER_NAME})"
+
+docker run -it --rm \
+    -p "${PROXY_CONTAINER_PORT}:${PROXY_CONTAINER_PORT}" \
+    --network "${target_container_net}" \
+    --name "${TARGET_CONTAINER_NAME}-proxy" \
+    alpine@sha256:6457d53fb065d6f250e1504b9bc42d5b6c65941d57532c072d929dd0628977d0 \
+    /bin/sh -c "apk update && apk add socat && socat -v TCP-LISTEN:${PROXY_CONTAINER_PORT},fork,reuseaddr TCP-CONNECT:${target_container_ip}:${TARGET_CONTAINER_PORT}"
+```
+{% endraw %}
+
+And use it to achieve the same result we did previously:
+
+```console
+λ ./proxy-container httpd-fun 80 8080
 ```
 
 ## Conclusion
