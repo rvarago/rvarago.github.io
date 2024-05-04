@@ -108,7 +108,7 @@ bridge
 λ docker run -it --rm -p 8080:8080 --network bridge --name httpd-fun-proxy alpine@sha256:6457d53fb065d6f250e1504b9bc42d5b6c65941d57532c072d929dd0628977d0 /bin/sh
 ```
 
-This provides a shell in an alpine container where `8080` on the host goes to `8080` in the container.
+This provides a shell in an Alpine container where `8080` on the host goes to `8080` in the container.
 
 3\. For the proxy, we can install [socat](https://linux.die.net/man/1/socat):
 
