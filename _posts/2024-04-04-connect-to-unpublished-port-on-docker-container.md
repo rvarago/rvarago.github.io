@@ -8,7 +8,7 @@ tags: containers networking
 
 ---
 
-When we deploy services as containers, we typically want to ensure that relevant behaviors can be reproduced between the artifacts we develop locally or test on CI servers and those we ship to production. Crucially, we should be able to experiment with such artifacts and troubleshoot them.
+As we deploy services as containers, we typically want to ensure that relevant behaviors can be reproduced between the artifacts we develop locally or test on CI servers and those we ship to production. Crucially, we should be able to experiment with such artifacts and troubleshoot them.
 
 Sometimes we get too immersed in the development/testing cycle and may realise that we've missed an important step only when it's a little too inconvenient to restart the whole process from scratch.
 
@@ -60,11 +60,11 @@ curl: (7) Failed to connect to localhost port 80 after 0 ms: Connection refused
 
 It didn't work. There's nothing listening on `localhost:80`!
 
-Sure, that's expected. We didn't publish the container's port `80` onto our host.
+Sure, that's expected. We didn't publish the container's port `80` onto our host and therefore we couldn't reach the service.
 
-At this point, we could simply re-run the container with the port published, say `-p 8080:80` to expose `80` inside the container to `8080` on our host, or even build a new image with thr changes we wanted and start a new container from that. However, we'd lose the changes we've made so far to the container and that might not be acceptable. We'd prefer to keep the changes throughout the experimentation session.
+At this point, we could simply re-run the container with the port published, say `-p 8080:80` to expose `80` inside the container to `8080` on our host, or even build a new image with the changes we wanted and start a new container from that. However, we'd lose the changes we've made so far to the container and that might not be acceptable. We'd prefer to keep the changes throughout the experimentation session.
 
-There are different options to proceed (commit the container, shell out to iptables, etc.), but we're going to limit ourselves to just two.
+There are different options to proceed (commit the container, shell out to iptables and manually add the necessary rules, etc.), but we're going to limit ourselves to just two.
 
 ## Connecting to the container's IP
 
@@ -183,6 +183,8 @@ And use it to achieve the same result we did previously:
 
 ## Conclusion
 
-We've played with ways to reach out via the network on a container where we'd forgot to publish a necessary port, which can be helpful during one-shot debugging sessions. For that, we made use of the versatile `socat`, a powerful tool to have in our toolbox. 
+We've played with ways to reach out via the network on a container where we'd forgot to publish a necessary port, which can be helpful during one-shot debugging sessions as part of the broader development process.
 
-Finally, it's important to keep track of what we changed and, once the session is over, declare the necessary modifications in the Dockerfile (or similar system) and build a new image with what is necessary to restore immutability.
+To achieve our goals, we've made use of the versatile `socat`, a powerful tool to have in our toolbox. 
+
+Finally, it's important to keep track of what we changed and, once the session is over, declare the necessary modifications in the Dockerfile (or similar system) and build a new image with what is necessary to restore immutability and make it go through the standard integration process (checks, reviews, etc) before going to production.
