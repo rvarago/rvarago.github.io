@@ -8,7 +8,9 @@ tags: containers networking
 
 ---
 
-Sometimes we get too immersed in the development/testing cycle and may realize that we've missed an important step only when it's a little too late.
+When we deploy services as containers, we typically want to ensure that relevant behaviors can be reproduced between the artifacts we develop locally or test on CI servers and those we ship to production. Crucially, we should be able to experiment with such artifacts and troubleshoot them.
+
+Sometimes we get too immersed in the development/testing cycle and may realise that we've missed an important step only when it's a little too inconvenient to restart the whole process from scratch.
 
 Let's say we have a networked service running inside a Docker container. Here exemplified by [Apache's `httpd`](https://httpd.apache.org) with the following `Dockerfile`:
 
@@ -26,19 +28,25 @@ The answer?
 </html>
 ```
 
-After building the image and running the container:
+After building the image:
 
 ```console
-λ docker build -t httpd-fun . && docker run --rm --name httpd-fun httpd-fun
+λ docker build -t httpd-fun .
 ```
 
-Due to _reasons_, we need to make a couple of in-place changes to the container for **experimentation**. Here exemplified by "revealing *the answer*":
+We spin up a container:
+
+```console
+λ docker run --rm --name httpd-fun httpd-fun
+```
+
+However, as we play with the application, due to _reasons_, we need to make a couple of in-place changes to the container for **experimentation**. Here exemplified by "revealing *the answer*":
 
 ```console
 λ docker exec httpd-fun sed -i '/^The answer\?/ s/$/ <strong>42<\/strong>/' /usr/local/apache2/htdocs/index.html
 ```
 
-After all that, we try to fetch the HTML page from our host machine:
+After all that, we happily try to fetch the HTML page from our host machine:
 
 ```console
 λ curl http://localhost:80
@@ -50,11 +58,11 @@ And... Oops:
 curl: (7) Failed to connect to localhost port 80 after 0 ms: Connection refused
 ```
 
-There's nothing listening on `localhost:80`!
+It didn't work. There's nothing listening on `localhost:80`!
 
 Sure, that's expected. We didn't publish the container's port `80` onto our host.
 
-At this point, we could re-run the container with the port published, say `-p 8080:80` to expose `80` inside the container to `8080` on our host. However, we'd lose the changes we've made so far to the container and that might not acceptable. We'd prefer to keep the changes throughout the experimentation session.
+At this point, we could simply re-run the container with the port published, say `-p 8080:80` to expose `80` inside the container to `8080` on our host, or even build a new image with thr changes we wanted and start a new container from that. However, we'd lose the changes we've made so far to the container and that might not be acceptable. We'd prefer to keep the changes throughout the experimentation session.
 
 There are different options to proceed (commit the container, shell out to iptables, etc.), but we're going to limit ourselves to just two.
 
@@ -175,6 +183,6 @@ And use it to achieve the same result we did previously:
 
 ## Conclusion
 
-We've played with ways to reach out via the network on a container where we'd forgot to publish a necessary port, which can be helpful during one-shot debugging sessions. For that, we made use of the versalitile `socat`, a powerful tool to have in our toolbox. 
+We've played with ways to reach out via the network on a container where we'd forgot to publish a necessary port, which can be helpful during one-shot debugging sessions. For that, we made use of the versatile `socat`, a powerful tool to have in our toolbox. 
 
 Finally, it's important to keep track of what we changed and, once the session is over, declare the necessary modifications in the Dockerfile (or similar system) and build a new image with what is necessary to restore immutability.
