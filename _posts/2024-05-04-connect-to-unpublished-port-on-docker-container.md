@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Oops, I forgot to --publish! How can I connect to the container then?"
-tags: containers networking
+tags: docker networking
 ---
 
 > Today we're going to briefly look at a fun way to connect over the network to an unpublished port of a process running inside a Docker container.
