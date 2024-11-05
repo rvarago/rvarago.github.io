@@ -29,14 +29,16 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Font settings for code blocks with better contrast */
 pre {
-    background-color: #1c1c1c; /* Darker background for code blocks (even darker for high contrast) */
-    color: #e1e1e1;            /* Brighter text for better readability */
+    background-color: #282828; /* Dark background for code blocks */
+    color: #e0e0e0;            /* Lighter text for better readability */
     padding: 15px;
     border-radius: 5px;
     font-family: "JetBrains Mono", "Iosevka", "Monoid", monospace; /* Custom code font */
     font-size: 1em;             /* Regular font size for better readability */
     line-height: 1.6;           /* More line height for better readability */
     border-left: 4px solid #f0dfaf; /* Add left border for a Zenburn-inspired accent */
+    word-wrap: break-word; /* Handle long lines better */
+    overflow-wrap: break-word;
 }
 
 /* Avoid overriding Rouge styles for syntax highlighting */
@@ -90,7 +92,7 @@ blockquote {
 
 /* Code blocks inside a div or pre */
 div pre {
-    background-color: #1c1c1c; /* Same dark background for div code blocks */
+    background-color: #282828; /* Same dark background for div code blocks */
     padding: 15px;
     border-radius: 5px;
 }
