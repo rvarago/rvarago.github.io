@@ -10,9 +10,11 @@ jobs:
         with:
           ruby-version: '3.3'
       - name: Install dependencies
-        run: apt-get update && apt-get install -y pandoc && bundle install && bundle exec appraisal install
+        run: sudo apt-get update && apt-get install -y pandoc && bundle install && bundle exec appraisal install
       - name: Convert org to md
-        run: find ./ -iname "*.org" -type f -exec sh -c 'pandoc -f org -t gfm "${0}" -o "${0%.org}.md"' {} \;
+        run: |
+          find ./ -iname "*.org" -type f -exec sh -c 'pandoc -f org -t gfm "${0}" -o "${0%.org}.md"' {} \;
+          find . -name "*.org" -type f -delete
       - name: Setup Pages
         id: configure-pages
         uses: actions/configure-pages@v5
