@@ -1,0 +1,94 @@
+/* Zenburn-inspired theme for Jekyll with custom fonts */
+
+/* General background and text colors */
+body {
+    background-color: #3f3f3f; /* Dark gray background */
+    color: #dcdccc;            /* Off-white/gray text */
+    font-family: "Arial", sans-serif; /* Default font for the body */
+}
+
+/* Links */
+a {
+    color: #dca3a3;  /* Light red/pink for links */
+}
+
+a:hover {
+    color: #f0dfaf;  /* Light yellow on hover */
+}
+
+/* Highlighting */
+mark {
+    background-color: #dcdc8c; /* Light yellow for highlights */
+    color: #2e2e2e;            /* Darker text */
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    color: #f0dfaf;            /* Light yellow for headings */
+}
+
+/* Font settings for code blocks */
+pre {
+    background-color: #2e2e2e; /* Darker background for code blocks */
+    color: #f0dfaf;            /* Light yellow text for code */
+    padding: 10px;
+    border-radius: 5px;
+    font-family: "JetBrains Mono", "Iosevka", "Monoid", monospace; /* Custom code font */
+    font-size: 0.9em;          /* Slightly smaller font size for code blocks */
+}
+
+/* Avoid overriding Rouge styles for syntax highlighting */
+pre code {
+    background: transparent;   /* Ensure code has no extra background */
+    color: inherit;             /* Inherit the color from the parent pre */
+    font-family: inherit;       /* Use the same font family as the parent pre */
+}
+
+/* Syntax highlighting for inline code */
+code {
+    color: #f0dfaf;            /* Light yellow text for inline code */
+    background-color: #2e2e2e; /* Dark background for inline code */
+    padding: 0 2px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Iosevka", "Monoid", monospace; /* Custom inline code font */
+}
+
+/* Tables */
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    border: 1px solid #555555;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #2e2e2e;
+    color: #dcdccc;
+}
+
+tr:nth-child(even) {
+    background-color: #3f3f3f; /* Slightly lighter rows */
+}
+
+tr:nth-child(odd) {
+    background-color: #2e2e2e; /* Darker odd rows */
+}
+
+/* Blockquotes */
+blockquote {
+    border-left: 4px solid #dca3a3; /* Light red border for quotes */
+    margin-left: 20px;
+    padding-left: 10px;
+    color: #dcdccc;
+}
+
+/* Code blocks inside a div or pre */
+div pre {
+    background-color: #2e2e2e;
+    padding: 10px;
+    border-radius: 5px;
+}
