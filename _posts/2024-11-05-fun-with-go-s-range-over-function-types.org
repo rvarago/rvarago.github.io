@@ -8,19 +8,17 @@ tags: []
 #+end_export
 
 #+begin_quote
-A quick look at `range`-aware custom iterators.
+A quick look at =range=-aware custom iterators.
 #+end_quote
 --------------
 
-Since Go 1.23, you can add support for the `range` construct to user-defined types. This provides a standard interface for iteration, which should make it easier for those experimenting with third-party containers.
+Since Go 1.23, you can add support for the =range= construct to user-defined types. This provides a standard interface for iteration, which should make it easier for those experimenting with third-party containers.
 
 To start off, there's been nice feature since [[https://tip.golang.org/doc/go1.22][1.22]] more or less on the same topic:
 
-#+begin_center
-A terser syntax for iterating over integers in the range ~[0, n)~. Similar to APL's [[https://aplwiki.com/wiki/Index_Generator][~Iota~]] primitive.
-#+end_center
+A terser syntax for iterating over integers in the range =[0, n)=. Similar to APL's [[https://aplwiki.com/wiki/Index_Generator][=Iota=]] primitive.
 
-*Example*: Iterating from ~[0, 10]~
+*Example*: Iterating from =[0, 10)=
 
 #+begin_src go :imports "fmt"
 for i := range 10 {
@@ -42,7 +40,7 @@ n = 8
 n = 9
 #+end_example
 
-Since the loop variable is optional, if we simply want to execute an action, say ~3~ times, the code boils down to:
+Since the loop variable is optional, if we simply want to execute an action, say =3= times, the code boils down to:
 
 #+begin_src go :imports "fmt"
 for range 3 {
