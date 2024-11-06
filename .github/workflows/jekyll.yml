@@ -40,7 +40,7 @@ jobs:
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
           cache-version: 0 # Increment this number if you need to re-download cached gems
       - name: Install dependencies
-        run: sudo apt-get install -y pandoc && bundle install && bundle exec appraisal install
+        run: sudo apt-get install -y pandoc
       - name: Convert org to md
         run: |
           find ./ -iname "*.org" -type f -exec sh -c 'pandoc -f org -t gfm "${0}" -o "${0%.org}.md"' {} \;
@@ -50,7 +50,7 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Build with Jekyll
         # Outputs to the './_site' directory by default
-        run: bundle exec appraisal jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
+        run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
         env:
           JEKYLL_ENV: production
       - name: Upload artifact

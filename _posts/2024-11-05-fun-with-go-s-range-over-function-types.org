@@ -1,7 +1,7 @@
 #+begin_export html
 ---
 layout: post
-title: WIP: Fun with Go's range over function types
+title: (WIP) Fun with Go's range over function types
 permalink: /:title/
 tags: []
 ---
