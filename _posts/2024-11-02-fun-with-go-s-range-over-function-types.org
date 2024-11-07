@@ -179,20 +179,10 @@ Since the iterator returned by =fibs= produces an infinite sequence, we had to e
 
 * Range adapters
 
-Lastly, we can write functions that adapts iterators to our needs, for instance, =takeWhile= to keep iterating while a given predicate applied to the current value yields =true=. As an example, we use to iterate over an infinite sequence of strings (=a= =aa= =aaa= ...) with lengths =< 5=.
+Lastly, we can write functions that adapts iterators to our needs, for instance, =takeWhile= to keep iterating while a given predicate applied to the current value yields =true=. As an example, we use to iterate over an infinite sequence of strings (=a= =aa= =aaa= ...) and take only the firsts whose lengths are =< 5=.
 
 #+begin_src go :imports '("fmt" "iter") :main no
 package main
-
-func takeWhile[V any](p func(V) bool, seq iter.Seq[V]) iter.Seq[V] {
-	return func(yield func(V) bool) {
-		for v := range seq {
-			if !p(v) || !yield(v) {
-				return
-			}
-		}
-	}
-}
 
 func appendForever(s string) iter.Seq[string] {
 	init := s
@@ -202,6 +192,16 @@ func appendForever(s string) iter.Seq[string] {
 				return
 			}
 			s = init + s
+		}
+	}
+}
+
+func takeWhile[V any](p func(V) bool, seq iter.Seq[V]) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		for v := range seq {
+			if !p(v) || !yield(v) {
+				return
+			}
 		}
 	}
 }
