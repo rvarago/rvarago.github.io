@@ -1,0 +1,62 @@
+#+begin_export html
+---
+layout: post
+title: Blogging with org-mode
+permalink: /:title/
+tags: [emacs org-mode]
+---
+#+end_export
+
+#+begin_quote
+I'm gradually migrating posts from Markdown to Org.
+#+end_quote
+--------------
+
+I've been writing posts in Markdown for a while now, but lately I've been pondering whether to use [[https://orgmode.org/][Org]] instead.
+
+Now, it's finally happening! I've started an experiment where new posts, starting from this one, will be written in Org.
+
+There's /really/ no strong reason other than I feel slightly more comfortable with Emacs + org-mode.
+
+Additionally -- and perhaps crucially? -- I profit from [[https://orgmode.org/worg/org-contrib/babel/][Babel]] to evaluate inline code  within the comfort Emacs directly in the buffer containing the post. With discipline, it should help me ensure all the code actually compiles and (maybe) produces the expected outcome, which is generally hard to achieve otherwise due to copy-paste deviations.
+
+*Example:* Python snippet evaluated with [[https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-python.html][=ob-python=]]
+
+#+begin_src python :results output
+from collections.abc import Iterator
+import itertools
+
+def nats() -> Iterator[int]:
+    n = 0
+    while True:
+        yield n
+        n += 1
+
+for n in itertools.takewhile(lambda n: n < 10, nats()):
+    print(f"n = {n}")
+#+end_src
+
+#+RESULTS:
+#+begin_example
+n = 0
+n = 1
+n = 2
+n = 3
+n = 4
+n = 5
+n = 6
+n = 7
+n = 8
+n = 9
+#+end_example
+
+Now, with my cursor in the code, I type =C-c C-c= (Emacs for =Ctrl+c Ctrl+c=) and I see the output of running it.
+
+That's good, because I don't feel much need to frequently switch from buffer with the text to another place to test code and then copy it back to original buffer, with all the perils of a deviation between the code I tested and the code I published.
+
+I haven't taken the time to clean things up yet and may never do so. Thus, for now I'm lazily shelling out to =pandoc= in the GitHub Action to [[https://github.com/rvarago/rvarago.github.io/blob/66885528f683655f094b7bdac241132c2bdedc24/.github/workflows/jekyll.yml#L46][convert Org to Markdown]]
+before deploying the site. Lastly, to lower the friction of blogging, I wrote an [[https://github.com/rvarago/renv/blob/162a63e359efb00fd6b2ed0704fbccb95c72e4f4/nixpkgs/modules/editors/emacs/doom.d/config.el#L133][Emacs Lisp function]] to start a new post with all the boilerplate.
+
+This is all part of a larger refactoring, in which I've changed the style of this blog and intend to focus more on shorter essays from now on.
+
+Anyway, more focus, more fun! Or so one hopes.

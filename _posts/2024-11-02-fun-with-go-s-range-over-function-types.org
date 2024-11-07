@@ -1,0 +1,226 @@
+#+begin_export html
+---
+layout: post
+title: Fun with Go's range over function types
+permalink: /:title/
+tags: [go]
+---
+#+end_export
+
+#+begin_quote
+A quick look at =range=-aware custom iterators.
+#+end_quote
+--------------
+
+Since Go [[https://tip.golang.org/doc/go1.23][1.23]], it's possible to iterate over user-defined constructs with usual =range= loops, as long as such types conform to the expected interface.
+
+Thanks to this new standard interface, it should be easier to integrate with third-party containers and to more concisely express some algorithms.
+
+* Range over integers
+
+To start off, there's been nice feature since [[https://tip.golang.org/doc/go1.22][1.22]] more or less on the same topic: A terser syntax for iterating over integers in the range =[0, n)=. Similar to APL's [[https://aplwiki.com/wiki/Index_Generator][=Iota=]] primitive.
+
+*Example*: Iterating from =[0, 10)=
+
+#+begin_src go :imports "fmt"
+for i := range 10 {
+	fmt.Printf("i = %v\n", i)
+}
+#+end_src
+
+#+RESULTS:
+#+begin_example
+n = 0
+n = 1
+n = 2
+n = 3
+n = 4
+n = 5
+n = 6
+n = 7
+n = 8
+n = 9
+#+end_example
+
+Since the loop variable is optional, if we just want to execute an action multiple times, say =3= times, the code boils down to:
+
+#+begin_src go :imports "fmt"
+for range 3 {
+	fmt.Println("some-action")
+}
+#+end_src
+
+#+RESULTS:
+: some-action
+: some-action
+: some-action
+
+This is a nice little improvement in quality of life.
+
+* Range over user-defined containers
+
+For *illustration purposes*, let's build a =Set= that stores unique elements and ensure uniqueness by checking if an equal element has been already added before adding a new one:
+
+#+begin_src go :main no :tangle "set.go"
+import "slices"
+
+type Set[V comparable] struct {
+    values []V
+}
+
+func New[V comparable]() Set[V] {
+    return Set[V]{}
+}
+
+func (s *Set[V]) Add(v V) {
+	if s.Contains(v) {
+		return
+	}
+	s.values = append(s.values, v)
+}
+
+func (s *Set[V]) Contains(v V) bool {
+	return slices.Contains(s.values, v)
+}
+#+end_src
+
+To make =Set= compatible with =range=, we define a method, here arbitrarily named =Values()=, that returns an =iter.Seq= from the new [[https://pkg.go.dev/iter][=iter=]] package:
+
+#+begin_src go :main no :tangle "set.go"
+import "iter"
+
+func (s *Set[V]) Values() iter.Seq[V] {
+    return func(yield func(V) bool) {
+		for _, v := range s.values {
+			if !yield(v) {
+				return
+			}
+		}
+	}
+}
+#+end_src
+
+=Values= returns a function that itself accepts a function, typically -- yet arbitrarily -- named =yield=, that we call to /push/ values into the loop.
+
+Note that =yield= returns a boolean and that is =false= when the loop exits early, e.g. due to a =break=, and therefore we shouldn't push any more values.
+
+We use it like this:
+
+#+begin_src go :tangle "set.go" :imports "fmt"
+s := set.New[int]()
+s.Add(1)
+s.Add(2)
+s.Add(2)
+s.Add(3)
+for v := range s.Values() {
+	fmt.Println(v)
+}
+#+end_src
+
+#+RESULTS:
+
+** Delegating to =slices.Values=
+
+Within the same release, =slices= has received plenty of helper functions for iteration, including [[https://pkg.go.dev/slices@master#Values][=Values=]].
+Equipped with it, our =Values= reduces to a one-line delegation:
+
+#+begin_src go :main no :tangle "set.go"
+func (s *Set[V]) Values() iter.Seq[V] {
+    return slices.Values(s.values)
+}
+#+end_src
+
+* Range over infinite sequences
+
+We can also range over infinite sequences, for example, Fibonacci's:
+
+#+begin_src go :imports '("fmt" "iter") :main no
+package main
+
+func fibs() iter.Seq[int] {
+	return func(yield func(int) bool) {
+		a, b := 0, 1
+		for {
+			if !yield(a) {
+				return
+			}
+			a, b = b, a+b
+		}
+	}
+}
+
+func main() {
+	for f := range fibs() {
+		if f > 100 {
+			break
+        }
+		fmt.Println(f)
+	}
+}
+#+end_src
+
+#+RESULTS:
+#+begin_example
+0
+1
+1
+2
+3
+5
+8
+13
+21
+34
+55
+89
+#+end_example
+
+Since the iterator returned by =fibs= produces an infinite sequence, we had to explicitly break out of the loop to prevent it from running "forever".
+
+* Range adapters
+
+Lastly, we can write functions that adapts iterators to our needs, for instance, =takeWhile= to keep iterating while a given predicate applied to the current value yields =true=. As an example, we use to iterate over an infinite sequence of strings (=a= =aa= =aaa= ...) with lengths =< 5=.
+
+#+begin_src go :imports '("fmt" "iter") :main no
+package main
+
+func takeWhile[V any](p func(V) bool, seq iter.Seq[V]) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		for v := range seq {
+			if !p(v) || !yield(v) {
+				return
+			}
+		}
+	}
+}
+
+func appendForever(s string) iter.Seq[string] {
+	init := s
+	return func(yield func(string) bool) {
+		for {
+			if !yield(s) {
+				return
+			}
+			s = init + s
+		}
+	}
+}
+
+func main() {
+	for s := range takeWhile(func(s string) bool { return len(s) < 5 }, appendForever("a")) {
+		fmt.Println(s)
+	}
+}
+#+end_src
+
+#+RESULTS:
+: a
+: aa
+: aaa
+: aaaa
+
+* Conclusion
+
+There's a lot to discuss about for this lovely feature, for example the contrast between /push/ iterators (discussed here) and /pull/ iterators, where the control flow is more or less reversed. We could also write different methods for different iterations, e.g. forwards, backwards, in-order, pre-order, etc.
+
+I encourage you to go through [[https://go.dev/blog/range-functions][Range Over Function Types]] for more details.
