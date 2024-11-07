@@ -221,6 +221,6 @@ func main() {
 
 * Conclusion
 
-There's a lot to discuss about for this lovely feature, for example the contrast between /push/ iterators (discussed here) and /pull/ iterators, where the control flow is more or less reversed. We could also write different methods for different iterations, e.g. forwards, backwards, in-order, pre-order, etc.
+There's a lot to discuss about for this lovely feature, for example the contrast between /push/ iterators (all examples shown here) and /pull/ iterators, where the control-flow is more or less reversed. We could also write different methods for different iterations, e.g. forwards, backwards, in-order, pre-order, etc.
 
 I encourage you to go through [[https://go.dev/blog/range-functions][Range Over Function Types]] for more details.

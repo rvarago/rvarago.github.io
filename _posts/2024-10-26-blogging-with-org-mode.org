@@ -55,7 +55,7 @@ Now, with my cursor in the code, I type =C-c C-c= (Emacs for =Ctrl+c Ctrl+c=) an
 That's good, because I don't feel much need to frequently switch from buffer with the text to another place to test code and then copy it back to original buffer, with all the perils of a deviation between the code I tested and the code I published.
 
 I haven't taken the time to clean things up yet and may never do so. Thus, for now I'm lazily shelling out to =pandoc= in the GitHub Action to [[https://github.com/rvarago/rvarago.github.io/blob/66885528f683655f094b7bdac241132c2bdedc24/.github/workflows/jekyll.yml#L46][convert Org to Markdown]]
-before deploying the site. Lastly, to lower the friction of blogging, I wrote an [[https://github.com/rvarago/renv/blob/162a63e359efb00fd6b2ed0704fbccb95c72e4f4/nixpkgs/modules/editors/emacs/doom.d/config.el#L133][Emacs Lisp function]] to start a new post with all the boilerplate.
+before deploying the site. Lastly, to lower the friction of blogging, I wrote an [[https://github.com/rvarago/renv/blob/f87f220c9665ddd78dfc0e115639bb38c7e45de5/nixpkgs/modules/editors/emacs/doom.d/config.el#L133][Emacs Lisp function]] to start a new post with all the boilerplate.
 
 This is all part of a larger refactoring, in which I've changed the style of this blog and intend to focus more on shorter essays from now on.
 
