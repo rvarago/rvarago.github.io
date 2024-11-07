@@ -3,7 +3,7 @@
 layout: post
 title: Blogging with org-mode
 permalink: /:title/
-tags: [emacs org-mode]
+tags: [emacs meta org-mode]
 ---
 #+end_export
 
