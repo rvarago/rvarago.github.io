@@ -18,7 +18,7 @@ Now, it's finally happening! I've started an experiment where new posts, startin
 
 There's /really/ no strong reason other than I feel slightly more comfortable with Emacs + org-mode.
 
-Additionally -- and perhaps crucially? -- I profit from [[https://orgmode.org/worg/org-contrib/babel/][Babel]] to evaluate inline code  within the comfort Emacs directly in the buffer containing the post. With discipline, it should help me ensure all the code actually compiles and (maybe) produces the expected outcome, which is generally hard to achieve otherwise due to copy-paste deviations.
+Additionally -- and perhaps crucially? -- I profit from [[https://orgmode.org/worg/org-contrib/babel/][Babel]] to evaluate inline code within the comfort of Emacs directly in the buffer containing the post. With discipline, it should help me ensure all the code actually compiles and (maybe) produces the expected outcome, which is generally hard to achieve otherwise due to copy-paste deviations.
 
 *Example:* Python snippet evaluated with [[https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-python.html][=ob-python=]]
 
