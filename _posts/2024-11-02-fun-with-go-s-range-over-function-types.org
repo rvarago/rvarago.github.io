@@ -30,16 +30,16 @@ for i := range 10 {
 
 #+RESULTS:
 #+begin_example
-n = 0
-n = 1
-n = 2
-n = 3
-n = 4
-n = 5
-n = 6
-n = 7
-n = 8
-n = 9
+i = 0
+i = 1
+i = 2
+i = 3
+i = 4
+i = 5
+i = 6
+i = 7
+i = 8
+i = 9
 #+end_example
 
 Since the loop variable is optional, if we just want to execute an action multiple times, say =3= times, the code boils down to:
@@ -61,7 +61,9 @@ This is a nice little improvement in quality of life.
 
 For *illustration purposes*, let's build a =Set= that stores unique elements and ensure uniqueness by checking if an equal element has been already added before adding a new one:
 
-#+begin_src go :main no :tangle "set.go"
+#+begin_src go :main no :eval no :tangle "set/core.go"
+package set
+
 import "slices"
 
 type Set[V comparable] struct {
@@ -86,7 +88,9 @@ func (s *Set[V]) Contains(v V) bool {
 
 To make =Set= compatible with =range=, we define a method, here arbitrarily named =Values()=, that returns an =iter.Seq= from the new [[https://pkg.go.dev/iter][=iter=]] package:
 
-#+begin_src go :main no :tangle "set.go"
+#+begin_src go :main no :eval no :tangle "set/iter.go"
+package set
+
 import "iter"
 
 func (s *Set[V]) Values() iter.Seq[V] {
@@ -106,7 +110,7 @@ Note that =yield= returns a boolean and that is =false= when the loop exits earl
 
 We use it like this:
 
-#+begin_src go :tangle "set.go" :imports "fmt"
+#+begin_src go :eval no :imports '("./set" "fmt") :tangle yes
 s := set.New[int]()
 s.Add(1)
 s.Add(2)
@@ -117,15 +121,20 @@ for v := range s.Values() {
 }
 #+end_src
 
-#+RESULTS:
-
 ** Delegating to =slices.Values=
 
 Within the same release, =slices= has received plenty of helper functions for iteration, including [[https://pkg.go.dev/slices@master#Values][=Values=]].
 Equipped with it, our =Values= reduces to a one-line delegation:
 
-#+begin_src go :main no :tangle "set.go"
-func (s *Set[V]) Values() iter.Seq[V] {
+#+begin_src go :main no :eval no :tangle "set/iter_helper.go"
+package set
+
+import (
+	"iter"
+	"slices"
+)
+
+func (s *Set[V]) ValuesWithHelper() iter.Seq[V] {
     return slices.Values(s.values)
 }
 #+end_src
@@ -135,8 +144,6 @@ func (s *Set[V]) Values() iter.Seq[V] {
 We can also range over infinite sequences, for example, Fibonacci's:
 
 #+begin_src go :imports '("fmt" "iter") :main no
-package main
-
 func fibs() iter.Seq[int] {
 	return func(yield func(int) bool) {
 		a, b := 0, 1
@@ -182,8 +189,6 @@ Since the iterator returned by =fibs= produces an infinite sequence, we had to e
 Lastly, we can write functions that adapts iterators to our needs, for instance, =takeWhile= to keep iterating while a given predicate applied to the current value yields =true=. As an example, we use to iterate over an infinite sequence of strings (=a= =aa= =aaa= ...) and take only the firsts whose lengths are =< 5=.
 
 #+begin_src go :imports '("fmt" "iter") :main no
-package main
-
 func appendForever(s string) iter.Seq[string] {
 	init := s
 	return func(yield func(string) bool) {
