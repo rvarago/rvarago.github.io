@@ -66,10 +66,10 @@ I remembered \( 2\sin x \cos x \) could be simplified with the double-angle iden
   By algebraic manipulation and application of the angle sum identity for \( \sin \):
   \[
 \begin{aligned}
-  \sin(2x) \\
-  & = \sin(x + x) \\
+  \sin(2x) & = \sin(x + x) \\
   & = \sin x\cos x + \sin x\cos x \\
-  & = 2\sin x\cos x \blacksquare
+  & = 2\sin x\cos x \\
+  \blacksquare
 \end{aligned}
   \]
 </details>
@@ -80,3 +80,13 @@ Leaving us with this simpler integrand:
 \[
 1 + \sin(2x)
 \]
+
+I plugged it into the integral and omitted the integration limits for brevity:
+
+\[
+\int 1 + \sin(2x) \, dx
+\]
+
+Integral is a linear operator -- hence the integral of the sum is the sum of the integrals, I integrated each term individually by finding the "primitives" (anti-derivatives):
+
+TBD
