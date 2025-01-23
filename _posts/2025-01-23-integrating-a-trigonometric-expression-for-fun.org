@@ -15,10 +15,53 @@ a while since I last did anything similar. So, I reckoned it'd be writing about 
 #+end_quote
 --------------
 
-It's been years, perhaps far more than I'd like to admit, since I resolve an integration problem. I remember somehow having fun trying to find patterns in integrands that'd eventually lead me to an analytical solution.
-
-Weeks ago I stumbled upon this exercise online:
+It's been years, perhaps far more than I'd like to admit, since I resolve an [[https://en.wikipedia.org/wiki/Integral][integration]] problem. I remember somehow having fun trying to find patterns in integrands that'd eventually lead me to an analytical solution. It'd often involve [[https://en.wikipedia.org/wiki/List_of_trigonometric_identities][trigonometric identities]] and I always had troubles committing them all to memory, except perhaps for the beautiful most important Pythagorean identity:
 
 \[
-\int_0^{\frac{\pi}{2}} (\sin(x)^2 + \cos(x)^2) \, dx
+\sin^2 x + \cos^2 x = 1
 \]
+
+And the angle sum, e.g. for \( \sin \):
+
+\[
+\sin (\alpha + \beta) = \sin \alpha \cos \alpha + \sin \beta \cos \alpha
+\]
+
+Thankfully, they suffice to mechanically derive plenty of rest.
+
+* The challenge
+Weeks ago I took a stab at this brief exercise I found somewhere:
+
+\[
+\int_0^{\frach{\pi}{2}} (\sin x + \cos x)^2 \, dx
+\]
+
+Nice! Good chance to play around and refresh my working memory on integrals and trigonometry without taking too much time (hopefully).
+
+* The solution
+I started off by expanding \( (\sin x + \cos x)^2 \) into:
+
+\[
+\sin^2 x + 2\sin x\cos x + \cos^2 x
+\]
+
+I recognised the sum of the first and last terms as equal to \( 1 \) -- per the Pythegorean identity:
+
+\[
+1 + 2\sin x \cos x
+\]
+
+Ok. I remembered \( 2\sin x \cos x \) could be simplified with a double-angle identity:
+\[
+\sin(2x) = 2\sin x\cos x
+\]
+
+#+BEGIN_EXPORT html
+<details>
+  <summary>Deriving the last identity</summary>
+  By algebraic manipulation and application of the angle sum identity on \( \sin \):
+  \[
+  \sin(2x) \biconditional \sin(x + x) \biconditional \sin x\cos x + \sin x\cos x = 2\sin x\cos x \blacksquare
+  \]
+</details>
+#+END_EXPORT
