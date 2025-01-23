@@ -1,0 +1,23 @@
+#+begin_export html
+---
+layout: post
+title: Integrating a trigonometric expression for fun
+permalink: /:title/
+tags: [math]
+---
+#+end_export
+
+#+begin_quote
+(WIP)
+I stumbled upon an exercise to integrate a function involving trigonometric identities, it'd been
+a while since I last did anything similar. So, I reckoned it'd be writing about it.
+#+end_quote
+--------------
+
+It's been years, perhaps far more than I'd like to admit, since I resolve an integration problem. I remember somehow having fun trying to find patterns in integrands that'd eventually lead me to an analytical solution.
+
+Weeks ago I stumbled upon this exercise online:
+
+#+begin_src latex
+\int_0^{\frac{\pi}{2}} (\sin(x)^2 + \cos(x)^2) \, dx
+#+end_src
