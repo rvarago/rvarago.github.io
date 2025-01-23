@@ -65,10 +65,12 @@ I remembered \( 2\sin x \cos x \) could be simplified with the double-angle iden
   <summary>Deriving the double-angle identity</summary>
   By algebraic manipulation and application of the angle sum identity for \( \sin \):
   \[
+\begin{aligned}
   \sin(2x) \\
-  = \sin(x + x) \\
-  = \sin x\cos x + \sin x\cos x = 2\sin x\cos x \\
-  \blacksquare
+  & = \sin(x + x) \\
+  & = \sin x\cos x + \sin x\cos x \\
+  & = 2\sin x\cos x \blacksquare
+\end{aligned}
   \]
 </details>
 #+END_EXPORT
