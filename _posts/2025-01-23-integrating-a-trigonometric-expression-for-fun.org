@@ -27,7 +27,7 @@ The process often involved [[https://en.wikipedia.org/wiki/List_of_trigonometric
 And the angle sum, e.g. for \( \sin \):
 
 \[
-\sin (\alpha + \beta) = \sin \alpha \cos \alpha + \sin \beta \cos \alpha
+\sin (\alpha + \beta) = \sin \alpha \cos \beta + \sin \beta \cos \alpha
 \]
 
 Thankfully, they suffice to mechanically derive much of the rest.
@@ -65,9 +65,9 @@ I remembered \( 2\sin x \cos x \) could be simplified with the double-angle iden
   <summary>Deriving the double-angle identity</summary>
   By algebraic manipulation and application of the angle sum identity for \( \sin \):
   \[
-  \sin(2x)
-  \leftrightarrow \sin(x + x)
-  \leftrightarrow \sin x\cos x + \sin x\cos x = 2\sin x\cos x
+  \sin(2x) \\
+  = \sin(x + x) \\
+  = \sin x\cos x + \sin x\cos x = 2\sin x\cos x \\
   \blacksquare
   \]
 </details>
