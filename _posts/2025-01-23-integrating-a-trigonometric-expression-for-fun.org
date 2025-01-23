@@ -33,7 +33,7 @@ Thankfully, they suffice to mechanically derive plenty of rest.
 Weeks ago I took a stab at this brief exercise I found somewhere:
 
 \[
-\int_0^{\frach{\pi}{2}} (\sin x + \cos x)^2 \, dx
+\int_0^{\frac{\pi}{2}} (\sin x + \cos x)^2 \, dx
 \]
 
 Nice! Good chance to play around and refresh my working memory on integrals and trigonometry without taking too much time (hopefully).
