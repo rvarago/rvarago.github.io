@@ -4,6 +4,7 @@ layout: post
 title: Integrating a trigonometric expression for fun
 permalink: /:title/
 tags: [math]
+mathjax: true
 ---
 #+end_export
 
@@ -18,6 +19,6 @@ It's been years, perhaps far more than I'd like to admit, since I resolve an int
 
 Weeks ago I stumbled upon this exercise online:
 
-#+begin_src latex
+\[
 \int_0^{\frac{\pi}{2}} (\sin(x)^2 + \cos(x)^2) \, dx
-#+end_src
+\]
