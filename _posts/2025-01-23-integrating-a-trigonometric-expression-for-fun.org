@@ -10,14 +10,15 @@ mathjax: true
 
 #+begin_quote
 (WIP)
-I stumbled upon an exercise to integrate a function involving trigonometric identities, it'd been
-a while since I last did anything similar. So, I reckoned it'd be writing about it.
+I stumbled upon an exercise to integrate a function involving trigonometric identities. So, I reckoned it'd be fun tackling it.
 #+end_quote
 --------------
 
-It's been years, perhaps far more than I'd like to admit, since I resolve an [[https://en.wikipedia.org/wiki/Integral][integration]] problem.
+It's been years since I solved an [[https://en.wikipedia.org/wiki/Integral][integration]] exercise.
 
-I remember having fun trying to find patterns in integrands that'd eventually lead me to an analytical solution and learning properties of different functions in the way. It'd often involve [[https://en.wikipedia.org/wiki/List_of_trigonometric_identities][trigonometric identities]] and I always had troubles committing them all to memory, except perhaps for the beautiful most important Pythagorean identity:
+I remember having fun trying to find patterns that'd eventually lead me to an analytical solution and rediscovering properties of different functions and useful identities in the way.
+
+The process often involved [[https://en.wikipedia.org/wiki/List_of_trigonometric_identities][trigonometric identities]] and I always had troubles committing them all to memory, except perhaps for the top Pythagorean identity:
 
 \[
 \sin^2 x + \cos^2 x = 1
@@ -29,7 +30,7 @@ And the angle sum, e.g. for \( \sin \):
 \sin (\alpha + \beta) = \sin \alpha \cos \alpha + \sin \beta \cos \alpha
 \]
 
-Thankfully, they suffice to mechanically derive plenty of rest.
+Thankfully, they suffice to mechanically derive much of the rest.
 
 * The challenge
 Weeks ago I took a stab at this brief exercise I found somewhere:
@@ -38,7 +39,7 @@ Weeks ago I took a stab at this brief exercise I found somewhere:
 \int_0^{\frac{\pi}{2}} (\sin x + \cos x)^2 \, dx
 \]
 
-Nice! Good chance to play around and refresh my working memory on integrals and trigonometry without taking too much time (hopefully).
+It looked like a good opportunity to play around and refresh my working memory on integrals and trigonometry in general without taking too much time.
 
 * The solution
 I started off by expanding \( (\sin x + \cos x)^2 \) into:
@@ -53,22 +54,27 @@ I recognised the sum of the first and last terms as equal to \( 1 \) -- per the 
 1 + 2\sin x \cos x
 \]
 
-Ok. I remembered \( 2\sin x \cos x \) could be simplified with the double-angle identity for \( \sin \):
+I remembered \( 2\sin x \cos x \) could be simplified with the double-angle identity for \( \sin \):
+
 \[
 \sin(2x) = 2\sin x\cos x
 \]
 
 #+BEGIN_EXPORT html
 <details>
-  <summary>Deriving the last identity</summary>
+  <summary>Deriving the double-angle identity</summary>
   By algebraic manipulation and application of the angle sum identity for \( \sin \):
   \[
-  \sin(2x) \leftrightarrow \sin(x + x) \leftrightarrow \sin x\cos x + \sin x\cos x = 2\sin x\cos x \blacksquare
+  \sin(2x)
+  \leftrightarrow \sin(x + x)
+  \leftrightarrow \sin x\cos x + \sin x\cos x = 2\sin x\cos x
+  \blacksquare
   \]
 </details>
 #+END_EXPORT
 
 Leaving us with this simpler integrand:
+
 \[
 1 + \sin(2x)
 \]
