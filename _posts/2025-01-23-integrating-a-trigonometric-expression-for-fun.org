@@ -9,14 +9,13 @@ mathjax: true
 #+end_export
 
 #+begin_quote
-(WIP)
 I stumbled upon an exercise to integrate a function involving trigonometric identities. So, I reckoned it'd be fun tackling it.
 #+end_quote
 --------------
 
 It's been years since I solved an [[https://en.wikipedia.org/wiki/Integral][integration]] exercise.
 
-I remember having fun trying to find patterns that'd eventually lead me to an analytical solution and rediscovering properties of different functions and useful identities in the way.
+I remember having fun trying to find patterns that'd eventually lead me to well-known forms that I could look up in a table and rediscovering properties of different functions and useful identities along the way. I still hold memories of an introductory Quantum Mechanics exam with complicated integrals over strange geometric objects.
 
 The process often involved [[https://en.wikipedia.org/wiki/List_of_trigonometric_identities][trigonometric identities]] and I always had troubles committing them all to memory, except perhaps for the top Pythagorean identity:
 
@@ -33,7 +32,7 @@ And the angle sum, e.g. for \( \sin \):
 Thankfully, they suffice to mechanically derive much of the rest.
 
 * The challenge
-Weeks ago I took a stab at this brief exercise I found somewhere:
+Weeks ago I took a stab at this simple exercise I found somewhere:
 
 \[
 \int_0^{\frac{\pi}{2}} (\sin x + \cos x)^2 \, dx
@@ -54,7 +53,7 @@ I recognised the sum of the first and last terms as equal to \( 1 \) -- per the 
 1 + 2\sin x \cos x
 \]
 
-I remembered \( 2\sin x \cos x \) could be simplified with the double-angle identity for \( \sin \):
+I remembered that with the double-angle identity for \( \sin \), we simplify \( 2\sin x \cos x \) into:
 
 \[
 \sin(2x) = 2\sin x\cos x
@@ -74,7 +73,7 @@ I remembered \( 2\sin x \cos x \) could be simplified with the double-angle iden
 </details>
 #+END_EXPORT
 
-Leaving us with this simpler integrand:
+Leaving us with the simpler integrand:
 
 \[
 1 + \sin(2x)
@@ -89,7 +88,7 @@ I plugged it into the integral and omitted the integration limits for brevity:
 Integral is a linear operator -- roughly, the integral of the sum is the sum of the integrals. Hence, I integrated each term individually by finding the "primitives" (anti-derivatives) of known forms/standard techniques:
 
 \[
-x - \frac{1}{2}cos(2x)
+x - \frac{1}{2}\cos(2x)
 \]
 
 #+BEGIN_EXPORT html
@@ -98,12 +97,31 @@ x - \frac{1}{2}cos(2x)
   By algebraic manipulation and application of the angle sum identity for \( \sin \):
   \[
 \begin{aligned}
-  \sin(2x) & = \sin(x + x) \\
-  & = \sin x\cos x + \sin x\cos x \\
-  & = 2\sin x\cos x \qquad \blacksquare
+  \int \sin(2x) \, dx & = \int \frac{1}{2}\sin u \, du \qquad (u = 2x) \\
+  & = \frac{1}{2} \int \sin u \, du \\
+  & = \frac{1}{2} (-\cos u) \\
+  & = \frac{-1}{2} \cos(2x) \qquad \blacksquare
 \end{aligned}
   \]
 </details>
 #+END_EXPORT
 
-TBD
+I reintroduced the limits:
+
+\[
+[x - \frac{1}{2}\cos(2x)]^{\frac{\pi}{2}}_0
+\]
+
+Finally, after applying them and doing a little manipulation, I got the answer:
+
+\[
+\begin{aligned}
+  (\frac{\pi}{2} - \frac{1}{2}\cos(2 \cdot \frac{\pi}{2})) - (0 - \frac{1}{2}\cos(2 \cdot 0)) \\
+  & = \frac{\pi}{2} + \frac{1}{2} + \frac{1}{2} \\
+  & = \frac{\pi}{2} + 1 \qquad \blacksquare
+\end{aligned}
+\]
+
+Nothing novel or particularly challenging, but fun.
+
+Afterwards, I eventually got hooked and did some more challenging exercises, but that's another story.
