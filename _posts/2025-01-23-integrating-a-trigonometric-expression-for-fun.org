@@ -122,6 +122,4 @@ Finally, after applying them and doing a little manipulation, I got the answer:
 \end{aligned}
 \]
 
-Nothing novel or particularly challenging, but fun.
-
-Afterwards, I eventually got hooked and did some more challenging exercises, but that's another story.
+Nothing novel or particularly challenging, but it was fun.
