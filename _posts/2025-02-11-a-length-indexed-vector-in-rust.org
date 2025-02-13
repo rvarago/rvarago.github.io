@@ -113,7 +113,7 @@ In Haskell, constructors themselves held the relationship between themselves and
 
 We can do that by crafting a way to produce an empty vector via ~IndexedVec<A, _>::default~ returning ~IndexedVec<A, Zero>~ and a way to add an element ~A~ to an ~IndexedVec<A, N>~ via ~IndexedVec<A, N>::pushed~ returning an ~IndexedVec<A, Succ<N>>~. Crucially, they are the *only* ways to produce vectors.
 
-Additionally, all functions consume input vectors and produce new vectors (although mostly through consuming the input), because when calling them we change types, e.g. from ~IndexedVec<A, N>~ to ~IndexedVec<A, Succ<N>>~ to encode the protocol we are targeting.
+Additionally, all functions consume input vectors and produce new vectors (although through consuming the input), because when calling them we change types, e.g. from ~IndexedVec<A, N>~ to ~IndexedVec<A, Succ<N>>~ to encode the protocol we are targeting, akin to the Type-state pattern.
 
 #+begin_src rust :tangle main.rs
 pub mod ivec {
