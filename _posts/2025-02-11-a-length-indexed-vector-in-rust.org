@@ -9,25 +9,25 @@ mathjax: true
 #+end_export
 
 #+begin_quote
-Sneak peeking at Dependent-types and an encoding of length-indexed vectors in Rust to constraint /consumers/ on operations they can perform.
+Sneak peeking at Dependent Types and an encoding of length-indexed vectors in Rust to constraint /consumers/ on operations they can perform.
 #+end_quote
 --------------
 
-It's customary to introduce [[https://en.wikipedia.org/wiki/Dependent_type][Dependent Types]] with vectors (or lists) parameterized by a type ~A~, indexed by a type ~N~ of [[https://en.wikipedia.org/wiki/Peano_axioms][Peano]]-encoded (unary) natural numbers, and two constructors:
+It's customary to introduce [[https://en.wikipedia.org/wiki/Dependent_type][Dependent Types]] (types as first-class citizens that may depend on terms) with vectors (or rather linked-lists) parameterized by a type ~A~, indexed by a type ~N~ of [[https://en.wikipedia.org/wiki/Peano_axioms][Peano]]-encoded (unary) natural numbers, and two constructors:
 
-- ~VEmpty~: an empty vector has ~N~ equal ~Zero~ ($0$)
+- ~VEmpty~: an empty vector with ~Zero~ ($0$)
 - ~VCons~: adding an element into a vector with length ~N~ gives back a vector with length ~Succ(N)~ ($N + 1$)
 
-From there, we implement all sorts of useful operations and establish relationships between input/output vectors and ~N~ via constructors to provide neat guarantees, such as:
+From there, we implement all sorts of operations and establish relationships between input/output vectors and their lengths ~N~ via constructors to provide some useful guarantees, such as:
 
-1. Accessing the first element of is only allowed on ~IndexedVec<Succ<N>>~ for some ~N~, i.e. it's impossible to read from an empty vector
-2. Mapping an ~IndexedVec<A, N>~ with ~f: A -> B~ gives us an ~IndexedVec<B, N>~, i.e. mapping preserves the length
-3. Appending an ~IndexedVec<A, M>~ onto ~IndexedVec<A, N>~ gives us an ~IndexedVec<A, N + M~
-4. Zipping two vectors is only allowed when they have the same length
+1. Accessing the first element of a vector is only allowed on ~IndexedVec<Succ<N>>~ for some ~N~, i.e. it's impossible to read from an empty vector
+2. Mapping an ~IndexedVec<A, N>~ with ~f: A -> B~ produces an ~IndexedVec<B, N>~, i.e. mapping preserves lengths
+3. Appending an ~IndexedVec<A, M>~ onto ~IndexedVec<A, N>~ produces an ~IndexedVec<A, N + M~
+4. Zipping two vectors is only allowed when their lengths are equal
 
 * Haskell encoding
 
-To start off, let's write it in Haskell with just enough GHC extensions enabled to get us "[[https://wiki.haskell.org/Dependent_type][close]]" to dependent typing:
+To start off, let's write it in Haskell with just enough GHC extensions enabled to get us somewhere "[[https://wiki.haskell.org/Dependent_type][close]]" to dependent typing:
 
 #+begin_src haskell :tangle main.hs
 {-# LANGUAGE DataKinds #-}
@@ -39,8 +39,8 @@ import GHC.Types (Type)
 data Nat = Zero | Succ Nat deriving Show
 
 type family Add n m where
-  Add Zero     m = m
-  Add (Succ n) m = Succ (Add n m)
+  Add Zero     m = m -- 0 + m = m
+  Add (Succ n) m = Succ (Add n m) -- (n + 1) + m = 1 + (n + m)
 
 data IndexedVec (a :: Type) (n :: Nat) where
   VEmpty :: IndexedVec a Zero                           -- an empty vector has length 0
@@ -75,23 +75,24 @@ ivzip (VCons a as) (VCons b bs) = VCons (a, b) (ivzip as bs)
 
 #+RESULTS:
 
-It's particularly interesting to note that ~ivhead~ is a /total-function/: we specify ~Succ m~ in the signature, so GHC knows that only ~VCons~ inhabits such a type and therefore the ~VEmpty~ case isn't needed -- consumers can't call into this function with an empty vector. Similarly, in ~ivzip~, by pattern-matching on the constructors, we refine ~N~, such that if the left vector was ~VEmpty~, then the right must be too (the same applies to ~VCons~).
+It's worth noting that ~ivhead~ is a /total-function/: we specify ~Succ m~ in the type-signature, so GHC knows that only ~VCons~ can inhabit such a type and therefore the ~VEmpty~ branch isn't needed -- consumers can't call into this function with an empty vector.
+Similarly in ~ivzip~, by pattern-matching on constructors, we refine ~N~, such that if the left vector was ~VEmpty~, then the right must be too (the same applies to ~VCons~).
 
-We could keep on implementing more functions (as I did [[https://github.com/rvarago/playground/blob/main/haskell/Vec/Main.hs][here]] or even better go to a full implementation like in the [[https://hackage.haskell.org/package/vec][vec]] package), but that'd require more effort and what we already have is enough to illustrate the point:
+We could keep on implementing more functions (as I did [[https://github.com/rvarago/playground/blob/main/haskell/Vec/Main.hs][here]] or even better go to a proper package like in the [[https://hackage.haskell.org/package/vec][vec]]), but that'd require more effort and what we already have is enough to illustrate the main point:
 
 #+begin_quote
 The more correctness properties we encode into types, the more we get from the type-system.
 #+end_quote
 
-Additionally, we've made it impossible to construct invalid vectors. For instance, an empty vector with a length different from ~Zero~ or adding an element into a vector with length ~N~ not producing a vector with length ~Succ(N)~.
+Additionally, we've made it impossible to ever produce invalid vectors with respect to their lengths. For instance, an empty vector whose length isn't ~Zero~, or an adding vector whose length isn't ~Succ(N)~ (~N~ being the length of the added-to vector).
 
-This means that an ~IndexedVec<A, N>~ is valid *by construction* and that's a strong guarantee.
+This means that an ~IndexedVec<A, N>~ is valid *by construction* and that's a strong property.
 
 We ensure both:
 - /consumers/ can only ever see valid vectors
 - /implementers/ of functions on vectors must obey the constraints imposed by the constructors
 
-Now, some errors due to consumers misusing our API or implementers building incorrect implementations are *type errors*.
+Now, classes of errors due to consumers misusing our API or implementers providing incorrect implementations are *type errors*.
 
 #+begin_quote
 By the way, there is a deeper relationship between constraints and guarantees that we might explore someday. Check this presentation [[https://www.youtube.com/watch?v=GqmsQeSzMdw][Constraints liberate, liberate constraints]] for ideas.
@@ -99,7 +100,7 @@ By the way, there is a deeper relationship between constraints and guarantees th
 
 * Rust encoding
 
-Although Rust doesn't have Dependent types and hence can't offer both assurances (for consumers and implementers), we can at least provide guarantees to consumers if we're willing to push things further with some machinery.
+Although Rust doesn't have Dependent Types and hence can't offer the same lever of protection to consumers and implementers. We can at least get something a little close in terms of guarantees to consumers, if we're willing to push things further with some machinery.
 
 We shall tackle the problem as follows:
 
@@ -107,16 +108,20 @@ We shall tackle the problem as follows:
 Encapsulate ~IndexedVec~ and functions over it in a module where we /establish trust/:
 
 - Inside the module, all bets are off and we're on our own to write the implementation without any assurance: we can see everything and do anything
-- Outside the module, we can only perform operations constrained: we can only see what type-signatures allow us
+- Outside the module, we can only perform operations constrained: we can only see what type-signatures allow us to see
 
-IMPORTANT: There's *no* type-system-verified relationships between implementation and type-signatures, it's upon us (the implementers) to verify they hold.
+IMPORTANT: There's *no* type-system-verified relationship between type-signatures and their bodies, it's upon us (the implementers) to ensure they hold.
 #+end_quote
 
-In Haskell, the constructors held the relationship between themselves and their lengths. In Rust, we use visibility to restrict how consumers can create and modify vectors and thus artificially establish relationships /roughly similar/ Haskell.
+In Haskell, the constructors held tight relationships between themselves and their lengths. In Rust, we use modules (with a couple of tricks) to restrict how consumers can create and modify vectors and thus artificially establish relationships /roughly similar/ Haskell.
 
-We can do that by crafting *the only* way to produce an empty vector via ~IndexedVec<A, _>::default~ returning ~IndexedVec<A, Zero>~ and *the only* way to insert an element ~A~ into an ~IndexedVec<A, N>~ via ~IndexedVec<A, N>::pushed~ returning an ~IndexedVec<A, Succ<N>>~.
+We can do with by having just a few selected functions as *the only* way to access/manipulate the internal representation of ~IndexedVec~.
 
-Additionally, all functions consume input vectors and produce *new* vectors (internally by consuming the input). This happens because calling functions change types, e.g. from ~IndexedVec<A, N>~ to ~IndexedVec<A, Succ<N>>~ to encode the usage protocol we want, akin to the [[https://docs.rust-embedded.org/book/static-guarantees/typestate-programming.html][Type-state pattern]].
+Namely, we produce an empty vector with ~IndexedVec<A, _>::default~ returning ~IndexedVec<A, Zero>~ (like ~VEmpty~). We add an element ~A~ into an ~IndexedVec<A, N>~ with ~IndexedVec<A, N>::pushed~ returning an ~IndexedVec<A, Succ<N>>~ ( like ~VCons~).
+
+Additionally, all functions moves input vectors and produce *new* vectors (internally by simply consuming thr input). This happens because calling functions change types, e.g. from ~IndexedVec<A, N>~ to ~IndexedVec<A, Succ<N>>~ to encode the usage protocol we want, akin to the [[https://docs.rust-embedded.org/book/static-guarantees/typestate-programming.html][Type-state pattern]].
+
+The code looks like this:
 
 #+begin_src rust :tangle main.rs
 pub mod ivec {
@@ -199,13 +204,13 @@ pub mod ivec {
 }
 #+end_src
 
-Inside ~ivec~, we as implementers don't get any assurances from the type-system about functions satisfying the type-signatures we gave to them -- special mention to ~unverified_from~.
+Inside ~ivec~, we as implementers don't get much from the type-system in terms of bodies of functions satisfying their type-signatures -- special mention to ~unverified_from~.
 
 #+begin_quote
-The private ~unverified_from~ produces an ~IndexedVec<A, N>~ whose length ~N~ is fully controlled by callers and therefore doesn't perform any sort of checking on the length of the input ~Vec<A>~ -- like I said, no assurances for implementers. Bu since we control who can call into that by making it private to the module, we end up with a small surface to mess and/or audit.
+The private ~unverified_from~ produces an ~IndexedVec<A, N>~ whose length ~N~ is fully controlled by callers and therefore itself doesn't perform any sort of checking on the length of the input ~Vec<A>~ -- like I said, no assurances for implementers. But since we control who can call into that by making it private to the module, we end up with a small surface to mess and/or audit.
 #+end_quote
 
-However, assuming our implementation is correct, the type-signatures propagate as constraints to consumers and restrict the usage of the API, triggering type-errors on misuses:
+However, assuming our implementation is correct, type-signatures propagate as constraints to consumers and restrict the usage of the API, triggering type-errors on misuses:
 
 #+begin_src rust :main yes :tangle main.rs
 fn main() {
@@ -232,14 +237,16 @@ fn main() {
 
 * Conclusion
 
-We've seen how Dependent-typing extends the capabilities of a type-checker to statically verify correctness properties and how we can reap some benefits in Haskell (really, GHC with a couple of extensions) and then we've built an encoding in Rust (by the way, perhaps we could simplify it with [[https://github.com/rust-lang/rust/issues/76560][generic expressions in cont-context]]?).
+We've seen how Dependent Types extends the capabilities of a type-checker to statically verify correctness properties and how we can reap some benefits in Haskell (really, GHC with a couple of extensions) and then we've built an encoding in Rust (by the way, perhaps we could simplify it with [[https://github.com/rust-lang/rust/issues/76560][generic expressions in cont-context]]?).
 
-For simplicity, we've implemented only a few functions and they should be enough to back up the main point:
+For simplicity, we've implemented only a handful of functions. Yet they should be enough to substantiate the main point:
 
 #+begin_quote
 We can express (some) properties as types and let the type-checker verifies them.
 #+end_quote
 
-There are limits in terms of the capabilities of the type system and the overall usability of the resulting APIs. This is likely a trade-off between several factors at play, so it's up to us to decide when and how this is appropriate.
+There are limits in terms of capabilities required from the type-system and the overall usability of resulting APIs. This is likely a trade-off between several factors at play, so it's up to us to decide when and how this is appropriate.
+
+There's so much about Dependent Types and the whole notion of types as first-class citizens, this barely scratches the surface.
 
 /Anyway, to be fair, this was more of an excuse for me to play with Rust (shh! that's a secret)./
