@@ -13,7 +13,7 @@ available at run-time?
 #+end_quote
 --------------
 
-Looking at the ~IndexedVec<T, N>~ we designed in a [[file:2025-02-11-a-length-indexed-vector-in-rust.org][previous part]], there is no built-in way to construct instances from dynamic ~Vec<T>~ because their lengths are only known at runtime.
+Looking at the ~IndexedVec<T, N>~ we designed in a [[https://rvarago.github.io/a-length-indexed-vector-in-rust/][previous part]], there is no built-in way to construct instances from dynamic ~Vec<T>~ because their lengths are only known at runtime.
 
 We can solve this problem by first teaching how ~Nat~ instances (~Zero~, ~Succ<N>~) can map to runtime values ​​(~0~, ~N + 1~) of type ~usize~ via a ~const~ we will call ~REIFY~. Then, we will implement ~TryFrom<Vec<T>>~ for ~IndexedVec<T, N>~ and this operation will only succeed when ~Vec::len~ is equal to ~N::REIFY~.
 
