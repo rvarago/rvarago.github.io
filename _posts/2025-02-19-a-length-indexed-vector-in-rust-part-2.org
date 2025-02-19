@@ -1,0 +1,137 @@
+#+begin_export html
+---
+layout: post
+title: A length-indexed Vector in Rust - Part 2
+permalink: /:title/
+tags: [rust]
+---
+#+end_export
+
+#+begin_quote
+Previously, we designed a vector in Rust whose length is known at compile-time, but then how can we construct an instance of it from a ~Vec<T>~ whose length is only
+available at run-time?
+#+end_quote
+--------------
+
+Looking at the ~IndexedVec<T, N>~ we designed in a [[file:2025-02-11-a-length-indexed-vector-in-rust.org][previous part]], there is no built-in way to construct instances from dynamic ~Vec<T>~ because their lengths are only known at runtime.
+
+We can solve this problem by first teaching how ~Nat~ instances (~Zero~, ~Succ<N>~) can map to runtime values ​​(~0~, ~N + 1~) of type ~usize~ via a ~const~ we will call ~REIFY~. Then, we will implement ~TryFrom<Vec<T>>~ for ~IndexedVec<T, N>~ and this operation will only succeed when ~Vec::len~ is equal to ~N::REIFY~.
+
+#+begin_src rust :tangle main.rs
+pub mod ivec {
+    use std::marker::PhantomData;
+
+    pub trait Nat: private::Sealed {
+        // NEW: From compile-time size to run-time size.
+        const REIFY: usize;
+    }
+
+    #[derive(Debug)]
+    pub struct Zero;
+    impl private::Sealed for Zero {}
+    impl Nat for Zero {
+        // NEW: Zero = 0
+        const REIFY: usize = 0;
+    }
+
+    #[derive(Debug)]
+    pub struct Succ<N: Nat>(N);
+    impl<N: Nat> private::Sealed for Succ<N> {}
+    impl<N: Nat> Nat for Succ<N> {
+        // NEW: Succ<N> = N + 1
+        const REIFY: usize = N::REIFY + 1;
+    }
+
+    pub trait AddI<M: Nat>: Nat + private::Sealed {
+        type Out: Nat;
+    }
+    impl<M: Nat> AddI<M> for Zero {
+        type Out = M;
+    }
+    impl<N, M: Nat> AddI<M> for Succ<N>
+    where
+        N: AddI<M>,
+    {
+        type Out = Succ<<N as AddI<M>>::Out>;
+    }
+
+    pub type Add<N, M> = <N as AddI<M>>::Out;
+
+    #[derive(Debug)]
+    pub struct IndexedVec<A, N: Nat> {
+        pub inner: Vec<A>,
+        _len: PhantomData<N>,
+    }
+
+    impl<A> Default for IndexedVec<A, Zero> {
+        fn default() -> Self {
+            unverified_from(Vec::default())
+        }
+    }
+
+    impl<A, N: Nat> IndexedVec<A, Succ<N>> {
+        pub fn first(&self) -> &A {
+            self.inner.first().unwrap()
+        }
+    }
+
+    impl<A, N: Nat> IndexedVec<A, N> {
+        pub fn pushed(mut self, value: A) -> IndexedVec<A, Succ<N>> {
+            self.inner.push(value);
+            unverified_from(self.inner)
+        }
+
+        pub fn zipped<B>(self, rhs: IndexedVec<B, N>) -> IndexedVec<(A, B), N> {
+            unverified_from(self.inner.into_iter().zip(rhs.inner).collect())
+        }
+
+        pub fn appended<M: Nat>(mut self, mut rhs: IndexedVec<A, M>) -> IndexedVec<A, Add<N, M>>
+        where
+            N: AddI<M>,
+        {
+            self.inner.append(&mut rhs.inner);
+            unverified_from(self.inner)
+        }
+    }
+
+    // NEW: From Vec<T> into IndexedVec<T, N> if N matches the run-time length of Vec<T>.
+    impl<T, N: Nat> TryFrom<Vec<T>> for IndexedVec<T, N> {
+        type Error = (); // TODO: Use a better error type.
+
+        fn try_from(value: Vec<T>) -> Result<Self, Self::Error> {
+            if value.len() == N::REIFY {
+                Ok(unverified_from(value))
+            } else {
+                Err(())
+            }
+        }
+    }
+
+    fn unverified_from<A, N: Nat>(v: Vec<A>) -> IndexedVec<A, N> {
+        IndexedVec {
+            inner: v,
+            _len: PhantomData::default(),
+        }
+    }
+
+    mod private {
+        pub trait Sealed {}
+    }
+}
+#+end_src
+
+And use like this:
+
+#+begin_src rust :main yes :tangle main.rs
+fn main() {
+    use ivec::*;
+
+    assert!(IndexedVec::<_, Succ<Succ<Zero>>>::try_from(vec![1]).is_err());
+    assert!(IndexedVec::<_, Succ<Succ<Zero>>>::try_from(vec![1, 2]).is_ok());
+    assert!(IndexedVec::<_, Succ<Succ<Zero>>>::try_from(vec![1, 2, 3]).is_err());
+}
+#+end_src
+
+The idea is that we convert ~Vec<T>~ to ~IndexedVec<T, N>~ early on to use its additional guarantees, perform whatever operations we want, and only then at the boundaries of our application, for example when storing to a database, do we convert it back to ~Vec<T>~.
+
+Admittedly, the ~Succ<Succ<Zero>>~ syntax seems awkward, but perhaps with some aliases (e.g. ~Z~ instead of ~Zero~ and ~S<N>~ instead of ~Succ<N>~) or even a macro we could make it more pleasant to work with.
