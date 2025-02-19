@@ -247,6 +247,6 @@ We can express (some) properties as types and let the type-checker verifies them
 
 There are limits in terms of capabilities required from the type-system and the overall usability of resulting APIs. This is likely a trade-off between several factors at play, so it's up to us to decide when and how this is appropriate.
 
-There's so much about Dependent Types and the whole notion of types as first-class citizens, this barely scratches the surface.
+There's far more to be said about Dependent Types and the whole notion of types as first-class citizens. This installment barely scratches the surface, but I hope to inspire your curiosity.
 
 /Anyway, to be fair, this was more of an excuse for me to play with Rust (shh! that's a secret)./
