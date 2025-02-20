@@ -78,7 +78,7 @@ ivzip (VCons a as) (VCons b bs) = VCons (a, b) (ivzip as bs)
 It's worth noting that ~ivhead~ is a /total-function/: we specify ~Succ m~ in the type-signature, so GHC knows that only ~VCons~ can inhabit such a type and therefore the ~VEmpty~ branch isn't needed -- consumers can't call into this function with an empty vector.
 Similarly in ~ivzip~, by pattern-matching on constructors, we refine ~N~, such that if the left vector was ~VEmpty~, then the right must be too (the same applies to ~VCons~).
 
-We could keep on implementing more functions (as I did [[https://github.com/rvarago/playground/blob/main/haskell/Vec/Main.hs][here]] or even better go to a proper package like in the [[https://hackage.haskell.org/package/vec][vec]]), but that'd require more effort and what we already have is enough to illustrate the main point:
+We could keep on implementing more functions (as I did [[https://github.com/rvarago/playground/blob/main/haskell/Vec/Main.hs][here]] or even better go with a proper package like [[https://hackage.haskell.org/package/vec][vec]]), but that'd require more effort and what we already have is enough to illustrate the main point:
 
 #+begin_quote
 The more correctness properties we encode into types, the more we get from the type-system.
