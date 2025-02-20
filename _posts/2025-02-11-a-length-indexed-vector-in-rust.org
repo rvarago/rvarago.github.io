@@ -15,7 +15,7 @@ Sneak peeking at Dependent Types and an encoding of length-indexed vectors in Ru
 
 It's customary to introduce [[https://en.wikipedia.org/wiki/Dependent_type][Dependent Types]] (types as first-class citizens that may depend on terms) with vectors (or rather linked-lists) parameterized by a type ~A~, indexed by a type ~N~ of [[https://en.wikipedia.org/wiki/Peano_axioms][Peano]]-encoded (unary) natural numbers, and two constructors:
 
-- ~VEmpty~: an empty vector with ~Zero~ ($0$)
+- ~VEmpty~: an empty vector with length ~Zero~ ($0$)
 - ~VCons~: adding an element into a vector with length ~N~ gives back a vector with length ~Succ(N)~ ($N + 1$)
 
 From there, we implement all sorts of operations and establish relationships between input/output vectors and their lengths ~N~ via constructors to provide some useful guarantees, such as:
