@@ -237,7 +237,7 @@ fn main() {
 
 * Conclusion
 
-We've seen how Dependent Types extends the capabilities of a type-checker to statically verify correctness properties and how we can reap some benefits in Haskell (really, GHC with a couple of extensions) and then we've built an encoding in Rust (by the way, perhaps we could simplify it with [[https://github.com/rust-lang/rust/issues/76560][generic expressions in cont-context]]?).
+We've seen how Dependent Types extends the capabilities of a type-checker to statically verify correctness properties and how we can reap some benefits in Haskell (really, GHC with a couple of extensions) and then we've built an encoding in Rust (by the way, perhaps we could simplify it with [[https://github.com/rust-lang/rust/issues/76560][generic expressions in const-context]]?).
 
 For simplicity, we've implemented only a handful of functions. Yet they should be enough to substantiate the main point:
 
