@@ -4,22 +4,17 @@ title: About
 permalink: /about/
 ---
 
-`λ author:print-description`
+`λ author:me`
 
-> Hi, I am Rafael Varago, and this is my new blog.
+> Hello, I'm Rafael Varago. Here I write about things I learn and find interesting, for example, random thoughts on Computer Science and Mathematics.
+>
+> Although I write primarily for myself, everyone is welcome to read it! However, take any advice I give as *suggestions* rather than rules.
+>
+> I apologise for any errors I've made and/or will eventually make; let me know!
+>
+> My opinions may change over time. So, please be kind.
+>
+> I sincerely wish you lots of fun :-).
+>
+> **Opinions are my own**.
 
-`λ author:print-interests`
-
-> I am a Software Engineer who enjoys learning new things, mainly programming languages and paradigms. My current interest lies in C++, Rust, Haskell, Scala, Go, C, Python, Linux, functional programming, system programming, tooling, IoT, cloud, math, etc.
-
-`λ author:print-goal`
-
-> I intend to write about programming with bits of Mathematics here and there.
-
-`λ author:print-disclaimer`
-
-> Please, take any advice that I may give as **suggestions**, rather than rules.
-> Even though I will do my best to give good advice based correct and precise information, I sure lack some knowledge about the topics that I shall be discussing, and I am no authoritative source of truth at all. Therefore I may commit mistakes, for which I already apologize.
-> That all said, I will look forward to receiving your feedback and learning from it.
-
-I sincerely wish you have a good time :-).

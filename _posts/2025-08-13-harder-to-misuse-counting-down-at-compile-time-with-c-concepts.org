@@ -1,0 +1,220 @@
+#+begin_export html
+---
+layout: post
+title: Harder to misuse, counting down at compile-time with C++ concepts (with a bonus in Rust)
+permalink: /:title/
+tags: [c++ rust]
+---
+#+end_export
+
+#+begin_quote
+How to statically check that callers perform an operation N times.
+#+end_quote
+--------------
+
+I had a C++ API for accumulating amounts in a vector and then returning them in reverse, similar to this:
+
+#+begin_src C++ :results output :exports both :includes <algorithm> <iostream> <utility> <vector> :flags -std=c++20
+class Builder {
+public:
+  auto append(const int deltaAmount) && -> Builder {
+    totalAmount += deltaAmount;
+    amounts.push_back(totalAmount);
+    return std::move(*this);
+  }
+
+  auto build() && -> std::vector<int> {
+    std::ranges::reverse(amounts);
+    return std::move(amounts);
+  }
+
+private:
+  int totalAmount{0};
+  std::vector<int> amounts{};
+};
+
+int main() {
+  const std::vector<int> amounts = Builder{}.append(10).append(20).append(30).build();
+  std::ranges::for_each(amounts, [](const int amt) { std::cout << amt << '\n'; });
+}
+#+end_src
+
+#+RESULTS:
+: 60
+: 30
+: 10
+
+For reasons irrelevant to this post, I wanted to get rid of ~std::ranges::reverse~.
+
+Therefore, I decided to ~resize~ the vector to a user-provided number of amounts and keep track of a countdown index. Instead of ~push_back~ amounts onto the vector, I'd assign them to indices with ~operator[]~.
+
+However, I now have to account for mismatches between the number of amounts and the actual calls to ~append~ (both user-controlled).
+
+Although, it might be impossible to enforce that with 100% certainty in C++, I'd be happy with making this API at least /a little/ harder to misuse.
+
+So, I templatised the ~Builder<N>~ with a *compile-time* number ~N~ (our index) and made ~append~ return a ~Builder<N - 1>~. Furthermore, ~build~ requires that ~N == 0~:
+
+#+begin_src C++ :results output :includes <algorithm> <iostream> <utility> <vector> :flags -std=c++20 :main no
+template <size_t NAmounts>
+class Builder {
+public:
+  explicit Builder() {
+    amounts.resize(NAmounts);
+  }
+
+  auto append(const int deltaAmount) && -> Builder<NAmounts - 1> requires (NAmounts > 0)  {
+    Builder<NAmounts - 1> next{};
+    next.totalAmount = totalAmount + deltaAmount;
+    next.amounts = std::move(amounts);
+    next.amounts[NAmounts - 1] = next.totalAmount;
+    return next;
+  }
+
+  auto build() && -> std::vector<int> requires (NAmounts == 0) {
+    return std::move(amounts);
+  }
+
+private:
+  int totalAmount{0};
+  std::vector<int> amounts{};
+
+  template <size_t>
+  friend class Builder;
+};
+
+int main() {
+  const std::vector<int> amounts = Builder<3>{}.append(10).append(20).append(30).build();
+
+  std::ranges::for_each(amounts, [](const int amt) { std::cout << amt << '\n'; });
+}
+#+end_src
+
+#+RESULTS:
+: 60
+: 30
+: 10
+
+Attempting to change ~3~ in ~Builder<3>~ to, say ~2~ or ~4~, is a compile-time error.
+
+* Bonus (Rust)
+For Rust, at least on stable, I had to encode, rather poorly, natural numbers. Most likely, much of it will go away once we gain access to [[https://github.com/rust-lang/rust/issues/76560][generic_const_exprs]] and [[https://github.com/rust-lang/rust/issues/20041][type equality constraints in where clauses]]. Nevertheless, for now, it looks like this:
+
+#+begin_src rust
+use std::marker::PhantomData;
+
+trait Nat {
+    const REIFY: usize;
+}
+
+struct Z;
+trait IsZ: Nat {}
+impl IsZ for Z {}
+
+struct S<N>(PhantomData<N>);
+trait IsS {}
+impl<N: Nat> IsS for S<N> {}
+
+impl Nat for Z {
+    const REIFY: usize = 0;
+}
+
+impl<N: Nat> Nat for S<N> {
+    const REIFY: usize = 1 + N::REIFY;
+}
+
+type Dec<M> = <M as DecT>::Out;
+
+trait DecT: Nat {
+    type Out: Nat;
+}
+
+impl<N: Nat> DecT for S<N> {
+    type Out = N;
+}
+
+struct Builder<NAmounts: Nat> {
+    total_amount: i32,
+    amounts: Vec<i32>,
+    _n: PhantomData<NAmounts>,
+}
+
+impl<N: Nat> Default for Builder<N> {
+    fn default() -> Self {
+        Self {
+            total_amount: 0,
+            amounts: vec![0; N::REIFY],
+            _n: PhantomData,
+        }
+    }
+}
+
+impl<NAmounts: Nat> Builder<NAmounts> {
+    fn append(self, delta_amount: i32) -> Builder<Dec<NAmounts>>
+    where
+        NAmounts: IsS + DecT,
+    {
+        let mut next = Builder {
+            total_amount: self.total_amount + delta_amount,
+            amounts: self.amounts,
+            _n: PhantomData,
+        };
+        next.amounts[Dec::<NAmounts>::REIFY] = next.total_amount;
+
+        next
+    }
+
+    fn build(self) -> Vec<i32>
+    where
+        NAmounts: IsZ,
+    {
+        self.amounts
+    }
+}
+
+fn main() {
+    dbg!(Builder::<S<S<S<Z>>>>::default()
+        .append(10)
+        .append(20)
+        .append(30)
+        .build());
+}
+#+end_src
+
+#+RESULTS:
+: [src/main.rs:74:5] Builder::<S<S<S<Z>>>>::default().append(10).append(20).append(30).build() = [
+:     60,
+:     30,
+:     10,
+: ]
+
+* Bonus (C++ Variadic Function)
+
+We could compress the whole builder into a variadic function and let the compiler infer the number of amounts:
+#+begin_src C++ :results output :includes <algorithm> <iostream> <vector> :flags -std=c++20 :main no
+template <typename...Amounts> requires (std::same_as<Amounts, int> && ...)
+auto build(Amounts... deltaAmounts) -> std::vector<int> {
+  size_t nAmounts = sizeof...(deltaAmounts);
+
+  std::vector<int> amounts{};
+  amounts.resize(nAmounts);
+
+  auto append = [&amounts, totalAmount = 0](const size_t index, const int amount) mutable {
+    totalAmount += amount;
+    amounts[index] = totalAmount;
+  };
+
+  (append(--nAmounts, deltaAmounts), ...);
+
+  return amounts;
+}
+
+int main() {
+  const std::vector<int> amounts = build(10, 20, 30);
+  std::ranges::for_each(amounts, [](const int amt) { std::cout << amt << '\n'; });
+}
+#+end_src
+
+#+RESULTS:
+: 60
+: 30
+: 10
