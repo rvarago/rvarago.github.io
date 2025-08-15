@@ -190,7 +190,7 @@ fn main() {
 : ]
 
 * Bonus (C++ Variadic Function)
-We could compress the whole builder into a variadic function and let the compiler infer the number of amounts instead of manually ascribing it:
+We could compress the whole builder into a variadic function, let the compiler infer the number of amounts instead of manually ascribing it, and get the job done with a fold expression over the comma operator:
 #+begin_src C++ :results output :includes <algorithm> <iostream> <vector> :flags -std=c++20 :main no
 template <typename...Amounts> requires (std::same_as<Amounts, int> && ...)
 auto build(Amounts... deltaAmounts) -> std::vector<int> {
