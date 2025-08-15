@@ -98,8 +98,12 @@ int main() {
 Attempts to change ~3~ in ~Builder<3>~ to, say ~2~ or ~4~, are a compile-time error. Nice!
 
 * Bonus (Rust)
-I translated this example into Rust and as I wanted to stick to stable, I had to manually encode natural numbers -- rather poorly I should add. I reckon much of tha
-e boilerplate will vanish once we get [[https://github.com/rust-lang/rust/issues/76560][generic_const_exprs]] and [[https://github.com/rust-lang/rust/issues/20041][type equality constraints in where clauses]]. Until then, here's my sketch:
+For extra fun I translated this example to Rust. As I wanted to stick to stable, I had to manually encode natural numbers -- rather poorly I should add.
+
+I reckon much of tha
+e boilerplate will vanish once we get [[https://github.com/rust-lang/rust/issues/76560][generic_const_exprs]] and [[https://github.com/rust-lang/rust/issues/20041][type equality constraints in where clauses]].
+
+Until then, here's my sketch:
 
 #+begin_src rust
 use std::marker::PhantomData;
@@ -221,4 +225,4 @@ int main() {
 : 10
 
 * Conclusion
-Just like the Typestate pattern, the principle behind those pieces of code was to encode states as /distinct/ types and state transitions as type transitions. It's possibly not that mind blowing at first sight, but it's actually quite a powerful design tool.
+Just like the Typestate pattern, the principle behind those pieces of code was to encode states as /distinct/ types and state transitions as type transitions. It might not be that mind blowing at first sight, but it's actually quite a powerful design tool.
