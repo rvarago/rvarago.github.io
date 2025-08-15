@@ -12,7 +12,7 @@ How to statically "check" that callers perform an operation N times.
 #+end_quote
 --------------
 
-I had a C++ API for accumulating amounts in a vector and then returning them in reverse order, similar to:
+I had a C++ API for accumulating amounts in a vector and returning them in reverse order, similar to:
 
 #+begin_src C++ :results output :exports both :includes <algorithm> <iostream> <utility> <vector> :flags -std=c++20
 class Builder {
@@ -51,9 +51,9 @@ I decided to call ~resize~ with the number of amounts and keep track of a countd
 
 However, I now have to account for mismatches between the number of amounts and how many times ~append~ ends up being called.
 
-Although, it might be impossible to enforce they do match with 100% certainty in C++, I'd be happy with making this API at least /a little/ harder to misuse.
+Although it might be impossible to enforce they do match with 100% certainty in C++, I'd be fine by making this API /a little/ harder to misuse.
 
-So I templatised the ~Builder<N>~ with a *compile-time* number ~N~ (our index) and made ~append~ return a ~Builder<N - 1>~. Furthermore, ~build~ requires that ~N == 0~:
+So I templatised the ~Builder<N>~ with a *compile-time* number ~N~ (our index) and made ~append~ require that ~N > 0~ and then return a ~Builder<N - 1>~. Finally, ~build~ requires that ~N == 0~; in code:
 
 #+begin_src C++ :results output :includes <algorithm> <iostream> <utility> <vector> :flags -std=c++20 :main no
 template <size_t NAmounts>
@@ -95,10 +95,11 @@ int main() {
 : 30
 : 10
 
-Attempting to change ~3~ in ~Builder<3>~ to, say ~2~ or ~4~, is a compile-time error.
+Attempts to change ~3~ in ~Builder<3>~ to, say ~2~ or ~4~, are a compile-time error. Nice!
 
 * Bonus (Rust)
-For Rust, at least on stable, I had to encode, rather poorly, natural numbers. Most likely, much of it will go away once we gain access to [[https://github.com/rust-lang/rust/issues/76560][generic_const_exprs]] and [[https://github.com/rust-lang/rust/issues/20041][type equality constraints in where clauses]]. Nevertheless, for now, it looks like this:
+I translated this example into Rust and as I wanted to stick to stable, I had to manually encode natural numbers -- rather poorly I should add. I reckon much of tha
+e boilerplate will vanish once we get [[https://github.com/rust-lang/rust/issues/76560][generic_const_exprs]] and [[https://github.com/rust-lang/rust/issues/20041][type equality constraints in where clauses]]. Until then, here's my sketch:
 
 #+begin_src rust
 use std::marker::PhantomData;
@@ -189,8 +190,7 @@ fn main() {
 : ]
 
 * Bonus (C++ Variadic Function)
-
-We could compress the whole builder into a variadic function and let the compiler infer the number of amounts:
+We could compress the whole builder into a variadic function and let the compiler infer the number of amounts instead of manually ascribing it:
 #+begin_src C++ :results output :includes <algorithm> <iostream> <vector> :flags -std=c++20 :main no
 template <typename...Amounts> requires (std::same_as<Amounts, int> && ...)
 auto build(Amounts... deltaAmounts) -> std::vector<int> {
@@ -221,4 +221,4 @@ int main() {
 : 10
 
 * Conclusion
-Just like the Typestate pattern, the principle behind those snippets was to encode states as distinct types and state transitions as type transitions. It's possibly not that exciting at first, but it's actually quite an amazing idea.
+Just like the Typestate pattern, the principle behind those pieces of code was to encode states as /distinct/ types and state transitions as type transitions. It's possibly not that mind blowing at first sight, but it's actually quite a powerful design tool.
