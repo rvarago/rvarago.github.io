@@ -8,11 +8,11 @@ tags: [c++ rust]
 #+end_export
 
 #+begin_quote
-How to statically check that callers perform an operation N times.
+How to statically "check" that callers perform an operation N times.
 #+end_quote
 --------------
 
-I had a C++ API for accumulating amounts in a vector and then returning them in reverse, similar to this:
+I had a C++ API for accumulating amounts in a vector and then returning them in reverse order, similar to:
 
 #+begin_src C++ :results output :exports both :includes <algorithm> <iostream> <utility> <vector> :flags -std=c++20
 class Builder {
@@ -46,13 +46,13 @@ int main() {
 
 For reasons irrelevant to this post, I wanted to get rid of ~std::ranges::reverse~.
 
-Therefore, I decided to ~resize~ the vector to a user-provided number of amounts and keep track of a countdown index. Instead of ~push_back~ amounts onto the vector, I'd assign them to indices with ~operator[]~.
+At first, I decided to call ~resize~ with the number of amounts and keep track of a countdown index that I'd then use to assign amounts to their correct position (from end to beginning) instead of calling ~push_back~ (from beginning to end).
 
-However, I now have to account for mismatches between the number of amounts and the actual calls to ~append~ (both user-controlled).
+However, I now have to account for mismatches between the number of amounts and how many times ~append~ ends up being called.
 
-Although, it might be impossible to enforce that with 100% certainty in C++, I'd be happy with making this API at least /a little/ harder to misuse.
+Although, it might be impossible to enforce they do match with 100% certainty in C++, I'd be happy with making this API at least /a little/ harder to misuse.
 
-So, I templatised the ~Builder<N>~ with a *compile-time* number ~N~ (our index) and made ~append~ return a ~Builder<N - 1>~. Furthermore, ~build~ requires that ~N == 0~:
+So I templatised the ~Builder<N>~ with a *compile-time* number ~N~ (our index) and made ~append~ return a ~Builder<N - 1>~. Furthermore, ~build~ requires that ~N == 0~:
 
 #+begin_src C++ :results output :includes <algorithm> <iostream> <utility> <vector> :flags -std=c++20 :main no
 template <size_t NAmounts>
@@ -218,3 +218,6 @@ int main() {
 : 60
 : 30
 : 10
+
+* Conclusion
+Just like the Typestate pattern, the principle behind those snippets was to encode states as distinct types and state transitions as type transitions. It's possibly not that exciting at first, but it's actually quite an amazing idea.
