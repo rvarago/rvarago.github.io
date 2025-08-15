@@ -53,8 +53,9 @@ However, I now have to account for accidental mismatches between the number of a
 
 Although it might be impossible to enforce they do match with 100% certainty in C++, I'd be fine by making this API /a little/ harder to misuse.
 
-So I templatised the ~Builder<N>~ with a *compile-time* number ~N~ (our index) and made ~append~ require that ~N > 0~ and then return a ~Builder<N - 1>~. Finally, ~build~ requires that ~N == 0~; in code:
+So I templatised the ~Builder<N>~ with a *compile-time* number ~N~ (our index) and made ~append~ require that ~N > 0~ and then return a ~Builder<N - 1>~. Finally, ~build~ requires that ~N == 0~.
 
+In code:
 #+begin_src C++ :results output :includes <algorithm> <iostream> <utility> <vector> :flags -std=c++20 :main no
 template <size_t NAmounts>
 class Builder {
