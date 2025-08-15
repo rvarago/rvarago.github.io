@@ -44,12 +44,12 @@ int main() {
 : 30
 : 10
 
-For reasons uninteresting to this post, I wanted to get rid of ~std::ranges::reverse~.
+Due to not so interesting reasons, I wanted to get rid of ~std::ranges::reverse~.
 
 * Builder + compile-time countdown index
 I decided to call ~resize~ with the number of amounts and keep track of a countdown index that I'd then use to assign amounts to their correct position (from end to beginning) instead of calling ~push_back~ (from beginning to end).
 
-However, I now have to account for mismatches between the number of amounts and how many times ~append~ ends up being called.
+However, I now have to account for accidental mismatches between the number of amounts and how many times ~append~ ends up being actually called. That could make up for a not so easy to use correctly kind of API.
 
 Although it might be impossible to enforce they do match with 100% certainty in C++, I'd be fine by making this API /a little/ harder to misuse.
 
