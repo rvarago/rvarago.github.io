@@ -49,7 +49,7 @@ Due to not so interesting reasons, I wanted to get rid of ~std::ranges::reverse~
 * Builder + compile-time countdown index
 I decided to call ~resize~ with the number of amounts and keep track of a countdown index that I'd then use to assign amounts to their correct position (from end to beginning) instead of calling ~push_back~ (from beginning to end).
 
-However, I now have to account for accidental mismatches between the number of amounts and how many times ~append~ ends up being actually called. That could make up for a not so easy to use correctly kind of API.
+However, I now have to account for accidental mismatches between the number of amounts and how many times ~append~ ends up being actually called. That's a not so easy to use correctly kind of API.
 
 Although it might be impossible to enforce they do match with 100% certainty in C++, I'd be fine by making this API /a little/ harder to misuse.
 
@@ -96,7 +96,7 @@ int main() {
 : 30
 : 10
 
-Attempts to change ~3~ in ~Builder<3>~ to, say ~2~ or ~4~, are a compile-time error. Nice!
+Attempts to change ~3~ in ~Builder<3>~ to, say ~2~ or ~4~, are compile-time errors. Nice!
 
 * Bonus (Rust)
 For extra fun I translated this example to Rust. As I wanted to stick to stable, I had to manually encode natural numbers -- rather poorly I should add.
@@ -226,4 +226,4 @@ int main() {
 : 10
 
 * Conclusion
-Just like the Typestate pattern, the principle behind those pieces of code was to encode states as /distinct/ types and state transitions as type transitions. It might not be that mind blowing at first sight, but it's actually quite a powerful design tool.
+Just like the Typestate pattern, the principle behind those pieces of code was to encode states as /distinct/ types and state transitions as type transitions. It might not be that mind blowing at first sight, but it's actually quite a powerful design tool to statically prevent classes of bugs.
