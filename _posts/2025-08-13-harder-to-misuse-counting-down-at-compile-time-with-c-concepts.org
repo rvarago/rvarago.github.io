@@ -96,13 +96,13 @@ int main() {
 : 30
 : 10
 
-Attempts to change ~3~ in ~Builder<3>~ to, say ~2~ or ~4~, are compile-time errors. Nice!
+Attempts to change ~3~ in ~Builder<3>~ to, say ~2~ or ~4~, are met with compile-time errors. Nice!
 
 * Bonus (Rust)
 For extra fun I translated this example to Rust. As I wanted to stick to stable, I had to manually encode natural numbers -- rather poorly I should add.
 
 I reckon much of tha
-e boilerplate will vanish once we get [[https://github.com/rust-lang/rust/issues/76560][generic_const_exprs]] and [[https://github.com/rust-lang/rust/issues/20041][type equality constraints in where clauses]].
+e boilerplate will vanish once we get [[https://github.com/rust-lang/rust/issues/76560][generic const expressions]] and [[https://github.com/rust-lang/rust/issues/20041][type equality constraints in where clauses]].
 
 Until then, here's my sketch:
 
@@ -194,7 +194,7 @@ fn main() {
 :     10,
 : ]
 
-* Bonus (C++ Variadic Function)
+* Bonus Bonus (C++ Variadic Function + Fold Expression)
 We could compress the whole builder into a variadic function, let the compiler infer the number of amounts instead of manually ascribing it, and get the job done with a fold expression over the comma operator:
 #+begin_src C++ :results output :includes <algorithm> <iostream> <vector> :flags -std=c++20 :main no
 template <typename...Amounts> requires (std::same_as<Amounts, int> && ...)
