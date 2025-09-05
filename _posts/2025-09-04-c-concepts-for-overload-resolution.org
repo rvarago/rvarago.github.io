@@ -12,7 +12,8 @@ Resolving overload sets in C++ that differ in accepting ~bool~ vs ~std::string~ 
 #+end_quote
 --------------
 
-Consider this overload set, where the first accepts an ~std::string~ and the second accepts an ~bool~:
+Consider this overload set, where the first overload accepts an ~std::string~ and the second accepts a ~bool~:
+
 #+begin_src C++ :results output :exports both :includes <iostream> <string_view> :flags -std=c++20 :main no
 void show(std::string_view s) {
   std::cout << "Showing the string: " << s << std::endl;
@@ -30,29 +31,31 @@ int main() {
 
 #+RESULTS:
 : Showing the bool: 1
-: Showing the string: A lovely string
+: Showing the bool: 1
 
-The second call, namely ~show("A lovely string")~, selects the ~bool~ overload and therefore prints: ~Showing the bool: 1~.
+Both calls select the ~bool~ overload and therefore the snippet prints ~Showing the bool: 1~ twice.
 
-However, it would be reasonable to have expected that the ~std::string_view~ overload would have been selected, and such surprises often become bugs.
+Perhaps surprisingly, one might have expected ~show("A lovely string")~ to call the ~std::string_view~ overload instead, and such surprises often lead bugs.
 
-Essentially, this happens due to a [[https://en.cppreference.com/w/cpp/language/implicit_conversion.html][conversion sequence]] from ~const char[16]~ (the type of ~"A lovely string"~) to ~bool~, and that's preferred over the alternative conversion to ~std::string_view~.
+Essentially, this happens due to a [[https://en.cppreference.com/w/cpp/language/implicit_conversion.html][conversion sequence]] from ~const char[16]~ (the underlying type of ~"A lovely string"~) to ~bool~, and that's preferred over the alternative conversion to ~std::string_view~.
 
-#+begin_center
+#+begin_quote
 The same holds if we replace ~std::string_view~ with ~const std::string&~.
-#+end_center
+#+end_quote
 
-There are different ways to "fix" this and each one depends on context, for instance:
+There are multiple ways to "fix" this, and each one depends on what we want to achieve, for example:
 
 - not overloading in the first place
 - adding an overload that accepts a ~const char*~
 - explicitly converting the literal into an ~std::string_view~ at call-site
 - use a template with SFINAE
 
-I'd like to show another option that improves upon "use a template with SFINAE" with C++20 concepts.
+I'd like to present another option that improves upon "use a template with SFINAE" with C++20 concepts.
 
 * Concepts for an exact match
-Borrowing a little help from the standard ~std::same_as~ concept (and the [[https://devblogs.microsoft.com/cppblog/abbreviated-function-templates-and-constrained-auto/][constrained auto]] syntax for terseness), we can restrict the overload that accepts a ~bool~ to accept *exactly* a ~bool~ and thus "disallow" conversions:
+
+With a little help from the standard ~std::same_as~ concept (and the [[https://devblogs.microsoft.com/cppblog/abbreviated-function-templates-and-constrained-auto/][constrained auto]] syntax for terseness), we can restrict the overload that accepts *something implicitly convertible to* a ~bool~ to accept *exactly* a ~bool~. This disables the unwanted conversion to ~bool~ in favour of the conversion to ~std::string_view~:
+
 #+begin_src C++ :results output :exports both :includes <iostream> <string_view> <concepts> :flags -std=c++20 :main no
 void show(std::string_view s) {
   std::cout << "Showing the string: " << s << std::endl;
@@ -72,7 +75,10 @@ int main() {
 : Showing the bool: 1
 : Showing the string: A lovely string
 
-To be even more strict, we could change ~std::string_view~ to ~std::same_as<std::string_view>~ and thus *require* an explicit conversion:
+Note that ~bool b~ has changed to ~std::same_as<bool> auto b~ -- maybe a bit more verbose, but it works "as expected".
+
+To be even more strict, we could also change ~std::string_view~ to ~std::same_as<std::string_view> auto~ and thus *require* an explicit conversion at call-site:
+
 #+begin_src C++ :results output :exports both :includes <iostream> <string_view> <concepts> :namespaces std::literals :flags -std=c++20 :main no
 void show(std::same_as<std::string_view> auto s) {
   std::cout << "Showing the string: " << s << std::endl;
@@ -92,6 +98,8 @@ int main() {
 : Showing the bool: 1
 : Showing the string: A lovely string
 
-Note that we had to explicitly convert the literal into an ~std::string_view~ -- in this case using the ~sv~ operator, but ~std::string_view{"A lovely string"}~ would work just as fine. Otherwise, a compilation error would occur.
+Note that we had to explicitly convert the literal into an ~std::string_view~ -- in this case using the ~sv~ operator, but ~std::string_view{"A lovely string"}~ would work just as fine.
+
+Any attempt to call ~show("A lovely string")~ now results in a compile error.
 
 And that's possibly safer.
