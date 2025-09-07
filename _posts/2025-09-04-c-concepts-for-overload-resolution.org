@@ -33,9 +33,7 @@ int main() {
 : Showing the bool: 1
 : Showing the bool: 1
 
-Both calls select the ~bool~ overload and therefore the snippet prints ~Showing the bool: 1~ twice.
-
-Perhaps surprisingly, one might have expected ~show("A lovely string")~ to call the ~std::string_view~ overload instead, and such surprises often lead bugs.
+Both calls select the ~bool~ overload and therefore the snippet prints ~Showing the bool: 1~ twice. This might be surprising, as one could have expected ~show("A lovely string")~ resolving to the ~std::string_view~ overload instead, and such surprises often lead bugs.
 
 Essentially, this happens due to a [[https://en.cppreference.com/w/cpp/language/implicit_conversion.html][conversion sequence]] from ~const char[16]~ (the underlying type of ~"A lovely string"~) to ~bool~, and that's preferred over the alternative conversion to ~std::string_view~.
 
