@@ -6,9 +6,10 @@ permalink: /:title/
 tags: [haskell rust]
 ---
 #+end_export
+#+PROPERTY: header-args :noweb strip-export
 
 #+begin_quote
-An encode for trivial language well-typed by construction, first in Haskell and then in Rust.
+An encode for a trivial language well-typed by construction, first in Haskell and then in Rust.
 #+end_quote
 --------------
 
