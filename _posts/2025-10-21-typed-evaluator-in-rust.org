@@ -1,0 +1,197 @@
+#+begin_export html
+---
+layout: post
+title: Typed Evaluator in Rust
+permalink: /:title/
+tags: [haskell rust]
+---
+#+end_export
+
+#+begin_quote
+An encode for trivial language well-typed by construction, first in Haskell and then in Rust.
+#+end_quote
+--------------
+
+Haskell is notorious for its sophisticated type system, in which we express certain properties as types and let type checking enforce them.
+
+Consider the task of constructing an AST for a statically-typed (trivial) expression language with booleans, integers, addition, and if–then–else. We'd like to forbid certain nonsensical expressions, such as:
+
+- adding to booleans to integers
+- ifs with non-boolean conditions
+- ifs whose then and else branches yielding different types 
+
+Rather than an implementing a function to verify types, we'd rather enforce that only well-typed expressions can ever be instantiated.
+  
+As per [[https://okmij.org/ftp/tagless-final/course/lecture.pdf][Typed Tagless Final Interpreters]], we can employ [[https://wiki.haskell.org/Generalised_algebraic_datatype][GADTs]], which, broadly speaking, enable us to assign more precise types to data constructors; for example:
+#+begin_src haskell
+data Expr v where
+  EBool :: Bool -> Expr Bool
+  EInt :: Int -> Expr Int
+  EAdd :: Expr Int -> Expr Int -> Expr Int
+  EIf :: Expr Bool -> Expr v -> Expr v -> Expr v
+#+end_src
+
+The main idea is to let each data constructor (~EBool~, ~EInt~, ~EAdd~, and ~EIf~ ) pick a suitable type for ~v~.
+
+Attempts to violate our rules are met with type errors, say adding 10 to false:
+#+begin_src haskell
+λ> EAdd (EInt 10) (EBool False)
+#+end_src
+
+Triggers:
+#+begin_src :eval no
+    • Couldn't match type ‘Bool’ with ‘Int’
+      Expected: Expr Int
+        Actual: Expr Bool
+    • In the second argument of ‘EAdd’, namely ‘(EBool False)’
+      In the expression: EAdd (EInt 10) (EBool False)
+      In an equation for ‘it’: it = EAdd (EInt 10) (EBool False)
+#+end_src
+
+For completeness, let's write a simple recursive evaluator from ~Expr~ into ~Int~ or ~Bool~:
+#+begin_src haskell
+eval :: Expr v -> v
+eval (EBool v) = v
+eval (EInt v) = v
+eval (EAdd l r) = eval l + eval r
+eval (EIf c t e) = if eval c then eval t else eval e
+#+end_src
+
+GHC is clever enough to use the matched data constructor to refine the return type.
+
+We _could_ improve this much further, e.g. by constraining the type parameter ~v~ in ~Expr v~. However, I'm more interested in the Rust encoding, so let's jump into that.
+
+* Rust encoding
+
+Although Rust lacks GADTs, we can take inspiration from the concept and hope to reap some benefits.
+
+Each node in the AST gets its own type, unrelated to each other:
+#+begin_src rust :noweb-ref ast :eval no
+#[derive(Debug, Clone, Copy)]
+struct EBool(bool);
+
+#[derive(Debug, Clone, Copy)]
+struct EInt(i64);
+
+#[derive(Debug, Clone, Copy)]
+struct EAdd<Left, Right>(Left, Right);
+
+#[derive(Debug, Clone, Copy)]
+struct EIf<Cond, Then, Alt> {
+    cond: Cond,
+    then: Then,
+    alt: Alt,
+}
+#+end_src
+
+Although we _could_ constrain the type parameters already, for simplicity's sake, let's add the constraints only to  ~Eval~:
+#+begin_src rust :noweb yes :noweb-ref eval :eval no
+<<ast>>
+// Outcome is a little extra protection to limit the Eval to work with bools and i64s. TODO: Make it sealed.
+trait Outcome {}
+
+impl Outcome for bool {}
+impl Outcome for i64 {}
+
+trait Eval {
+    type Out: Outcome;
+
+    fn eval(self) -> Self::Out;
+}
+#+end_src
+
+Each node will implement ~Eval~  and get to pick the type of the evaluation outcome:
+#+begin_src rust :noweb yes :noweb-ref impl :eval no
+<<eval>>
+impl Eval for EBool {
+    type Out = bool;
+
+    fn eval(self) -> Self::Out {
+        self.0
+    }
+}
+
+impl Eval for EInt {
+    type Out = i64;
+
+    fn eval(self) -> Self::Out {
+        self.0
+    }
+}
+
+impl<Left, Right> Eval for EAdd<Left, Right>
+where
+    Left: Eval<Out = i64>,
+    Right: Eval<Out = i64>,
+{
+    type Out = i64;
+
+    fn eval(self) -> Self::Out {
+        self.0.eval() + self.1.eval()
+    }
+}
+
+impl<Cond, Then, Alt, O> Eval for EIf<Cond, Then, Alt>
+where
+    Cond: Eval<Out = bool>,
+    Then: Eval<Out = O>,
+    Alt: Eval<Out = O>,
+    O: Outcome,
+{
+    type Out = O;
+
+    fn eval(self) -> Self::Out {
+        if self.cond.eval() {
+            self.then.eval()
+        } else {
+            self.alt.eval()
+        }
+    }
+}
+#+end_src
+
+Here, we add trait bounds to each implementation block and constrained each node's ~Eval<Out>~ to suitable types, e.g. ~Cond: Eval<Out = bool>~  (an if condition must evaluate to a boolean).
+
+We can use it as:
+#+begin_src rust :noweb yes
+<<impl>>
+let e1 = EIf {
+    cond: EBool(true),
+    then: EBool(false),
+    alt: EBool(true),
+};
+dbg!(e1.eval());
+
+let e2 = EAdd(EInt(10), EInt(20));
+dbg!(e2.eval());    
+#+end_src
+
+#+RESULTS:
+: [src/main.rs:79:1] e1.eval() = false
+: [src/main.rs:82:1] e2.eval() = 30
+
+Similar to Haskell, attempts to evaluate nonsensical expressions are type errors, e.g.:
+#+begin_src rust :noweb yes :eval no
+<<impl>>
+let e3 = EAdd(EInt(10), EBool(false));
+dbg!(e3.eval());
+#+end_src
+
+Triggers:
+#+begin_src :eval no
+error[E0599]: the method `eval` exists for struct `EAdd<EInt, EBool>`, but its trait bounds were not satisfied
+  --> src/main.rs:75:9
+   |
+ 4 | struct EBool(bool);
+   | ------------ doesn't satisfy `<EBool as Eval>::Out = i64`
+...
+10 | struct EAdd<Left, Right>(Left, Right);
+   | ------------------------ method `eval` not found for this struct because it doesn't satisfy `EAdd<EInt, EBool>: Eval`
+...
+75 | dbg!(e3.eval());
+   |         ^^^^ method cannot be called on `EAdd<EInt, EBool>` due to unsatisfied trait bounds
+   |
+note: trait bound `<EBool as Eval>::Out = i64` was not satisfied
+#+end_src
+
+Although there's a lot we could improve, it's good enough for now.
