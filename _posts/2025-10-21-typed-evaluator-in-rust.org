@@ -6,7 +6,6 @@ permalink: /:title/
 tags: [haskell rust]
 ---
 #+end_export
-#+PROPERTY: header-args :noweb strip-export
 
 #+begin_quote
 An encoding of a simple programming language well-typed by construction, first in Haskell and then in Rust.
