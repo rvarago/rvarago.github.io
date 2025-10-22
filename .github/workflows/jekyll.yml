@@ -43,7 +43,7 @@ jobs:
         run: sudo apt-get install -y pandoc
       - name: Convert org to md
         run: |
-          find ./ -iname "*.org" -type f -exec sh -c 'sed -i "s/<<[^>]*>>//g" "${0}" && pandoc -f org -t gfm "${0}" -o "${0%.org}.md" --mathjax' {} \;
+          find ./ -iname "*.org" -type f -exec sh -c 'sed -i "/<<[^>]*>>/d" "${0}" && pandoc -f org -t gfm "${0}" -o "${0%.org}.md" --mathjax' {} \;
           find . -name "*.org" -type f -delete      
       - name: Setup Pages
         id: pages

@@ -1,7 +1,7 @@
 #+begin_export html
 ---
 layout: post
-title: Typed Evaluator in Rust
+title: A Typed Evaluator in Rust
 permalink: /:title/
 tags: [haskell rust]
 ---
