@@ -9,21 +9,22 @@ tags: [haskell rust]
 #+PROPERTY: header-args :noweb strip-export
 
 #+begin_quote
-An encode for a trivial language well-typed by construction, first in Haskell and then in Rust.
+An encoding of a simple programming language well-typed by construction, first in Haskell and then in Rust.
 #+end_quote
 --------------
 
 Haskell is notorious for its sophisticated type system, in which we express certain properties as types and let type checking enforce them.
 
-Consider the task of constructing an AST for a statically-typed (trivial) expression language with booleans, integers, addition, and if–then–else. We'd like to forbid certain nonsensical expressions, such as:
+Consider the task of constructing an AST for a simple programming language with booleans, integers, addition, and if–then–else. We'd like to forbid certain nonsensical expressions, such as:
 
 - adding to booleans to integers
 - ifs with non-boolean conditions
-- ifs whose then and else branches yielding different types 
+- ifs whose then and else branches yield different types 
 
-Rather than an implementing a function to verify types, we'd rather enforce that only well-typed expressions can ever be instantiated.
+Rather than implementing a separate function to check well-typedness prior to evaluation, we'd rather enforce that only well-typed expressions can ever be instantiated.
   
 As per [[https://okmij.org/ftp/tagless-final/course/lecture.pdf][Typed Tagless Final Interpreters]], we can employ [[https://wiki.haskell.org/Generalised_algebraic_datatype][GADTs]], which, broadly speaking, enable us to assign more precise types to data constructors; for example:
+
 #+begin_src haskell
 data Expr v where
   EBool :: Bool -> Expr Bool
@@ -32,14 +33,16 @@ data Expr v where
   EIf :: Expr Bool -> Expr v -> Expr v -> Expr v
 #+end_src
 
-The main idea is to let each data constructor (~EBool~, ~EInt~, ~EAdd~, and ~EIf~ ) pick a suitable type for ~v~.
+The main idea is to let each data constructor (~EBool~, ~EInt~, ~EAdd~, and ~EIf~ ) pick a suitable type for ~v~. Namely, ~v~ defines the type of the expression produced by the data constructor, e.g. ~EBool~ is an ~Expr Bool~.
 
-Attempts to violate our rules are met with type errors, say adding 10 to false:
+Attempts to violate our rules are met with type errors, say adding ~10~ to ~false~:
+
 #+begin_src haskell
 λ> EAdd (EInt 10) (EBool False)
 #+end_src
 
-Triggers:
+Triggers a type-error:
+
 #+begin_src :eval no
     • Couldn't match type ‘Bool’ with ‘Int’
       Expected: Expr Int
@@ -49,7 +52,8 @@ Triggers:
       In an equation for ‘it’: it = EAdd (EInt 10) (EBool False)
 #+end_src
 
-For completeness, let's write a simple recursive evaluator from ~Expr~ into ~Int~ or ~Bool~:
+For completeness, let's write a simple recursive evaluator:
+
 #+begin_src haskell
 eval :: Expr v -> v
 eval (EBool v) = v
@@ -58,15 +62,16 @@ eval (EAdd l r) = eval l + eval r
 eval (EIf c t e) = if eval c then eval t else eval e
 #+end_src
 
-GHC is clever enough to use the matched data constructor to refine the return type.
+GHC is clever enough to use the matched data constructor to refine the return type. So, an ~Expr Book~ evaluates to a ~Bool~ and an ~Expr Int~ to an ~Int~.
 
-We _could_ improve this much further, e.g. by constraining the type parameter ~v~ in ~Expr v~. However, I'm more interested in the Rust encoding, so let's jump into that.
+We _could_ improve this much further, e.g. by constraining the /kind/ of the type parameter ~v~ in the definition of ~Expr v~ to valid types. However, I'm more interested in the Rust encoding, so let's jump into that.
 
 * Rust encoding
 
-Although Rust lacks GADTs, we can take inspiration from the concept and hope to reap some benefits.
+Although Rust lacks GADTs, we can take inspiration from the concept and perhaps reap some benefits.
 
-Each node in the AST gets its own type, unrelated to each other:
+Each node in the AST will get its own type, unrelated to each other:
+
 #+begin_src rust :noweb-ref ast :eval no
 #[derive(Debug, Clone, Copy)]
 struct EBool(bool);
@@ -85,10 +90,13 @@ struct EIf<Cond, Then, Alt> {
 }
 #+end_src
 
-Although we _could_ constrain the type parameters already, for simplicity's sake, let's add the constraints only to  ~Eval~:
+Note that what otherwise would be recursive elements ~EIf~'~cond~ are replaced with type parameters.
+
+Also, although we _could_ constrain the type parameters already, for simplicity's sake, let's add the bounds only to ~Eval~ (so, it'll be possible instantiate invalid expressions, but not evaluate them):
+
 #+begin_src rust :noweb yes :noweb-ref eval :eval no
 <<ast>>
-// Outcome is a little extra protection to limit the Eval to work with bools and i64s. TODO: Make it sealed.
+// Outcome is a little extra protection to limit Eval to manipulate only bools and i64s. TODO: Make it sealed.
 trait Outcome {}
 
 impl Outcome for bool {}
@@ -101,7 +109,8 @@ trait Eval {
 }
 #+end_src
 
-Each node will implement ~Eval~  and get to pick the type of the evaluation outcome:
+Each node will implement ~Eval~ and get to pick the type of the evaluation outcome and therefore its type:
+
 #+begin_src rust :noweb yes :noweb-ref impl :eval no
 <<eval>>
 impl Eval for EBool {
@@ -151,9 +160,11 @@ where
 }
 #+end_src
 
-Here, we add trait bounds to each implementation block and constrained each node's ~Eval<Out>~ to suitable types, e.g. ~Cond: Eval<Out = bool>~  (an if condition must evaluate to a boolean).
+We added trait bounds to each implementation block and constrained each node's ~Eval<Out>~ to a suitable type.
 
-We can use it as:
+For example, ~Cond: Eval<Out = bool>, Then: Eval<Out = O>, Alt: Eval<Out = O>, O: Outcome~ means that an /if/'s condition must evaluate to a boolean, both branches to the same type ~O~, and ~O~ must be a valid type (~bool~ or ~i64~, the only implementers of ~Outcome~).
+
+We can evaluate expressions as:
 #+begin_src rust :noweb yes
 <<impl>>
 let e1 = EIf {
@@ -172,13 +183,15 @@ dbg!(e2.eval());
 : [src/main.rs:82:1] e2.eval() = 30
 
 Similar to Haskell, attempts to evaluate nonsensical expressions are type errors, e.g.:
+
 #+begin_src rust :noweb yes :eval no
 <<impl>>
 let e3 = EAdd(EInt(10), EBool(false));
 dbg!(e3.eval());
 #+end_src
 
-Triggers:
+Triggers a type-error:
+
 #+begin_src :eval no
 error[E0599]: the method `eval` exists for struct `EAdd<EInt, EBool>`, but its trait bounds were not satisfied
   --> src/main.rs:75:9
@@ -195,4 +208,8 @@ error[E0599]: the method `eval` exists for struct `EAdd<EInt, EBool>`, but its t
 note: trait bound `<EBool as Eval>::Out = i64` was not satisfied
 #+end_src
 
-Although there's a lot we could improve, it's good enough for now.
+Although there's a lot we could improve on, it's good enough for today.
+
+* Conclusion
+
+We saw how we could use type-parameters and bounds to classify expressions into valid types and thus type-check them *by construction*.
