@@ -1,0 +1,263 @@
+#+begin_export html
+---
+layout: post
+title: Testabilidade e Injeção de Dependências em Sistemas Embarcados
+permalink: /:title/
+tags: [testes c++]
+---
+#+end_export
+
+#+begin_quote
+Uma breva introdução a técnicas de injeção de dependências em C++ para testes unitários de software embarcado.
+#+end_quote
+--------------
+
+* Introducão
+
+Testes são cruciais para se garantir a confiabilidade, funcionalidade e segurança de sistemas embarcados que frequentemente operam em dispositivos críticos, como veículos, equipamentos médicos e sistemas industriais. Testes unitários, nesse contexto, desempenham um papel fundamental ao permitir a validação isolada de cada unidade de código, reduzindo o risco de erros propagados durante a integração e provendo feedback continuo ao longo do desenvolvimento.
+
+Contudo, o ambiente embarcado apresenta desafios únicos, como a limitação de hardware disponível e a necessidade de simular funcionalidades específicas, e.g. condições de falha, o que reforça a importância de uma estratégia de testes bem estruturada e abrangente.
+
+Veremos algumas técnicas práticas para se testar subsistemas embarcados com certo isolamento entre si. Tais técnicas são especialmente úteis para lidar com sistemas pré-existentes não necessariamente projetados com foco em testabilidade.
+
+* Motivação
+
+Ao testar um sistema, buscamos estabelecer com relativa confiança que o mesmo atende a sua especificação. E testes são dotados de características que determimam o grau de confiança que depositamos neles, por exemplo (definições simplificadas para fins de ilustração):
+
+- Fidelidade: o quão verossimil é o ambiente de testes em relação ao ambiente real de operação.
+- Reproducibilidade: respeitadas as mesmas condições, diferentes testadores podem reproduzir os mesmos resultados.
+- Isolamento: o quão viável é verificar a corretude de um subsistema sem a necessidade de se dispor de seu restante.
+
+De particular interesse, notamos que pode-se haver certa tensão entre parâmetros. Por exemplo, ao testar o envio de dados a partir de um cliente IoT ao servidor real (alta fidelidade), a indisponilidade do servidor ou até mesmo atualizações podem invibializar a conclusão dos testes (baixa reproducibilidade e isolamento).
+
+Isto nos indica a importancia de uma estratégia de testes robusta, que va de testes de subsistemas isolados até a integração completa entre as partes (e possivelmente de camadas intermediárias).
+
+Neste artigo, focaremos em estratégias para o testes unitários em que buscamos testar sub-sistemas isolamento. De modo a atingir nosso objetivo, utilizaremos a injeção de dependências. Apesar dos conceitos em si serem relativamente gerais, os códigos serão apresentados em C++.
+
+* O sub-sistema a ser testado
+
+Por razões ilustrativas, considere a seguinte API simplificada para o envio de dados via HTTP:
+#+begin_src cpp
+namespace http {
+struct Request;
+
+enum class Status {
+  Okay,
+  Fail
+};
+
+Status post(const Request&);
+}
+#+end_src
+
+Suponha que a API é fixa e não podemos alterá-la, talvez seja parte de uma SDK privada.
+
+Como objeto de teste, considere o seguinte sub-sistema responsável pelo envio de medidas via a API exposta acima:
+#+begin_src cpp
+struct Measurement;
+
+http::Request to_request(const Measurement&);
+
+void send_measurement(const Measurement& measurement, int max_attempts) {
+  const auto request = to_request(measurement);
+  
+  for (int attempt = 0; attempt < max_attempts; ++attempt) {
+    const auto status = http::post(request);
+    if (status == http::Status::Okay) {
+      return;
+    }
+  }
+}
+#+end_src
+
+Gostaríamas de verificar que ~send_measurement~ tenta enviar a requisição exatamente =N= vezes caso haja =N= falhas de envio HTTP.
+
+Como restrição prática, a exeção dos testes, devemos manter as chamadas ao ~send_measurement~ inalteradas. Isto é, sua API deve ser *retrocompatível*, se um trecho de código faz a chamada ~send_measurement(temperature, MAX_ATTEMPTS)~ e compila com sucesso, o mesmo deve manter-se assim.
+
+A princípio, poderíamos simplestemente enviar as requisições ao servidor via HTTP. Porém, a luz do que discutimos anteriormente, gostaríamos de testar ~send_measurement~ isolamente, seja porque ainda não dispomos do servidor implementado, ou não temos controle sob o servidor e portanto não podemos força-lo a falhar, ou mudanças no servidor não nos interessam neste ponto, ou chamadas ao servidor são demasiado caras em termos de tempo de execução o que torna a tarefa de testes demasiado lenta para nossos propósitos, etc.
+
+Neste caso, nossa tarefa consiste em remover a dependência existente entre ~send_measurement~ e ~http::post~ e substituí-la por algo que esteja sob nosso controle. A tal substituto, daremos o nome de =Fake= (falso).
+
+A diferentes maneiras de proceder, ilustraremos algumas.
+
+** Classes abstratas e resolução dinâmica
+
+#+begin_src c++
+class Client {
+public:
+  virtual ~Client() = default;
+
+  virtual http::Status post(const http::Request &) const = 0;
+};
+
+class HttpClient : public Client {
+public:
+  http::Status post(const http::Request &req) const override {
+    return http::post(req);
+  }
+};
+
+void send_measurement(const Measurement &measurement, int max_attempts,
+                      const Client &client = HttpClient{}) {
+  const auto request = to_request(measurement);
+
+  for (int attempt = 0; attempt < max_attempts; ++attempt) {
+    const auto status = client.post(request);
+    if (status == http::Status::Okay) {
+      return;
+    }
+  }
+}
+
+class CountingClient : public Client {
+public:
+  explicit CountingClient(http::Status fixedStatus) : status{fixedStatus} {}
+
+  http::Status post(const http::Request &) const override {
+    ++attempts;
+    return status;
+  }
+
+  http::Status status;
+  mutable int attempts{0};
+};
+
+void test() {
+  constexpr int expected_attempts = 10;
+  CountingClient client_always_fail{http::Status::Fail};
+  
+  send_measurement(Measurement{}, expected_attempts, client_always_fail);
+
+  assert(client_always_fail.attempts == expected_attempts);
+}
+#+end_src
+
+*** ~std::function<>~
+
+#+begin_src c++
+using PostFn = std::function<http::Status(const http::Request &)>;
+
+void send_measurement(const Measurement &measurement, int max_attempts,
+                      const PostFn &post = http::post) {
+  const auto request = to_request(measurement);
+
+  for (int attempt = 0; attempt < max_attempts; ++attempt) {
+    const auto status = post(request);
+    if (status == http::Status::Okay) {
+      return;
+    }
+  }
+}
+
+class CountingClient {
+public:
+  explicit CountingClient(http::Status fixedStatus) : status{fixedStatus} {}
+
+  http::Status operator()(const http::Request &) {
+    ++attempts;
+    return status;
+  }
+
+  http::Status status;
+  int attempts{0};
+};
+
+void test() {
+  constexpr int expected_attempts = 10;
+  CountingClient client_always_fail{http::Status::Fail};
+  
+  send_measurement(Measurement{}, expected_attempts, std::ref(client_always_fail));
+
+  assert(client_always_fail.attempts == expected_attempts);
+}
+#+end_src
+
+** Templates e resolução estática
+
+#+begin_src c++
+class HttpClient {
+public:
+  http::Status post(const http::Request &req) const { return http::post(req); }
+};
+
+template <typename Client = HttpClient>
+void send_measurement(const Measurement &measurement, int max_attempts,
+                      const Client &client = HttpClient{}) {
+  const auto request = to_request(measurement);
+
+  for (int attempt = 0; attempt < max_attempts; ++attempt) {
+    const auto status = client.post(request);
+    if (status == http::Status::Okay) {
+      return;
+    }
+  }
+}
+
+class CountingClient {
+public:
+  explicit CountingClient(http::Status fixedStatus) : status{fixedStatus} {}
+
+  http::Status post(const http::Request &) const {
+    ++attempts;
+    return status;
+  }
+
+  http::Status status;
+  mutable int attempts{0};
+};
+
+void test() {
+  constexpr int expected_attempts = 10;
+  CountingClient client_always_fail{http::Status::Fail};
+  
+  send_measurement(Measurement{}, expected_attempts, client_always_fail);
+
+  assert(client_always_fail.attempts == expected_attempts);
+}
+#+end_src
+
+*** Função
+
+#+begin_src c++
+template <typename PostFn = decltype(http::post)>
+void send_measurement(const Measurement &measurement, int max_attempts,
+                      PostFn post = http::post) {
+  const auto request = to_request(measurement);
+
+  for (int attempt = 0; attempt < max_attempts; ++attempt) {
+    const auto status = post(request);
+    if (status == http::Status::Okay) {
+      return;
+    }
+  }
+}
+
+class CountingClient {
+public:
+  explicit CountingClient(http::Status fixedStatus) : status{fixedStatus} {}
+
+  http::Status operator()(const http::Request &) {
+    ++attempts;
+    return status;
+  }
+
+  http::Status status;
+  int attempts{0};
+};
+
+void test() {
+  constexpr int expected_attempts = 10;
+  CountingClient client_always_fail{http::Status::Fail};
+
+  send_measurement(Measurement{}, expected_attempts,
+                   std::ref(client_always_fail));
+
+  assert(client_always_fail.attempts == expected_attempts);
+
+  send_measurement(Measurement{}, expected_attempts);
+}
+#+end_src
+
+* Conclusão
+
+A muito mais a ser dito sobre testes em geral e testes unitários em particular. 
