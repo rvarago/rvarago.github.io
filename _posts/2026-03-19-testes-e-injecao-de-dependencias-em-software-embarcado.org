@@ -84,7 +84,7 @@ void send_measurement(const Measurement& measurement, int max_attempts) {
 
 Nosso objetivo é testar a função ~send_measurement~, garantindo que ela tenta enviar uma requisição exatamente =N= vezes em caso de =N= falhas consecutivas nas chamadas HTTP. A API dessa função deve permanecer inalterada para garantir a compatibilidade com o código existente.
 
-A luz da discussão sobre testes unitários, constatamos que testar diretamente a API HTTP enfrentaria problemas como:
+À luz da discussão sobre testes unitários, constatamos que testar diretamente a API HTTP enfrentaria problemas como:
 - Dependência de um servidor externo, que pode estar indisponível.
 - Complexidade para simular falhas no servidor.
 - Testes lentos e caros devido à utilização de uma infraestrutura real.
@@ -149,14 +149,14 @@ void test() {
 }
 #+END_SRC
 
-Note que ~send_measurement~ agora recebe um terceiro parâmetro: ~const Client& client = HttpClient{}~. É ele que nos possibilita substituir a real chamada HTTP por algo que esteja sob nosso controle. Além disso, lhe demos um argumento padrão para preservar a compatibilidade com o código existente. Apesar de haver outras formas com diferentes prós e constras de se atingir o mesmo objetivo (e.g. sobrecarga de funções), o argumento padrão será utilizado enquanto estratégia ao longo desse texto sem perda de generalidade. 
+Note que ~send_measurement~ agora recebe um terceiro parâmetro: ~const Client& client = HttpClient{}~. É ele que nos possibilita substituir a real chamada HTTP por algo que esteja sob nosso controle. Além disso, lhe demos um argumento padrão para preservar a compatibilidade com o código existente. Apesar de haver outras formas com diferentes prós e contras de se atingir o mesmo objetivo (e.g. sobrecarga de funções), o argumento padrão será utilizado enquanto estratégia ao longo desse texto sem perda de generalidade. 
 
 Com respeito ao uso de polimorfismo dinâmico, temos aproximadamente:
-- *Vantagens*: Flexibilidade em tempo de execução, fácil substituição de implementações, e baixo impacto no tempo de execução e moderado tamanho do binário.
-- *Desvantagens*: Overhead de resolução dinâmica (interfaces virtuais) e maior dependência maior do uso de ponteiros e referências.
+- *Vantagens*: Flexibilidade em tempo de execução, fácil substituição de implementações, com baixo impacto no tempo de execução e moderado tamanho do binário.
+- *Desvantagens*: Overhead de resolução dinâmica (interfaces virtuais) e maior dependência do uso de ponteiros e referências.
 
 *** Caso especial: ~std::function<>~
-Para casos em que a API resume-se a única função, uma abordagem alternativa e mais compacta e termos de código escrito consiste em usar a [[https://en.cppreference.com/w/cpp/utility/functional/function.html][~std::function<>~]] para definir o comportamento dinamicamente sem necessidade de hierarquia de classes:
+Para casos em que a API resume-se a única função, uma abordagem alternativa e mais compacta em termos de código escrito consiste em usar a [[https://en.cppreference.com/w/cpp/utility/functional/function.html][~std::function<>~]] para definir o comportamento dinamicamente sem necessidade de hierarquia de classes:
 
 #+BEGIN_SRC cpp
 //
@@ -202,7 +202,7 @@ Considerações sobre ~std::function<>~:
 - *Vantagens*: Mais simples que classes abstratas, reduz verbosidade.
 - *Desvantagens*: Similares ao uso de classes abstratas.
 
-Vale destacar que em alguns cenários podemos atingir o objetivo com um ponteiro para função, e.g. se o objeto passado não possuí estado.
+Vale destacar que em alguns cenários podemos atingir o objetivo com um ponteiro para função, e.g. se o objeto passado não possui estado.
 
 ** Templates e resolução estática
 Uma alternativa com *templates* explora polimorfismo em tempo de compilação:
@@ -248,7 +248,7 @@ void test() {
 
 Considerações sobre templates:
 - *Vantagens*: Maior eficiência em tempo de execução com mais possibilidades para "inlining" e checagem de erros em tempo de compilação.
-- *Desvantagens*: Código pode se tornar mais verboso com piores mensagem de erro de compilação, aumento no tamanho do binário e maior tempo de compilação.
+- *Desvantagens*: Código pode se tornar mais verboso com piores mensagens de erro de compilação, aumento no tamanho do binário e maior tempo de compilação.
 
 *** Caso especial: função
 
@@ -289,6 +289,7 @@ void test() {
   assert(client_always_fail.attempts == expected_attempts);
 }
 #+END_SRC
+
 
 
 * Conclusão
