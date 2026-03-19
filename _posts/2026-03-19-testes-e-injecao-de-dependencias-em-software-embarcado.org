@@ -113,7 +113,8 @@ public:
   }
 };
 
-void send_measurement(const Measurement& measurement, int max_attempts, const Client& client = HttpClient{}) {
+void send_measurement(const Measurement& measurement, int max_attempts,
+                      const Client& client = HttpClient{}) {
   const auto request = to_request(measurement);
 
   for (int attempt = 0; attempt < max_attempts; ++attempt) {
@@ -161,7 +162,8 @@ Para casos em que a API resume-se a única função, uma abordagem alternativa e
 //
 using PostFn = std::function<http::Status(const http::Request&)>;
 
-void send_measurement(const Measurement& measurement, int max_attempts, const PostFn& post = http::post) {
+void send_measurement(const Measurement& measurement, int max_attempts,
+                      const PostFn& post = http::post) {
   const auto request = to_request(measurement);
 
   for (int attempt = 0; attempt < max_attempts; ++attempt) {
@@ -234,7 +236,6 @@ public:
 
 void test() {
   constexpr int expected_attempts = 10;
-  send_measurement(Measurement{}, expected_attempts);
 
   CountingClient client_always_fail{http::Status::Fail};
   send_measurement(Measurement{}, expected_attempts, client_always_fail);
@@ -251,7 +252,7 @@ Considerações sobre templates:
 
 *** Caso especial: função
 
-#+begin_src c++
+#+BEGIN_SRC cpp
 template <typename PostFn = decltype(http::post)>
 void send_measurement(const Measurement &measurement, int max_attempts,
                       PostFn post = http::post) {
@@ -287,7 +288,7 @@ void test() {
 
   assert(client_always_fail.attempts == expected_attempts);
 }
-#+end_src
+#+END_SRC
 
 
 * Conclusão
