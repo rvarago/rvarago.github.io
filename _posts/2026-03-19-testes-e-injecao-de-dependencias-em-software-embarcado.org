@@ -7,13 +7,15 @@ tags: [testes c++]
 ---
 #+end_export
 
-#+begin_quote
+#+BEGIN_QUOTE
 Uma breve introdução a técnicas de injeção de dependências em C++ para testes unitários de software embarcado.
-#+end_quote
----------------
+#+END_QUOTE
+
+---
 
 * Introdução
-A testabilidade é um aspecto crucial no desenvolvimento de sistemas embarcados, especialmente devido ao impacto significativo que esses dispositivos têm em contextos críticos, como veículos, equipamentos médicos e sistemas industriais. Testes unitários, nesse cenário, assumem um papel estratégico ao permitir a validação isolada de cada unidade de código. Isso contribui para a detecção precoce de defeitos, reduzindo os riscos associados à integração de componentes e oferecendo feedback contínuo durante o desenvolvimento.
+
+A *testabilidade* é um aspecto crucial no desenvolvimento de sistemas embarcados, especialmente devido ao impacto significativo que esses dispositivos têm em contextos críticos, como veículos, equipamentos médicos e sistemas industriais. Testes unitários, nesse cenário, assumem um papel estratégico ao permitir a validação isolada de cada unidade de código. Isso contribui para a detecção precoce de defeitos, reduzindo os riscos associados à integração de componentes e oferecendo feedback contínuo durante o desenvolvimento.
 
 Entretanto, o ambiente embarcado apresenta desafios únicos, como restrições de hardware, recursos computacionais limitados e dificuldades para simular cenários críticos. Esses fatores reforçam ainda mais a necessidade de uma abordagem estruturada para testes.
 
@@ -22,30 +24,49 @@ Neste artigo, exploraremos estratégias práticas para isolar e testar subsistem
 Os exemplos neste documento serão ilustrados em C++.
 
 * Motivação
+
 Ao realizar um teste, o objetivo é validar, com certo grau de confiança, que o sistema atende aos requisitos definidos. A eficácia de um teste pode ser avaliada com base em diversos critérios, notadamente:
 
-- *Fidelidade*: O quão próximo o ambiente de teste reflete as condições do ambiente real de operação.
-- *Reprodutibilidade*: A consistência dos resultados em execuções sob as mesmas condições.
-- *Isolamento*: A capacidade de testar um subsistema de forma independente do restante do sistema.
++ *Fidelidade*: O quão próximo o ambiente de teste reflete as condições do ambiente real de operação.
++ *Reprodutibilidade*: A consistência dos resultados em execuções sob as mesmas condições.
++ *Isolamento*: A capacidade de testar um subsistema de forma independente do restante do sistema.
 
 Por vezes, esses critérios podem se conflitar. Por exemplo, um teste com alta fidelidade pode incluir variáveis externas que prejudiquem tanto a reprodutibilidade quanto o isolamento. Imagine testar o envio de dados de um cliente IoT para um servidor real (alta fidelidade). Se o servidor estiver indisponível ou sofrer alterações, o resultado do teste pode se tornar incerto (baixa reprodutibilidade) ou exigir muita coordenação (baixo isolamento).
 
-Essas considerações destacam a importância de uma estratégia robusta de testes que vá desde unidades isoladas até a integração completa de todos os subsistemas. Neste artigo, focaremos na aplicação da *injeção de dependências* para viabilizar testes unitários em C++.
+Essas considerações destacam a importância de uma estratégia robusta de testes que vá desde unidades isoladas até a integração completa de todos os subsistemas.
+
+Neste artigo, focaremos na aplicação da *injeção de dependências* para viabilizar testes unitários em C++.
 
 * Injeção de dependências
+
 Em nosso contexto, uma "dependência" representa um componente de software necessário para implementar um requisito. Exemplos incluem:
-- Uma função que efetua a leitura de um sensor de temperatura.
-- Um conjunto de classes que escaneiam bytes vindos da porta serial e os interpretam como logins RFID.
-- SDK para envio de telemetria.
-- Controlador PID.
+
++ Uma função que efetua a leitura de um sensor de temperatura.
++ Um conjunto de classes que escaneiam bytes vindos da porta serial e os interpretam como logins RFID.
++ SDK para envio de telemetria.
++ Controlador PID.
 
 Nem sempre temos total controle sobre nossas dependências, seja por elas serem bibliotecas externas, seja por envolverem acesso a hardware diretamente. Nessas situações, testá-las em ambientes reais pode ser inviável ou inconveniente.
 
-Semelhante ao uso de modelos para representar a realidade, nos interessa substituir uma dependência real por uma versão simplificada, permitindo testar o componente de forma isolada. A injeção de dependências se baseia exatamente nessa ideia.
+Semelhante ao uso de modelos para representar a realidade, nos interessa substituir uma dependência real por uma versão simplificada, nos permitindo testar o componente de forma isolada. Em resumo, gostaríamos de isolar e controlar dependências de um determinado subsistema que causem não-determinismo ou similares efeitos colaterais fora de nosso controle em um contexto em que buscamos testar apenas o dito subsistema.
 
-A essência da abordagem é declarar dependências como abstrações (em oposição a ligações fixas diretamente no código), delegando a tarefa de fornecer implementações concretas ao componente que chamará o sistema. Em geral, isso acontece próximo ao ponto de entrada do software, como na função ~main~ ou equivalente.
+É isso que injeção de dependências nos possibilita.
+
+A essência da abordagem é fazer com que o subsistema objeto de testes declare suas dependências como abstrações (em oposição a ligações fixas resolvidas pelo subsistema em), delegando a tarefa de fornecer implementações concretas ao componente que usará o subsistema. Tipicamente, isso acontece próximo ao ponto de entrada do software, como na função ~main~ ou equivalente.
+
+Com isso, os testes podem usar implementações que sejam convenientes para fins de teste.
+
+*** Considerações sobre Fakes, Mocks e Stubs
+
+A diferentes tipos de substitutos para testes e a nomenclatura é [[https://martinfowler.com/articles/mocksArentStubs.html][diversa]] e por vezes confusa, por exemplo:
++ *Fake*: Implementação funcional simplificada, usada para testes.
++ *Stub*: Retorna valores pré-definidos, sem lógica.
++ *Mock*: Permite verificar interações (e.g. número de chamadas, argumentos).
+
+Ao longo desse texto, utilizarei o termo /Fake/ sem muito zelo quanto ao seu significado "exato".
 
 * O subsistema a ser testado
+
 Para ilustrar, considere uma API para envio de requisições HTTP:
 
 #+BEGIN_SRC cpp
@@ -66,13 +87,18 @@ Essa API é imutável, pois pode fazer parte de um SDK proprietário ou de terce
 Agora, considere o seguinte subsistema que utiliza essa API para enviar medições:
 
 #+BEGIN_SRC cpp
-struct Measurement;
+struct Measurement {
+  // Fictício.
+};
 
-http::Request to_request(const Measurement&);
+http::Request to_request(const Measurement& m) {
+  // Conversão fictícia para exemplo.
+  return http::Request{/*...*/};
+}
 
 void send_measurement(const Measurement& measurement, int max_attempts) {
   const auto request = to_request(measurement);
-  
+
   for (int attempt = 0; attempt < max_attempts; ++attempt) {
     const auto status = http::post(request);
     if (status == http::Status::Okay) {
@@ -82,30 +108,29 @@ void send_measurement(const Measurement& measurement, int max_attempts) {
 }
 #+END_SRC
 
-Nosso objetivo é testar a função ~send_measurement~, garantindo que ela tenta enviar uma requisição exatamente =N= vezes em caso de =N= falhas consecutivas nas chamadas HTTP. A API dessa função deve permanecer inalterada para garantir a compatibilidade com o código existente.
+Nosso objetivo é testar a função ~send_measurement~, garantindo que ela tenta enviar uma requisição exatamente ~N~ vezes em caso de ~N~ falhas consecutivas nas chamadas HTTP. A API dessa função deve permanecer inalterada para garantir a compatibilidade com o código existente.
 
 À luz da discussão sobre testes unitários, constatamos que testar diretamente a API HTTP enfrentaria problemas como:
-- Dependência de um servidor externo, que pode estar indisponível.
-- Complexidade para simular falhas no servidor.
-- Testes lentos e caros devido à utilização de uma infraestrutura real.
 
-Como solução, propomos substituir a dependência direta da função ~http::post~ por uma versão simulada (*Fake*) durante os testes.
++ Dependência de um servidor externo, que pode estar indisponível.
++ Complexidade para simular falhas no servidor.
++ Testes lentos e caros devido à utilização de uma infraestrutura real.
+
+Como solução, propomos substituir a dependência direta da função ~http::post~ por uma versão simulada (/Fake/) durante os testes.
 
 * Técnicas de Injeção de Dependências
 
 ** Classes abstratas e resolução dinâmica
+
 Uma abordagem inicial faz uso de classes abstratas para permitir polimorfismo dinâmico:
 
 #+BEGIN_SRC cpp
-// Camada de indireção que nos possibilita controlar o que de fato executa. 
 class Client {
 public:
   virtual ~Client() = default;
-
   virtual http::Status post(const http::Request&) const = 0;
 };
 
-// A implementação real simplemente delega ao http::post.
 class HttpClient : public Client {
 public:
   http::Status post(const http::Request& req) const override {
@@ -125,7 +150,7 @@ void send_measurement(const Measurement& measurement, int max_attempts,
   }
 }
 
-// Implementação para testes, sempre devolve um status pré-definido e incrementa um contador cada vez que executa um envio.
+// Fake para testes: conta tentativas e retorna status fixo.
 class CountingClient : public Client {
 public:
   explicit CountingClient(http::Status fixedStatus) : status{fixedStatus} {}
@@ -135,31 +160,41 @@ public:
     return status;
   }
 
-  mutable int attempts{0}; // mutable permite modificar o estado dentro de funções const, útil em testes.
+  mutable int attempts{0}; // "mutable" permite modificar o estado dentro de funções-membra "const". Perigoso em código de produção, porém útil em testes.
   http::Status status;
 };
 
 void test() {
   constexpr int expected_attempts = 10;
   CountingClient client_always_fail{http::Status::Fail};
-  
+
   send_measurement(Measurement{}, expected_attempts, client_always_fail);
 
   assert(client_always_fail.attempts == expected_attempts);
 }
 #+END_SRC
 
-Note que ~send_measurement~ agora recebe um terceiro parâmetro: ~const Client& client = HttpClient{}~. É ele que nos possibilita substituir a real chamada HTTP por algo que esteja sob nosso controle. Além disso, lhe demos um argumento padrão para preservar a compatibilidade com o código existente. Apesar de haver outras formas com diferentes prós e contras de se atingir o mesmo objetivo (e.g. sobrecarga de funções), o argumento padrão será utilizado enquanto estratégia ao longo desse texto sem perda de generalidade. 
+Note que ~send_measurement~ agora recebe um terceiro parâmetro: ~const Client& client = HttpClient{}~. É ele que nos possibilita substituir a real chamada HTTP por algo que esteja sob nosso controle. Sendo essa a essência da injeção de dependências.
 
-Com respeito ao uso de polimorfismo dinâmico, temos aproximadamente:
-- *Vantagens*: Flexibilidade em tempo de execução, fácil substituição de implementações, com baixo impacto no tempo de execução e moderado tamanho do binário.
-- *Desvantagens*: Overhead de resolução dinâmica (interfaces virtuais) e maior dependência do uso de ponteiros e referências.
+Além disso, lhe demos um argumento padrão (por simplicidade, instanciado a cada chamada) para preservar a compatibilidade com o código existente. Apesar de haver outras formas com diferentes prós e contras de se atingir o mesmo objetivo (e.g. sobrecarga de funções, passagem explícita de argumentos), o argumento padrão será utilizado enquanto estratégia ao longo desse texto por simplicidade sem perda de generalidade.
 
-*** Caso especial: ~std::function<>~
-Para casos em que a API resume-se a única função, uma abordagem alternativa e mais compacta em termos de código escrito consiste em usar a [[https://en.cppreference.com/w/cpp/utility/functional/function.html][~std::function<>~]] para definir o comportamento dinamicamente sem necessidade de hierarquia de classes:
+Considerações:
++ *Vantagens*:
+  + Flexibilidade em tempo de execução.
+  + Fácil substituição de implementações.
+  + Baixo impacto no tempo de execução e moderado tamanho do binário.
++ *Desvantagens*:
+  + Overhead de resolução dinâmica (interfaces virtuais).
+  + Maior dependência do uso de ponteiros e referências.
+
+** Caso especial: ~std::function<>~
+
+Para casos em que a API resume-se a uma única função, pode-se usar [[https://en.cppreference.com/w/cpp/utility/functional/function.html][~std::function<>~]] para definir o comportamento dinamicamente sem necessidade de hierarquia de classes, o que torna a implementação menos verbosa:
 
 #+BEGIN_SRC cpp
-//
+#include <functional> // Para ter accesso ao "std::function".
+
+// Camada de indireção para substituição dinâmica.
 using PostFn = std::function<http::Status(const http::Request&)>;
 
 void send_measurement(const Measurement& measurement, int max_attempts,
@@ -178,13 +213,14 @@ class CountingClient {
 public:
   explicit CountingClient(http::Status fixedStatus) : status{fixedStatus} {}
 
-  http::Status operator()(const http::Request &) {
+  // Implementamos o operador chamada de função para que "CountingClient" seja compatível com "std::function".
+  http::Status operator()(const http::Request &) const {
     ++attempts;
     return status;
   }
 
   http::Status status;
-  int attempts{0};
+  mutable int attempts{0};
 };
 
 void test() {
@@ -192,22 +228,28 @@ void test() {
   CountingClient client_always_fail{http::Status::Fail};
 
   send_measurement(Measurement{}, expected_attempts,
-                   std::ref(client_always_fail));
+                   std::cref(client_always_fail));
 
   assert(client_always_fail.attempts == expected_attempts);
 }
 #+END_SRC
 
-Considerações sobre ~std::function<>~:
-- *Vantagens*: Mais simples que classes abstratas, reduz verbosidade.
-- *Desvantagens*: Similares ao uso de classes abstratas.
+Note o uso de [[https://en.cppreference.com/w/cpp/utility/functional/ref.html][~std::cref~]] para impedir a cópia de ~client_always_fail~. Isso garante que seja passado por referência, permitindo que qualquer modificação feita em ~client_always_fail~ dentro da função ~send_measurement~ seja refletida após sua execução.
 
-Vale destacar que em alguns cenários podemos atingir o objetivo com um ponteiro para função, e.g. se o objeto passado não possui estado.
+Considerações:
++ *Vantagens*:
+  + Mais simples que classes abstratas.
+  + Reduz verbosidade.
++ *Desvantagens*:
+  + Overhead de ~std::function~ pode ser relevante em ambientes embarcados restritos e/ou sem acesso ao "heap".
+  + Requer refatoração para acomodar múltiplas funções.
 
 ** Templates e resolução estática
-Uma alternativa com *templates* explora polimorfismo em tempo de compilação:
+
+Uma alternativa com *templates* explora polimorfismo estático, resolvendo chamadas em tempo de compilação:
 
 #+BEGIN_SRC cpp
+// Nossa camada de indireção passa a ser o template.
 template <typename Client = HttpClient>
 void send_measurement(const Measurement &measurement, int max_attempts,
                       const Client &client = HttpClient{}) {
@@ -244,18 +286,22 @@ void test() {
 }
 #+END_SRC
 
-#+RESULTS:
+Considerações:
++ *Vantagens*:
+  + Maior eficiência em tempo de execução.
+  + Possibilidades para "inlining" e otimizações correlatas.
++ *Desvantagens*:
+  + Aumento no tamanho do binário e maior tempo de compilação.
+  + Complica a compilação em unidades de compilação separadas, pois para compilar cada chamado ao template o compilador requer acesso a sua definição.
+  + Qualidade das mensagens de erro de compilação.
 
-Considerações sobre templates:
-- *Vantagens*: Maior eficiência em tempo de execução com mais possibilidades para "inlining" e checagem de erros em tempo de compilação.
-- *Desvantagens*: Código pode se tornar mais verboso com piores mensagens de erro de compilação, aumento no tamanho do binário e maior tempo de compilação.
-
-*** Caso especial: função
+** Caso especial: função como template
 
 #+BEGIN_SRC cpp
-template <typename PostFn = decltype(http::post)>
+// Nossa camada de indireção passa a ser algo "tipo" uma função.
+template <typename PostFn = decltype(&http::post)>
 void send_measurement(const Measurement &measurement, int max_attempts,
-                      PostFn post = http::post) {
+                      const PostFn& post = http::post) {
   const auto request = to_request(measurement);
 
   for (int attempt = 0; attempt < max_attempts; ++attempt) {
@@ -270,13 +316,14 @@ class CountingClient {
 public:
   explicit CountingClient(http::Status fixedStatus) : status{fixedStatus} {}
 
-  http::Status operator()(const http::Request &) {
+  // Implementamos o operador chamada de função para que "CountingClient" seja compatível com o template.
+  http::Status operator()(const http::Request &) const {
     ++attempts;
     return status;
   }
 
   http::Status status;
-  int attempts{0};
+  mutable int attempts{0};
 };
 
 void test() {
@@ -284,21 +331,26 @@ void test() {
   CountingClient client_always_fail{http::Status::Fail};
 
   send_measurement(Measurement{}, expected_attempts,
-                   std::ref(client_always_fail));
+                   std::cref(client_always_fail));
 
   assert(client_always_fail.attempts == expected_attempts);
 }
 #+END_SRC
 
-
+Considerações:
++ *Vantagens*:
+  + Mais simples que classes, reduz verbosidade.
++ *Desvantagens*:
+  + Similares ao uso de templates.
+  + Requer refatoração para múltiplas funções.
 
 * Conclusão
+
 A injeção de dependências é uma técnica valiosa para aprimorar a testabilidade de software embarcado, permitindo isolar e simular componentes de forma eficaz. As abordagens discutidas oferecem diferentes vantagens:
 
 - *Classes abstratas*: Proporcionam flexibilidade em tempo de execução.
-- *std::function<>*: Oferecem simplicidade em cenários específicos e menor acoplamento a hierarquias complexas.
 - *Templates*: Garantem alto desempenho, mas exigem maior verbosidade e aumentam o tempo de compilação.
 
-É importante destacar que o impacto de cada abordagem no projeto (e.g. desempenho) depende de uma série de fatores que devem ser avaliados e monitorados continuamente para uma caracterização mais precisa. Comparar diretamente diferentes técnicas pode ser impreciso, já que cada solução oferece capacidades distintas e são úteis em diferentes contextos. Portanto, é recomendável avaliar as opções caso a caso, considerando a possibilidade de combiná-las para atender às necessidades específicas do projeto.
+É importante destacar que o impacto de cada abordagem no projeto (e.g. viabilidade, desempenho) depende de uma série de fatores que devem ser avaliados e monitorados continuamente para uma caracterização mais precisa. Comparar diretamente diferentes técnicas pode ser impreciso, já que cada solução oferece capacidades distintas e são úteis em diferentes contextos. Portanto, é recomendável avaliar as opções caso a caso, considerando inclusive a possibilidade de combiná-las para atender às necessidades específicas do projeto.
 
-Concluindo, agora com respeito à estratégia de testes, a escolha da abordagem mais adequada deve considerar a realidade do sistema e buscar um equilíbrio entre fidelidade, isolamento e reprodutibilidade. Em particular, sistemas embarcados se beneficiam de estratégias que reduzem os impactos do hardware envolvido e aumentam a confiabilidade do software.
+Concluindo, agora com respeito à estratégia de testes, a escolha da abordagem mais adequada deve considerar a realidade do sistema e buscar um equilíbrio entre fidelidade, isolamento e reprodutibilidade. Em particular, sistemas embarcados se beneficiam de estratégias que reduzem os impactos do hardware envolvido e aumentam a confiabilidade do software, o que pode abranger testes automatizados e manuais em diferentes escalas.
