@@ -52,18 +52,18 @@ Semelhante ao uso de modelos para representar a realidade, nos interessa substit
 
 É isso que injeção de dependências nos possibilita.
 
-A essência da abordagem é fazer com que o subsistema objeto de testes declare suas dependências como abstrações (em oposição a ligações fixas resolvidas pelo subsistema em), delegando a tarefa de fornecer implementações concretas ao componente que usará o subsistema. Tipicamente, isso acontece próximo ao ponto de entrada do software, como na função ~main~ ou equivalente.
+A essência da abordagem é fazer com que o subsistema objeto de testes declare suas dependências como abstrações (em oposição a ligações fixas amarradas internamente pelo próprio subsistema), delegando a tarefa de fornecer implementações concretas ao componente externo que usará o subsistema. Tipicamente, isso acontece próximo ao ponto de entrada do software, como na função ~main~ ou equivalente.
 
 Com isso, os testes podem usar implementações que sejam convenientes para fins de teste.
 
 *** Considerações sobre Fakes, Mocks e Stubs
 
-A diferentes tipos de substitutos para testes e a nomenclatura é [[https://martinfowler.com/articles/mocksArentStubs.html][diversa]] e por vezes confusa, por exemplo:
+Há diferentes tipos de substitutos para testes e a nomenclatura é [[https://martinfowler.com/articles/mocksArentStubs.html][diversa]] e por vezes confusa, por exemplo:
 + *Fake*: Implementação funcional simplificada, usada para testes.
 + *Stub*: Retorna valores pré-definidos, sem lógica.
 + *Mock*: Permite verificar interações (e.g. número de chamadas, argumentos).
 
-Ao longo desse texto, utilizarei o termo /Fake/ sem muito zelo quanto ao seu significado "exato".
+Ao longo desse texto, utilizarei o termo /Fake/ sem muito preciosismo quanto ao seu significado "exato".
 
 * O subsistema a ser testado
 
@@ -108,15 +108,15 @@ void send_measurement(const Measurement& measurement, int max_attempts) {
 }
 #+END_SRC
 
-Nosso objetivo é testar a função ~send_measurement~, garantindo que ela tenta enviar uma requisição exatamente ~N~ vezes em caso de ~N~ falhas consecutivas nas chamadas HTTP. A API dessa função deve permanecer inalterada para garantir a compatibilidade com o código existente.
+Nosso objetivo é testar a função ~send_measurement~, garantindo que ela envie uma requisição exatamente ~N~ vezes em caso de ~N~ falhas consecutivas nas chamadas HTTP. Para simular restrições minimamente realistas de projeto prático, buscaremos minizar a quantidade de código a ser alterado e sendo assim será necessário manter a retrocompatibilidade com o código existente.
 
-À luz da discussão sobre testes unitários, constatamos que testar diretamente a API HTTP enfrentaria problemas como:
+À luz da discussão sobre testes unitários, constatamos que usar a API HTTP real nos testes produziria os seguintes incovenientes:
 
 + Dependência de um servidor externo, que pode estar indisponível.
 + Complexidade para simular falhas no servidor.
 + Testes lentos e caros devido à utilização de uma infraestrutura real.
 
-Como solução, propomos substituir a dependência direta da função ~http::post~ por uma versão simulada (/Fake/) durante os testes.
+Como solução, propomos substituir a dependência direta da função ~http::post~ por uma versão simulada (/Fake/) sob medida para testes.
 
 * Técnicas de Injeção de Dependências
 
@@ -192,8 +192,6 @@ Considerações:
 Para casos em que a API resume-se a uma única função, pode-se usar [[https://en.cppreference.com/w/cpp/utility/functional/function.html][~std::function<>~]] para definir o comportamento dinamicamente sem necessidade de hierarquia de classes, o que torna a implementação menos verbosa:
 
 #+BEGIN_SRC cpp
-#include <functional> // Para ter accesso ao "std::function".
-
 // Camada de indireção para substituição dinâmica.
 using PostFn = std::function<http::Status(const http::Request&)>;
 
@@ -353,4 +351,4 @@ A injeção de dependências é uma técnica valiosa para aprimorar a testabilid
 
 É importante destacar que o impacto de cada abordagem no projeto (e.g. viabilidade, desempenho) depende de uma série de fatores que devem ser avaliados e monitorados continuamente para uma caracterização mais precisa. Comparar diretamente diferentes técnicas pode ser impreciso, já que cada solução oferece capacidades distintas e são úteis em diferentes contextos. Portanto, é recomendável avaliar as opções caso a caso, considerando inclusive a possibilidade de combiná-las para atender às necessidades específicas do projeto.
 
-Concluindo, agora com respeito à estratégia de testes, a escolha da abordagem mais adequada deve considerar a realidade do sistema e buscar um equilíbrio entre fidelidade, isolamento e reprodutibilidade. Em particular, sistemas embarcados se beneficiam de estratégias que reduzem os impactos do hardware envolvido e aumentam a confiabilidade do software, o que pode abranger testes automatizados e manuais em diferentes escalas.
+Concluindo, agora com respeito à estratégia de testes, a escolha da abordagem mais adequada deve considerar a realidade do sistema e buscar o equilíbrio entre fidelidade, isolamento e reprodutibilidade. Em particular, sistemas embarcados se beneficiam de estratégias que reduzem os impactos do hardware envolvido e aumentam a confiabilidade do software, o que pode abranger testes automatizados e manuais em diferentes escalas.
