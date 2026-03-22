@@ -19,7 +19,7 @@ A *testabilidade* é um aspecto crucial no desenvolvimento de sistemas embarcado
 
 Entretanto, o ambiente embarcado apresenta desafios únicos, como restrições de hardware, recursos computacionais limitados e dificuldades para simular cenários críticos. Esses fatores reforçam ainda mais a necessidade de uma abordagem estruturada para testes.
 
-Neste artigo, exploraremos estratégias práticas para isolar e testar subsistemas embarcados, com ênfase na aplicação de técnicas de injeção de dependências. Essas técnicas são particularmente úteis em sistemas legados, onde a arquitetura inicial pode não ter sido projetada com foco explícito em testabilidade.
+Neste artigo, exploraremos estratégias práticas para isolar e testar subsistemas embarcados, com ênfase na aplicação de técnicas de injeção de dependências. Tais técnicas são especialmente úteis em sistemas legados, cuja arquitetura inicial pode não ter priorizado a testabilidade..
 
 Os exemplos neste documento serão ilustrados em C++.
 
@@ -33,7 +33,7 @@ Ao realizar um teste, o objetivo é validar, com certo grau de confiança, que o
 
 Por vezes, esses critérios podem se conflitar. Por exemplo, um teste com alta fidelidade pode incluir variáveis externas que prejudiquem tanto a reprodutibilidade quanto o isolamento. Imagine testar o envio de dados de um cliente IoT para um servidor real (alta fidelidade). Se o servidor estiver indisponível ou sofrer alterações, o resultado do teste pode se tornar incerto (baixa reprodutibilidade) ou exigir muita coordenação (baixo isolamento).
 
-Essas considerações destacam a importância de uma estratégia robusta de testes que vá desde unidades isoladas até a integração completa de todos os subsistemas.
+Essas considerações destacam a importância de uma estratégia robusta de testes, abrangendo desde unidades isoladas até a integração completa de todos os subsistemas.
 
 Neste artigo, focaremos na aplicação da *injeção de dependências* para viabilizar testes unitários em C++.
 
@@ -54,7 +54,7 @@ Semelhante ao uso de modelos para representar a realidade, nos interessa substit
 
 A essência da abordagem é fazer com que o subsistema objeto de testes declare suas dependências como abstrações (em oposição a ligações fixas amarradas internamente pelo próprio subsistema), delegando a tarefa de fornecer implementações concretas ao componente externo que usará o subsistema. Tipicamente, isso acontece próximo ao ponto de entrada do software, como na função ~main~ ou equivalente.
 
-Com isso, os testes podem usar implementações que sejam convenientes para fins de teste.
+Com isso, os testes podem definir seus próprios objetos de teste que satisfação a abstração e que sejam convenientes para verificar determinados comportamentos.
 
 *** Considerações sobre Fakes, Mocks e Stubs
 
@@ -108,7 +108,7 @@ void send_measurement(const Measurement& measurement, int max_attempts) {
 }
 #+END_SRC
 
-Nosso objetivo é testar a função ~send_measurement~, garantindo que ela envie uma requisição exatamente ~N~ vezes em caso de ~N~ falhas consecutivas nas chamadas HTTP. Para simular restrições minimamente realistas de projeto prático, buscaremos minizar a quantidade de código a ser alterado e sendo assim será necessário manter a retrocompatibilidade com o código existente.
+Nosso objetivo é testar a função ~send_measurement~, garantindo que ela envie uma requisição exatamente ~N~ vezes em caso de ~N~ falhas consecutivas nas chamadas HTTP. Para simular restrições minimamente realistas de projeto prático, buscaremos minizar a quantidade de código a ser alterada e sendo assim será necessário manter a retrocompatibilidade com o código existente.
 
 À luz da discussão sobre testes unitários, constatamos que usar a API HTTP real nos testes produziria os seguintes incovenientes:
 
@@ -178,6 +178,14 @@ Note que ~send_measurement~ agora recebe um terceiro parâmetro: ~const Client& 
 
 Além disso, lhe demos um argumento padrão (por simplicidade, instanciado a cada chamada) para preservar a compatibilidade com o código existente. Apesar de haver outras formas com diferentes prós e contras de se atingir o mesmo objetivo (e.g. sobrecarga de funções, passagem explícita de argumentos), o argumento padrão será utilizado enquanto estratégia ao longo desse texto por simplicidade sem perda de generalidade.
 
+Já no teste, utilizamos um /Fake/ que simplesmente retorna uma resposta de falha pré-definida e mantém um contador do número de chamadas feitas ao método. Esse contador pode ser inspecionado para confirmar que corresponde ao valor esperado.
+
+Note que /Fakes/ podem ser muito mais elaborados. Por exemplo, poderíamos substituir o contador por um contêiner (e.g. ~std::vector<http::Request>~) que armazena os argumentos fornecido ao ~post~ e assim poderíamos verificar cenários em ~send_measurement~ o chama com diferentes argumentos. Neste caso, o número de chamadas equivaleria ao número de elementos no contêiner.
+
+#+begin_center
+O uso de ~mutable~ exige cautela, pois pode introduzir, de forma não intencional, violações de "[[https://isocpp.org/wiki/faq/const-correctness][const correctness]]". Ainda assim, seu emprego pode ser necessário em *testes*.
+#+end_center
+
 Considerações:
 + *Vantagens*:
   + Flexibilidade em tempo de execução.
@@ -234,6 +242,20 @@ void test() {
 
 Note o uso de [[https://en.cppreference.com/w/cpp/utility/functional/ref.html][~std::cref~]] para impedir a cópia de ~client_always_fail~. Isso garante que seja passado por referência, permitindo que qualquer modificação feita em ~client_always_fail~ dentro da função ~send_measurement~ seja refletida após sua execução.
 
+Alternativamente, poderíamos implementar o /Fake/ como uma expressão lambda, sem a necessidade de uma classe, e.g.:
+
+#+begin_src cpp
+int attempts = 0;
+const auto client_always_fail = [&attempts](const http::Request &)  {
+  ++attempts;
+  return http::Status::Fail;
+};
+
+send_measurement(Measurement{}, expected_attempts, client_always_fail);
+
+assert(attempts == expected_attempts);
+#+end_src
+
 Considerações:
 + *Vantagens*:
   + Mais simples que classes abstratas.
@@ -247,6 +269,11 @@ Considerações:
 Uma alternativa com *templates* explora polimorfismo estático, resolvendo chamadas em tempo de compilação:
 
 #+BEGIN_SRC cpp
+class HttpClient {
+public:
+  http::Status post(const http::Request &req) const { return http::post(req); }
+};
+
 // Nossa camada de indireção passa a ser o template.
 template <typename Client = HttpClient>
 void send_measurement(const Measurement &measurement, int max_attempts,
@@ -335,12 +362,32 @@ void test() {
 }
 #+END_SRC
 
+Similar ao ~std::function>~, podemos também alcançar o mesmo objetivo com uma expressão lambda em lugar da classe ~CountingClient~.
+
 Considerações:
 + *Vantagens*:
   + Mais simples que classes, reduz verbosidade.
 + *Desvantagens*:
   + Similares ao uso de templates.
   + Requer refatoração para múltiplas funções.
+
+*** Conceitos (C++ >=20)
+
+Citamos a diminuição da qualidade dos erros de compilação como sendo uma desvantagem dos templates.
+
+Isso é largamente mitigado com o uso de "[[https://en.cppreference.com/w/cpp/language/constraints.html][concepts]]" que estão disponíveis a partir da versão 20 do C++. Assim, podemos, por exemplo, refinar nosso template a tipos que suportem o operador chamada de função, que aceitem um ~http::Request~ como parâmetro e que retornem um ~http::Status~, e.g.:
+
+#+begin_src cpp
+template <typename F>
+concept PostFunction =
+    std::invocable<F, const http::Request&> &&
+    std::same_as<std::invoke_result_t<F, const http::Request&>, http::Status>;
+
+template <PostFunction PostFn = decltype(&http::post)>
+void send_measurement(const Measurement &measurement, int max_attempts,
+                      const PostFn& post = http::post) {
+#+end_src
+
 
 * Conclusão
 
