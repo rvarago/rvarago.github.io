@@ -15,59 +15,59 @@ Uma breve introdução a técnicas de injeção de dependências em C++ para tes
 
 * Introdução
 
-A *testabilidade* é um aspecto crucial no desenvolvimento de sistemas embarcados, especialmente devido ao impacto significativo que esses dispositivos têm em contextos críticos, como veículos, equipamentos médicos e sistemas industriais. Testes unitários, nesse cenário, assumem um papel estratégico ao permitir a validação isolada de cada unidade de código. Isso contribui para a detecção precoce de defeitos, reduzindo os riscos associados à integração de componentes e oferecendo feedback contínuo durante o desenvolvimento.
+A *testabilidade* é um aspecto fundamental no desenvolvimento de sistemas embarcados, especialmente devido ao impacto significativo que esses dispositivos exercem em contextos críticos, como veículos, equipamentos médicos e sistemas industriais. Nesse sentido, testes unitários desempenham um papel estratégico ao validar isoladamente cada unidade de código, contribuindo para a detecção precoce de defeitos, reduzindo os riscos associados à integração de componentes e fornecendo feedback contínuo durante o desenvolvimento.
 
-Entretanto, o ambiente embarcado apresenta desafios únicos, como restrições de hardware, recursos computacionais limitados e dificuldades para simular cenários críticos. Esses fatores reforçam ainda mais a necessidade de uma abordagem estruturada para testes.
+Entretanto, o ambiente embarcado apresenta desafios específicos, como restrições de hardware, recursos computacionais limitados e dificuldades em simular cenários críticos. Esses fatores destacam ainda mais a necessidade de uma abordagem estruturada para realizar testes eficazes.
 
-Neste artigo, exploraremos estratégias práticas para isolar e testar subsistemas embarcados, com ênfase na aplicação de técnicas de injeção de dependências. Tais técnicas são especialmente úteis em sistemas legados, cuja arquitetura inicial pode não ter priorizado a testabilidade..
+Neste artigo, exploraremos estratégias práticas para isolar e testar subsistemas embarcados, com ênfase na aplicação de técnicas de injeção de dependências. Essas técnicas são especialmente úteis em sistemas legados, cuja arquitetura inicial pode não ter considerado a testabilidade uma prioridade.
 
-Os exemplos neste documento serão ilustrados em C++.
+Os exemplos apresentados ao longo do artigo serão ilustrados em C++.
 
 * Motivação
 
-Ao realizar um teste, o objetivo é validar, com certo grau de confiança, que o sistema atende aos requisitos definidos. A eficácia de um teste pode ser avaliada com base em diversos critérios, notadamente:
+Ao realizar um teste, o objetivo é validar, com certo grau de confiança, que o sistema atende aos requisitos definidos. A eficácia de um teste pode ser analisada com base em diversos critérios, notadamente:
 
-+ *Fidelidade*: O quão próximo o ambiente de teste reflete as condições do ambiente real de operação.
-+ *Reprodutibilidade*: A consistência dos resultados em execuções sob as mesmas condições.
-+ *Isolamento*: A capacidade de testar um subsistema de forma independente do restante do sistema.
++ *Fidelidade*: Refere-se ao quão próximo o ambiente de teste reflete as condições reais de operação.
++ *Reprodutibilidade*: Representa a consistência dos resultados obtidos em execuções sob as mesmas condições.
++ *Isolamento*: A habilidade de testar um subsistema de forma independente do restante do sistema.
 
-Por vezes, esses critérios podem se conflitar. Por exemplo, um teste com alta fidelidade pode incluir variáveis externas que prejudiquem tanto a reprodutibilidade quanto o isolamento. Imagine testar o envio de dados de um cliente IoT para um servidor real (alta fidelidade). Se o servidor estiver indisponível ou sofrer alterações, o resultado do teste pode se tornar incerto (baixa reprodutibilidade) ou exigir muita coordenação (baixo isolamento).
+Por vezes, esses critérios podem entrar em conflito. Por exemplo, um teste com alta fidelidade pode envolver variáveis externas que afetem negativamente tanto a reprodutibilidade quanto o isolamento. Imagine testar o envio de dados de um cliente IoT para um servidor real (alta fidelidade). Se o servidor estiver indisponível ou sofrer alterações, o resultado do teste pode se tornar incerto (baixa reprodutibilidade) ou exigir uma coordenação complexa (baixo isolamento).
 
-Essas considerações destacam a importância de uma estratégia robusta de testes, abrangendo desde unidades isoladas até a integração completa de todos os subsistemas.
+Essas considerações evidenciam a importância de uma estratégia robusta de testes, que abranja desde unidades isoladas até a integração completa de todos os subsistemas.
 
-Neste artigo, focaremos na aplicação da *injeção de dependências* para viabilizar testes unitários em C++.
+Neste artigo, o foco será a aplicação da *injeção de dependências* para viabilizar testes unitários em C++.
 
 * Injeção de dependências
 
-Em nosso contexto, uma "dependência" representa um componente de software necessário para implementar um requisito. Exemplos incluem:
+No contexto deste artigo, uma "dependência" representa um componente de software necessário para implementar um requisito. Exemplos incluem:
 
-+ Uma função que efetua a leitura de um sensor de temperatura.
-+ Um conjunto de classes que escaneiam bytes vindos da porta serial e os interpretam como logins RFID.
-+ SDK para envio de telemetria.
-+ Controlador PID.
++ Uma função que realiza a leitura de um sensor de temperatura.
++ Um conjunto de classes que processa bytes de uma porta serial e os interpreta como logins RFID.
++ Um SDK para envio de telemetria.
++ Um controlador PID.
 
-Nem sempre temos total controle sobre nossas dependências, seja por elas serem bibliotecas externas, seja por envolverem acesso a hardware diretamente. Nessas situações, testá-las em ambientes reais pode ser inviável ou inconveniente.
+Nem sempre temos controle total sobre nossas dependências, seja porque elas são bibliotecas externas, seja porque envolvem acesso direto ao hardware. Nessas situações, testá-las em ambientes reais pode ser inviável ou inconveniente.
 
-Semelhante ao uso de modelos para representar a realidade, nos interessa substituir uma dependência real por uma versão simplificada, nos permitindo testar o componente de forma isolada. Em resumo, gostaríamos de isolar e controlar dependências de um determinado subsistema que causem não-determinismo ou similares efeitos colaterais fora de nosso controle em um contexto em que buscamos testar apenas o dito subsistema.
+Assim como usamos modelos para representar a realidade, desejamos substituir uma dependência real por uma versão simplificada, permitindo que o componente seja testado de forma isolada. Em resumo, queremos isolar e controlar dependências que introduzam indeterminação ou efeitos colaterais fora do nosso controle, quando o objetivo é testar apenas o subsistema em questão.
 
-É isso que injeção de dependências nos possibilita.
+É isso que a injeção de dependências possibilita.
 
-A essência da abordagem é fazer com que o subsistema objeto de testes declare suas dependências como abstrações (em oposição a ligações fixas amarradas internamente pelo próprio subsistema), delegando a tarefa de fornecer implementações concretas ao componente externo que usará o subsistema. Tipicamente, isso acontece próximo ao ponto de entrada do software, como na função ~main~ ou equivalente.
+A essência dessa abordagem é fazer com que o subsistema sob teste declare suas dependências como abstrações (em vez de ligações fixas, amarradas internamente ao subsistema), delegando a tarefa de fornecer implementações concretas ao componente externo que o utilizará. Essa configuração geralmente ocorre próximo ao ponto de entrada do software, como na função ~main~ ou equivalente.
 
-Com isso, os testes podem definir seus próprios objetos de teste que satisfação a abstração e que sejam convenientes para verificar determinados comportamentos.
+Dessa forma, os testes podem definir seus próprios objetos substitutos que implementem a abstração de forma conveniente para verificar comportamentos específicos.
 
 *** Considerações sobre Fakes, Mocks e Stubs
 
-Há diferentes tipos de substitutos para testes e a nomenclatura é [[https://martinfowler.com/articles/mocksArentStubs.html][diversa]] e por vezes confusa, por exemplo:
-+ *Fake*: Implementação funcional simplificada, usada para testes.
-+ *Stub*: Retorna valores pré-definidos, sem lógica.
-+ *Mock*: Permite verificar interações (e.g. número de chamadas, argumentos).
+Há diferentes tipos de substitutos para testes, e a terminologia é [[https://martinfowler.com/articles/mocksArentStubs.html][diversa]] e, por vezes, confusa. Entre os termos comuns, destacam-se:
++ *Fake*: Uma implementação funcional simplificada, usada em testes.
++ *Stub*: Um substituto que retorna valores pré-definidos, sem conter lógica.
++ *Mock*: Permite verificar interações, como número de chamadas e argumentos usados.
 
-Ao longo desse texto, utilizarei o termo /Fake/ sem muito preciosismo quanto ao seu significado "exato".
+Neste texto, utilizaremos o termo /Fake/ de forma genérica, sem rigor em relação ao seu significado estrito.
 
 * O subsistema a ser testado
 
-Para ilustrar, considere uma API para envio de requisições HTTP:
+Para ilustrar os conceitos, considere uma API para envio de requisições HTTP:
 
 #+BEGIN_SRC cpp
 namespace http {
@@ -82,7 +82,7 @@ Status post(const Request&);
 }
 #+END_SRC
 
-Essa API é imutável, pois pode fazer parte de um SDK proprietário ou de terceiros e, portanto, não temos controle sobre seu comportamento nem podemos alterá-la.
+Essa API é imutável, pois pode fazer parte de um SDK proprietário ou de terceiros, logo não temos controle sobre seu comportamento nem podemos alterá-la.
 
 Agora, considere o seguinte subsistema que utiliza essa API para enviar medições:
 
@@ -108,15 +108,15 @@ void send_measurement(const Measurement& measurement, int max_attempts) {
 }
 #+END_SRC
 
-Nosso objetivo é testar a função ~send_measurement~, garantindo que ela envie uma requisição exatamente ~N~ vezes em caso de ~N~ falhas consecutivas nas chamadas HTTP. Para simular restrições minimamente realistas de projeto prático, buscaremos minizar a quantidade de código a ser alterada e sendo assim será necessário manter a retrocompatibilidade com o código existente.
+Nosso objetivo é testar a função ~send_measurement~, garantindo que ela envie uma requisição exatamente ~N~ vezes em caso de ~N~ falhas consecutivas nas chamadas HTTP. Buscaremos minimizar alterações no código original, de forma a garantir a retrocompatibilidade.
 
-À luz da discussão sobre testes unitários, constatamos que usar a API HTTP real nos testes produziria os seguintes incovenientes:
+Ao analisar a estratégia de testes unitários, percebemos que usar a API HTTP real nos testes traria os seguintes inconvenientes:
 
 + Dependência de um servidor externo, que pode estar indisponível.
-+ Complexidade para simular falhas no servidor.
-+ Testes lentos e caros devido à utilização de uma infraestrutura real.
++ Dificuldade em simular falhas específicas do servidor.
++ Testes lentos e dispendiosos devido à utilização de infraestrutura real.
 
-Como solução, propomos substituir a dependência direta da função ~http::post~ por uma versão simulada (/Fake/) sob medida para testes.
+Para resolver isso, propomos substituir a dependência direta da função ~http::post~ por uma versão simulada (/Fake/) projetada especificamente para testes.
 
 * Técnicas de Injeção de Dependências
 
@@ -391,11 +391,13 @@ void send_measurement(const Measurement &measurement, int max_attempts,
 
 * Conclusão
 
-A injeção de dependências é uma técnica valiosa para aprimorar a testabilidade de software embarcado, permitindo isolar e simular componentes de forma eficaz. As abordagens discutidas oferecem diferentes vantagens:
+A injeção de dependências é uma técnica essencial para melhorar a testabilidade de software embarcado, permitindo isolar e simular componentes de maneira eficiente. As abordagens disponíveis oferecem diferentes vantagens:
 
 - *Classes abstratas*: Proporcionam flexibilidade em tempo de execução.
 - *Templates*: Garantem alto desempenho, mas exigem maior verbosidade e aumentam o tempo de compilação.
 
-É importante destacar que o impacto de cada abordagem no projeto (e.g. viabilidade, desempenho) depende de uma série de fatores que devem ser avaliados e monitorados continuamente para uma caracterização mais precisa. Comparar diretamente diferentes técnicas pode ser impreciso, já que cada solução oferece capacidades distintas e são úteis em diferentes contextos. Portanto, é recomendável avaliar as opções caso a caso, considerando inclusive a possibilidade de combiná-las para atender às necessidades específicas do projeto.
+O impacto de cada abordagem no projeto, como viabilidade e desempenho, depende de diversos fatores que devem ser analisados e monitorados constantemente. É fundamental evitar comparações simplistas entre técnicas, uma vez que cada solução apresenta características únicas e é mais adequada para contextos específicos. Por isso, recomenda-se uma avaliação criteriosa caso a caso, considerando ainda a possibilidade de combinar técnicas para atender às necessidades reais do projeto.
 
-Concluindo, agora com respeito à estratégia de testes, a escolha da abordagem mais adequada deve considerar a realidade do sistema e buscar o equilíbrio entre fidelidade, isolamento e reprodutibilidade. Em particular, sistemas embarcados se beneficiam de estratégias que reduzem os impactos do hardware envolvido e aumentam a confiabilidade do software, o que pode abranger testes automatizados e manuais em diferentes escalas.
+Concluindo, no que tange à estratégia de testes, a escolha da abordagem mais adequada deve considerar as particularidades do sistema, buscando equilibrar fidelidade aos comportamentos reais, isolamento das dependências e reprodutibilidade dos resultados. Vale destacar que, ao utilizar /fakes/, o nível de confiança nos testes estará diretamente relacionado à proximidade do /fake/ com o comportamento e as características da dependência real. /Fakes/ excessivamente simplificados podem introduzir discrepâncias significativas, comprometendo a validade dos testes ao longo de sua vida útil. Portanto, é essencial investir na (i) criação de /fakes/ suficientemente realistas, que aumentem a confiabilidade dos testes, e (ii) execução de testes que integrem o subsistema com suas dependências reais para validar os cenários de maneira mais abrangente.
+
+Particularmente em sistemas embarcados, a escolha de estratégias que minimizem os impactos do hardware e reforcem a confiabilidade do software é essencial. Essa abordagem pode incluir desde o uso de testes automatizados, que exploram uma ampla gama de cenários simulados, até testes manuais minuciosos que validem o comportamento do sistema em condições reais. Um processo contínuo de revisão e refinamento das estratégias de teste, aliado à aplicação adequada da injeção de dependências, garante uma base sólida para a evolução e a confiabilidade do software embarcado.
