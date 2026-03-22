@@ -31,7 +31,7 @@ Ao realizar um teste, o objetivo é validar, com certo grau de confiança, que o
 + *Reprodutibilidade*: Representa a consistência dos resultados obtidos em execuções sob as mesmas condições.
 + *Isolamento*: A habilidade de testar um subsistema de forma independente do restante do sistema.
 
-Por vezes, esses critérios podem entrar em conflito. Por exemplo, um teste com alta fidelidade pode envolver variáveis externas que afetem negativamente tanto a reprodutibilidade quanto o isolamento. Imagine testar o envio de dados de um cliente IoT para um servidor real (alta fidelidade). Se o servidor estiver indisponível ou sofrer alterações, o resultado do teste pode se tornar incerto (baixa reprodutibilidade) ou exigir uma coordenação complexa (baixo isolamento).
+Por vezes, esses critérios podem entrar em conflito. Por exemplo, um teste com alta fidelidade pode envolver variáveis externas que afetem negativamente tanto a reprodutibilidade quanto o isolamento. Imagine testar o envio de dados de um cliente IoT para um servidor real (alta fidelidade). Se o servidor estiver indisponível ou sofrer alterações, o resultado do teste pode se tornar incerto (baixa reprodutibilidade) ou exigir uma coordenação complexa com infraestrutura externa (baixo isolamento).
 
 Essas considerações evidenciam a importância de uma estratégia robusta de testes, que abranja desde unidades isoladas até a integração completa de todos os subsistemas.
 
@@ -46,13 +46,13 @@ No contexto deste artigo, uma "dependência" representa um componente de softwar
 + Um SDK para envio de telemetria.
 + Um controlador PID.
 
-Nem sempre temos controle total sobre nossas dependências, seja porque elas são bibliotecas externas, seja porque envolvem acesso direto ao hardware. Nessas situações, testá-las em ambientes reais pode ser inviável ou inconveniente.
+Nem sempre temos controle total sobre nossas dependências, seja porque elas são bibliotecas externas, seja porque envolvem acesso direto ao hardware. Nessas situações, testá-las em ambientes reais pode ser inviável ou inconveniente, especialmente em sistemas embarcados onde o hardware pode não estar disponível durante o desenvolvimento ou integração.
 
 Assim como usamos modelos para representar a realidade, desejamos substituir uma dependência real por uma versão simplificada, permitindo que o componente seja testado de forma isolada. Em resumo, queremos isolar e controlar dependências que introduzam indeterminação ou efeitos colaterais fora do nosso controle, quando o objetivo é testar apenas o subsistema em questão.
 
 É isso que a injeção de dependências possibilita.
 
-A essência dessa abordagem é fazer com que o subsistema sob teste declare suas dependências como abstrações (em vez de ligações fixas, amarradas internamente ao subsistema), delegando a tarefa de fornecer implementações concretas ao componente externo que o utilizará. Essa configuração geralmente ocorre próximo ao ponto de entrada do software, como na função ~main~ ou equivalente.
+A essência dessa abordagem é fazer com que o subsistema sob teste declare suas dependências como abstrações (em vez de ligações fixas, amarradas internamente ao subsistema), delegando a tarefa de fornecer implementações concretas ao componente externo que o utilizará. Dessa forma, o código sob teste recebe suas dependências de forma "injetada", permitindo que diferentes implementações sejam fornecidas em diferentes contextos. Essa configuração geralmente ocorre próximo ao ponto de entrada do software, como na função ~main~ ou equivalente.
 
 Dessa forma, os testes podem definir seus próprios objetos substitutos que implementem a abstração de forma conveniente para verificar comportamentos específicos.
 
@@ -108,7 +108,7 @@ void send_measurement(const Measurement& measurement, int max_attempts) {
 }
 #+END_SRC
 
-Nosso objetivo é testar a função ~send_measurement~, garantindo que ela envie uma requisição exatamente ~N~ vezes em caso de ~N~ falhas consecutivas nas chamadas HTTP. Buscaremos minimizar alterações no código original, de forma a garantir a retrocompatibilidade.
+Nosso objetivo é testar a função ~send_measurement~, garantindo que ela envie uma requisição exatamente ~N~ vezes em caso de ~N~ falhas consecutivas nas chamadas HTTP. Para tanto, objetivamos minimizar alterações no código original, de forma a garantir a retrocompatibilidade com código que já utiliza essa função.
 
 Ao analisar a estratégia de testes unitários, percebemos que usar a API HTTP real nos testes traria os seguintes inconvenientes:
 
@@ -174,25 +174,24 @@ void test() {
 }
 #+END_SRC
 
-Note que ~send_measurement~ agora recebe um terceiro parâmetro: ~const Client& client = HttpClient{}~. É ele que nos possibilita substituir a real chamada HTTP por algo que esteja sob nosso controle. Sendo essa a essência da injeção de dependências.
+Note que ~send_measurement~ agora recebe um terceiro parâmetro: ~const Client& client = HttpClient{}~. É ele que nos possibilita substituir a real chamada HTTP por algo que esteja sob nosso controle, permitindo testes determinísticos e isolados. Sendo essa a essência da injeção de dependências.
 
-Além disso, lhe demos um argumento padrão (por simplicidade, instanciado a cada chamada) para preservar a compatibilidade com o código existente. Apesar de haver outras formas com diferentes prós e contras de se atingir o mesmo objetivo (e.g. sobrecarga de funções, passagem explícita de argumentos), o argumento padrão será utilizado enquanto estratégia ao longo desse texto por simplicidade sem perda de generalidade.
+Além disso, lhe demos um argumento padrão (por simplicidade, instanciado a cada chamada) para preservar a compatibilidade com o código existente. Apesar de haver outras formas com diferentes vantagens e desvantagens para se atingir o mesmo objetivo (por exemplo, sobrecarga de funções, passagem explícita de argumentos), o argumento padrão será utilizado como estratégia ao longo desse texto por simplicidade, sem perda de generalidade.
 
 Já no teste, utilizamos um /Fake/ que simplesmente retorna uma resposta de falha pré-definida e mantém um contador do número de chamadas feitas ao método. Esse contador pode ser inspecionado para confirmar que corresponde ao valor esperado.
 
-Note que /Fakes/ podem ser muito mais elaborados. Por exemplo, poderíamos substituir o contador por um contêiner (e.g. ~std::vector<http::Request>~) que armazena os argumentos fornecido ao ~post~ e assim poderíamos verificar cenários em ~send_measurement~ o chama com diferentes argumentos. Neste caso, o número de chamadas equivaleria ao número de elementos no contêiner.
+Note que /Fakes/ podem ser muito mais elaborados. Por exemplo, poderíamos substituir o contador por um contêiner (por exemplo, ~std::vector<http::Request>~) que armazena os argumentos fornecidos ao ~post~ e assim poderíamos verificar cenários em que ~send_measurement~ é chamada com diferentes argumentos. Neste caso, o número de chamadas equivaleria ao número de elementos no contêiner.
 
 #+begin_center
-O uso de ~mutable~ exige cautela, pois pode introduzir, de forma não intencional, violações de "[[https://isocpp.org/wiki/faq/const-correctness][const correctness]]". Ainda assim, seu emprego pode ser necessário em *testes*.
+O uso de ~mutable~ exige cautela, pois pode introduzir, de forma não intencional, violações de "[[https://isocpp.org/wiki/faq/const-correctness][const correctness]]". Ainda assim, seu emprego é um padrão reconhecido e amplamente utilizado em fixtures de teste, sendo considerado pragmático nesse contexto.
 #+end_center
 
 Considerações:
 + *Vantagens*:
-  + Flexibilidade em tempo de execução.
-  + Fácil substituição de implementações.
-  + Baixo impacto no tempo de execução e moderado tamanho do binário.
+  + Permite um uso mais eficiente da compilação incremental.
+  + Baixo impacto no tamanho do binário.
 + *Desvantagens*:
-  + Overhead de resolução dinâmica (interfaces virtuais).
+  + Overhead de resolução dinâmica e possível perda de otimizações que dependem de /inlining/ (embora nem sempre, e.g. [[https://quuxplusone.github.io/blog/2021/02/15/devirtualization/][de-virtualização de chamadas]]).
   + Maior dependência do uso de ponteiros e referências.
 
 ** Caso especial: ~std::function<>~
@@ -240,11 +239,11 @@ void test() {
 }
 #+END_SRC
 
-Note o uso de [[https://en.cppreference.com/w/cpp/utility/functional/ref.html][~std::cref~]] para impedir a cópia de ~client_always_fail~. Isso garante que seja passado por referência, permitindo que qualquer modificação feita em ~client_always_fail~ dentro da função ~send_measurement~ seja refletida após sua execução.
+Note o uso de [[https://en.cppreference.com/w/cpp/utility/functional/ref.html][~std::cref~]] para impedir a cópia de ~client_always_fail~. Isso garante que seja passado por referência, permitindo que qualquer modificação feita em ~client_always_fail~ dentro da função ~send_measurement~ seja refletida após sua execução, facilitando a inspeção dos resultados.
 
-Alternativamente, poderíamos implementar o /Fake/ como uma expressão lambda, sem a necessidade de uma classe, e.g.:
+Alternativamente, poderíamos implementar o /Fake/ como uma expressão lambda, sem a necessidade de uma classe, por exemplo:
 
-#+begin_src cpp
+#+BEGIN_SRC cpp
 int attempts = 0;
 const auto client_always_fail = [&attempts](const http::Request &)  {
   ++attempts;
@@ -254,7 +253,7 @@ const auto client_always_fail = [&attempts](const http::Request &)  {
 send_measurement(Measurement{}, expected_attempts, client_always_fail);
 
 assert(attempts == expected_attempts);
-#+end_src
+#+END_SRC
 
 Considerações:
 + *Vantagens*:
@@ -271,7 +270,7 @@ Uma alternativa com *templates* explora polimorfismo estático, resolvendo chama
 #+BEGIN_SRC cpp
 class HttpClient {
 public:
-  http::Status post(const http::Request &req) const { return http::post(req); }
+  http::status post(const http::Request &req) const { return http::post(req); }
 };
 
 // Nossa camada de indireção passa a ser o template.
@@ -314,11 +313,12 @@ void test() {
 Considerações:
 + *Vantagens*:
   + Maior eficiência em tempo de execução.
-  + Possibilidades para "inlining" e otimizações correlatas.
+  + Mais favorável ao /inlining/ e às otimizações dele decorrentes.
 + *Desvantagens*:
-  + Aumento no tamanho do binário e maior tempo de compilação.
-  + Complica a compilação em unidades de compilação separadas, pois para compilar cada chamado ao template o compilador requer acesso a sua definição.
-  + Qualidade das mensagens de erro de compilação.
+  + Aumento no tamanho do binário (o que tambem pode after o cache de instruções e assim o desempenho).
+  + Aumento no tempo de compilação.
+  + Complica a compilação em unidades de compilação separadas, pois para compilar cada instanciação do template o compilador requer acesso à sua definição completa.
+  + Qualidade das mensagens de erro de compilação pode ser prejudicada.
 
 ** Caso especial: função como template
 
@@ -362,7 +362,7 @@ void test() {
 }
 #+END_SRC
 
-Similar ao ~std::function>~, podemos também alcançar o mesmo objetivo com uma expressão lambda em lugar da classe ~CountingClient~.
+Similar ao ~std::function<>~, podemos também alcançar o mesmo objetivo com uma expressão lambda em lugar da classe ~CountingClient~.
 
 Considerações:
 + *Vantagens*:
@@ -375,7 +375,7 @@ Considerações:
 
 Citamos a diminuição da qualidade dos erros de compilação como sendo uma desvantagem dos templates.
 
-Isso é largamente mitigado com o uso de "[[https://en.cppreference.com/w/cpp/language/constraints.html][concepts]]" que estão disponíveis a partir da versão 20 do C++. Assim, podemos, por exemplo, refinar nosso template a tipos que suportem o operador chamada de função, que aceitem um ~http::Request~ como parâmetro e que retornem um ~http::Status~, e.g.:
+Isso é parcialmente mitigado com o uso de "[[https://en.cppreference.com/w/cpp/language/constraints.html][concepts]]" (recurso disponível desde o C++20), que permitem definir "interfaces estáticas" de maneira explícita. Assim, podemos, por exemplo, restringir nosso template a tipos que: suportem o operador de chamada de função, aceitem um ~http::Request~ como parâmetro e que retornem um ~http::Status~, como no exemplo a seguir:
 
 #+begin_src cpp
 template <typename F>
@@ -388,16 +388,15 @@ void send_measurement(const Measurement &measurement, int max_attempts,
                       const PostFn& post = http::post) {
 #+end_src
 
-
 * Conclusão
 
-A injeção de dependências é uma técnica essencial para melhorar a testabilidade de software embarcado, permitindo isolar e simular componentes de maneira eficiente. As abordagens disponíveis oferecem diferentes vantagens:
+A injeção de dependências é uma técnica essencial para melhorar a testabilidade de software embarcado, permitindo isolar e simular componentes de maneira eficiente. As abordagens disponíveis oferecem diferentes vantagens e custos:
 
-- *Classes abstratas*: Proporcionam flexibilidade em tempo de execução.
-- *Templates*: Garantem alto desempenho, mas exigem maior verbosidade e aumentam o tempo de compilação.
+- *Classes abstratas*: Proporcionam flexibilidade em tempo de execução, mas introduzem overhead de resolução dinâmica.
+- *Templates*: Garantem alto desempenho e resoluções estáticas, mas podem ter impacto negativo no tamanho do binário e no tempo de compilação.
 
 O impacto de cada abordagem no projeto, como viabilidade e desempenho, depende de diversos fatores que devem ser analisados e monitorados constantemente. É fundamental evitar comparações simplistas entre técnicas, uma vez que cada solução apresenta características únicas e é mais adequada para contextos específicos. Por isso, recomenda-se uma avaliação criteriosa caso a caso, considerando ainda a possibilidade de combinar técnicas para atender às necessidades reais do projeto.
 
 Concluindo, no que tange à estratégia de testes, a escolha da abordagem mais adequada deve considerar as particularidades do sistema, buscando equilibrar fidelidade aos comportamentos reais, isolamento das dependências e reprodutibilidade dos resultados. Vale destacar que, ao utilizar /fakes/, o nível de confiança nos testes estará diretamente relacionado à proximidade do /fake/ com o comportamento e as características da dependência real. /Fakes/ excessivamente simplificados podem introduzir discrepâncias significativas, comprometendo a validade dos testes ao longo de sua vida útil. Portanto, é essencial investir na (i) criação de /fakes/ suficientemente realistas, que aumentem a confiabilidade dos testes, e (ii) execução de testes que integrem o subsistema com suas dependências reais para validar os cenários de maneira mais abrangente.
 
-Particularmente em sistemas embarcados, a escolha de estratégias que minimizem os impactos do hardware e reforcem a confiabilidade do software é essencial. Essa abordagem pode incluir desde o uso de testes automatizados, que exploram uma ampla gama de cenários simulados, até testes manuais minuciosos que validem o comportamento do sistema em condições reais. Um processo contínuo de revisão e refinamento das estratégias de teste, aliado à aplicação adequada da injeção de dependências, garante uma base sólida para a evolução e a confiabilidade do software embarcado.
+Particularmente em sistemas embarcados, a escolha de estratégias que minimizem os impactos do hardware e reforcem a confiabilidade do software é essencial. Essa abordagem pode incluir desde o uso de testes automatizados que exploram uma ampla gama de cenários simulados, até testes manuais minuciosos que validem o comportamento do sistema em condições reais. Um processo contínuo de revisão e refinamento das estratégias de teste, aliado à aplicação adequada da injeção de dependências, garante uma base sólida para a evolução e a confiabilidade do software embarcado, contribuindo para sistemas mais seguros e confiáveis.
