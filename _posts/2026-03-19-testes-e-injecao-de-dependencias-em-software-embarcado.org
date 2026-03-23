@@ -1,7 +1,7 @@
 #+begin_export html
 ---
 layout: post
-title: Testabilidade e Injeção de Dependências em Software Embarcado
+title: Testabilidade e Injeção de Dependências em Software Embarcado com C++
 permalink: /:title/
 tags: [testes c++]
 ---
@@ -43,16 +43,20 @@ No contexto deste artigo, uma "dependência" representa um componente de softwar
 
 + Uma função que realiza a leitura de um sensor de temperatura.
 + Um conjunto de classes que processa bytes de uma porta serial e os interpreta como logins RFID.
-+ Um SDK para envio de telemetria.
++ Uma SDK para envio de telemetria.
 + Um controlador PID.
 
 Nem sempre temos controle total sobre nossas dependências, seja porque elas são bibliotecas externas, seja porque envolvem acesso direto ao hardware. Nessas situações, testá-las em ambientes reais pode ser inviável ou inconveniente, especialmente em sistemas embarcados onde o hardware pode não estar disponível durante o desenvolvimento ou integração.
 
-Assim como usamos modelos para representar a realidade, desejamos substituir uma dependência real por uma versão simplificada, permitindo que o componente seja testado de forma isolada. Em resumo, queremos isolar e controlar dependências que introduzam indeterminação ou efeitos colaterais fora do nosso controle, quando o objetivo é testar apenas o subsistema em questão.
+Assim como usamos modelos para representar a realidade, desejamos substituir uma dependência real por uma versão simplificada, permitindo que o componente seja testado de forma isolada. Em resumo, queremos isolar e controlar dependências que introduzem indeterminação ou efeitos colaterais fora do nosso controle, quando o objetivo é testar apenas o subsistema em questão.
 
 É isso que a injeção de dependências possibilita.
 
-A essência dessa abordagem é fazer com que o subsistema sob teste declare suas dependências como abstrações (em vez de ligações fixas, amarradas internamente ao subsistema), delegando a tarefa de fornecer implementações concretas ao componente externo que o utilizará. Dessa forma, o código sob teste recebe suas dependências de forma "injetada", permitindo que diferentes implementações sejam fornecidas em diferentes contextos. Essa configuração geralmente ocorre próximo ao ponto de entrada do software, como na função ~main~ ou equivalente.
+A essência dessa abordagem é fazer com que o subsistema sob teste declare suas dependências como abstrações (em vez de ligações fixas, amarradas internamente ao subsistema), delegando a tarefa de fornecer implementações concretas ao componente externo que o utilizará. Dessa forma, o código sob teste recebe suas dependências de forma "injetada", permitindo que diferentes implementações sejam fornecidas em diferentes contextos conforme ilustrado pela Figura [[fig:subsistema-deps]]. Essa configuração geralmente ocorre próximo ao ponto de entrada do software, como na função ~main~ ou equivalente.
+
+#+CAPTION: Figura 1 - Relação entre um subsistema e suas dependências.
+#+NAME:   fig:subsistema-deps
+[[./../assets/img/2026-03-19-testes-e-injecao-de-dependencias-em-software-embarcado.dot.png]]
 
 Dessa forma, os testes podem definir seus próprios objetos substitutos que implementem a abstração de forma conveniente para verificar comportamentos específicos.
 
@@ -318,7 +322,7 @@ Considerações:
   + Aumento no tamanho do binário (o que tambem pode after o cache de instruções e assim o desempenho).
   + Aumento no tempo de compilação.
   + Complica a compilação em unidades de compilação separadas, pois para compilar cada instanciação do template o compilador requer acesso à sua definição completa.
-  + Qualidade das mensagens de erro de compilação pode ser prejudicada.
+  + A qualidade das mensagens de erro de compilação pode ser prejudicada.
 
 ** Caso especial: função como template
 
