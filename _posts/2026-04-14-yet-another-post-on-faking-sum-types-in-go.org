@@ -1,0 +1,244 @@
+#+begin_export html
+---
+layout: post
+title: Yet Another Post on Faking Sum Types in Go
+permalink: /:title/
+tags: [go]
+---
+#+end_export
+
+#+begin_quote
+Let's stretch Go a bit and fake sum types for the sake of, well, fun.
+#+end_quote
+--------------
+
+* Introduction
+We can compose Algebraic Data Types (ADTs) as *products* (structs, records, conjunctions, etc), in Haskell:
+#+begin_src haskell
+data SocketAddress = SocketAddress { host :: Host, port :: Int }
+#+end_src
+
+#+begin_center
+A ~SocketAddress~ has _both_ a ~host~ *and* a ~port~.
+#+end_center
+
+Or *sums* (co-products, variants, disjunction, etc):
+#+begin_src haskell
+data Host = Hostname String | HostIp IpAddress
+#+end_src
+
+#+begin_center
+A ~Host~ is _either_ a ~Hostname~ with a ~String~ *or* a ~HostIp~ with an ~IpAddress~.
+#+end_center
+
+We construct instances of these types using constructors and deconstruct them with pattern-matching:
+#+begin_src haskell
+ping :: Host -> IO ()
+ping = \case
+  Hostname h -> putStrLn $ "Pinging with hostname: " <>  h
+  HostIp   i -> putStrLn $ "Pinging with ip: " <> show i
+#+end_src
+
+We may call into ~ping~ as:
+#+begin_src haskell
+ping $ Hostname "localhost"
+-- OUTPUT: Pinging with hostname: localhost
+#+end_src
+
+The key advantage is that an instance of ~Host~ is *exactly* a ~Hostname~ or a ~HostIp~ and the choices are mutually-exclusive, always. Moreover, it is statically impossible to access an ~IpAddress~ from a ~Hostname~ (modulo some shenanigans). These guarantees apply to both the implementers and users of the type. This ensures that illegal states are unrepresentable, making the design correct /by construction/.
+
+While most statically-typed languages natively support product types, sum types are less common. We shall briefly revisit a way to +fake+ encode sum types in Go with a visitor.
+
+* Sums as visitation
+First, we define our data types:
+#+begin_src go
+type Host struct {
+	name *Hostname
+	ip   *HostIp
+}
+
+type Hostname struct {
+	Value string
+}
+
+type HostIp struct {
+	Value net.IPAddr
+}
+#+end_src
+
+A ~Host~ has _pointers_ to ~Hostname~ and ~HostIp~, which approximates the "either this or that" relationship. Crucially, it could point to both simultaneously or none at all.
+
+In isolation, a ~Host~ "is" either a ~Hostname~ or ~HostIp~ or both or neither; nothing prevents both pointers from being set or left ~nil~. Let's patch that up with a little encapsulation.
+
+#+begin_quote
+While I have decided to implement ~Host~ with two pointers. We could implement it differently, e.g. two value types plus a boolean (or an enum) to disambiguate which variant we're in. The main point stays as-is.
+#+end_quote
+
+Instead of having the compiler enforcing the correct construction of ~Host~, we rely on encapsulation through (i) making ~name~ and ~ip~ unexported fields (ii) factories. Therefore, we restrict the creation of ~Host~ instances outside its package to these two factories:
+#+begin_src go
+func NewHostname(v string) Host {
+	return Host{name: &Hostname{v}}
+}
+
+func NewHostIp(v net.IPAddr) Host {
+	return Host{ip: &HostIp{v}}
+}
+#+end_src
+
+To emphasise: The only way a _user_ (more on that later) can produce a ~Host~ is by calling either ~NewHostname~ or ~NewHostIp~. Furthermore, assuming that we have implemented both constructors correctly: any instance of ~Host~ we receive from users is guaranteed, _by encapsulation_, to represent a valid ~Hostname~ or ~HostIp~. In effect, the package that defines ~Host~  acts as a safe boundary, establishing this relationship as an invariant that we, as _implementers_, must uphold.
+
+#+begin_quote
+*DISCLAIMER*: This is _not_ really accurate due to zero-value initialisation, e.g. ~var aHost host.Host~ compiles and thus trivially violates the invariant as both pointers are ~nil~ now. Oops! We could probably paper over it with documentation or even by making ~Host~ itself unexported and exporting an interface instead. Although slightly safer, albeit more verbose, it still isn't surefire.
+#+end_quote
+
+With constructors out of the way, we're only missing a way to "pattern-match" on ~Host~. For that, let's introduce an aptly named ~match~ function:
+#+begin_src go
+func match[T any](host *Host, caseName func(Hostname) T, caseIp func(HostIp) T) T {
+	switch {
+	case host.name != nil:
+		return caseName(*host.name)
+	case host.ip != nil:
+		return caseIp(*host.ip)
+	}
+	panic("Host must be a Hostname (via NewHostname) or a HostIp (via NewHostIp)")
+}
+#+end_src
+
+Each variant gets its own function defining its behaviour.
+
+The regrettable ~panic~ is there because only _we as implementers_ know that ~Host~ holds either a ~Hostname~ or a ~HostIp~. The *compiler*, on the other hand, is none the wiser and therefore cannot check that invariant for us. We've basically moved away [[https://www.hillelwayne.com/post/constructive/][from constructive to predicative data]].
+
+#+begin_quote
+~match~ is a function and not a method of ~Host~ because at the time of writing [[https://github.com/golang/go/issues/77273][methods cannot introduce type parameters]].
+#+end_quote
+
+For convenience, let's add a function that matches on ~Host~ only for its side-effects, i.e. make ~T~ effectively like ~void~ in C:
+#+begin_src go
+func matchDiscarding(host *Host, caseName func(Hostname), caseIp func(HostIp)) {
+	match(host, discarding(caseName), discarding(caseIp))
+}
+
+func discarding[T any](f func(T)) func(T) struct{} {
+	return func(t T) struct{} {
+		f(t)
+		return struct{}{}
+	}
+}
+#+end_src
+
+With the machinery in-place, we're finally ready to implement ~Ping~:
+#+begin_src go
+func (h *Host) Ping() {
+	caseHostname := func(h Hostname) {
+		fmt.Printf("Pinging with hostname: %v", h.Value)
+	}
+
+	caseHostIp := func(h HostIp) {
+		fmt.Printf("Pinging with ip: %v", h.Value)
+	}
+
+	matchDiscarding(h, caseHostname, caseHostIp)
+}
+#+end_src
+
+We specify what to do with each variant and offload the rest onto ~matchDiscarding~.
+
+#+begin_quote
+For exposition, I've used function literals. But we could (and probably should) use top-level functions.
+#+end_quote
+
+The key advantage of this approach is that, as long as the implementation is sound, users of ~Host~ (such as ~Ping~ or other externally defined functions) cannot observe invalid states. From their perspective, a ~Host~ is always either a ~Hostname~ or a ~HostIp~, and they can rely on pattern matching to be exhaustively checked.
+
+* Generalising into ~Either[L, R]~
+Looking into the implementation, we note that parts of it are not tied to the specific ~Host~ type.
+
+Let's factor them out into a reusable, generic type for the case where we have two variants into an ~Either~.
+#+begin_src go
+package either
+
+type Either[L, R any] struct {
+	left  *L
+	right *R
+}
+
+func NewLeft[L, R any](l L) Either[L, R] {
+	return Either[L, R]{left: &l}
+}
+
+func NewRight[L, R any](r R) Either[L, R] {
+	return Either[L, R]{right: &r}
+}
+
+func Match[L, R, T any](e *Either[L, R], caseLeft func(L) T, caseRight func(R) T) T {
+	switch {
+	case e.left != nil:
+		return caseLeft(*e.left)
+	case e.right != nil:
+		return caseRight(*e.right)
+	}
+	panic("Either must be a Left (via NewLeft) or a Right (via NewRight)")
+}
+
+func MatchDiscarding[L, R any](e *Either[L, R], caseLeft func(L), caseRight func(R)) {
+	Match(e, discarding(caseLeft), discarding(caseRight))
+}
+
+func discarding[T any](f func(T)) func(T) struct{} {
+	return func(t T) struct{} {
+		f(t)
+		return struct{}{}
+	}
+}
+#+end_src
+
+#+begin_quote
+As this is just a toy, I didn't give it much thought on pointer vs value parameters. A serious implementation should.
+#+end_quote
+
+Then ~Host~ becomes a wrapper around ~Either~:
+#+begin_src go
+type Host struct {
+	inner either.Either[Hostname, HostIp]
+}
+#+end_src
+
+The constructors delegate to ~Either~'s ~NewLeft~ and ~NewRight~:
+#+begin_src go
+func NewHostname(v string) Host {
+	return Host{either.NewLeft[Hostname, HostIp](Hostname{v})}
+}
+
+func NewHostIp(v net.IPAddr) Host {
+	return Host{either.NewRight[Hostname, HostIp](HostIp{v})}
+}
+#+end_src
+
+Finally, ~Ping~ calls into ~MatchDiscarding~ to handle the branching logic:
+#+begin_src go
+func (h *Host) Ping() {
+	caseHostname := func(h Hostname) {
+		fmt.Printf("Pinging with hostname: %v", h.Value)
+	}
+
+	caseHostIp := func(h HostIp) {
+		fmt.Printf("Pinging with ip: %v", h.Value)
+	}
+
+	either.MatchDiscarding(&h.inner, caseHostname, caseHostIp)
+}
+#+end_src
+
+~Either[L, R]~ is probably fine when there are only two variants. However, supporting more variants requires nesting (e.g., ~Either[Hostname, Either[HostIp, HostId]]~), which can quickly become unwieldy.
+
+* Conclusion
+In conclusion, ADTs offer a powerful framework for modeling domain problems with type safety. Adding sum types enriches our vocabulary and reduces the likelihood of illegal states manifesting as bugs.
+
+However, applying these concepts in languages without native support, like Go, can be challenging and may feel unnatural or non-idiomatic.
+
+Despite the mechanics, reasoning in terms of ADTs as closed set of variants can be valuable. Even if we solve the problem using type-switches (naturally non-exhaustive) or a wholly different design, such as defining operations first and types second (often the more idiomatic approach in Go).
+
+There's much more to the topic, for instance the [[https://en.wikipedia.org/wiki/Expression_problem][Expression Problem]] shows an interesting trade-off in the design space. But that's for another day.
+
+* References
+
+1. [[https://rvarago.github.io/2022-10-10-emulating-pattern-match/][Pattern-matching without a match]]
