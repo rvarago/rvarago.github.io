@@ -14,7 +14,7 @@ As with most of the stuff I write, this is an exploratory, whimsical, and perhap
 #+end_quote
 --------------
 
-* Resources & `defer`
+* Resources & ~defer~
 
 A resource is basically something that a program acquires, uses, and releases. We must be careful not to break the protocol, e.g. using a resource after it's been released. Examples are plenty: mutexes, file-descriptors, sockets, DB transactions, your own custom-defined resources and, of course, memory.
 
