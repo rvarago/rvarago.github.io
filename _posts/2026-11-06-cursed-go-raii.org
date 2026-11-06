@@ -1,9 +1,9 @@
 #+begin_export html
 ---
 layout: post
-title: Cursed Go: RAII
+title: "Cursed Go: RAII"
 permalink: /:title/
-tags: [go cursed]
+tags: [go, cursed]
 ---
 #+end_export
 
