@@ -1,0 +1,179 @@
+#+begin_export html
+---
+layout: post
+title: Cursed Go: RAII
+permalink: /:title/
+tags: [go cursed]
+---
+#+end_export
+
+#+begin_quote
+I've been thinking about resource management lately, so let's play with inversion of control for resource management in Go.
+
+As with most of the stuff I write, this is an exploratory, whimsical, and perhaps quirky essay rather than recommendations or good advice for idiomatic Go.
+#+end_quote
+--------------
+
+* Resources & `defer`
+
+A resource is basically something that a program acquires, uses, and releases. We must be careful not to break the protocol, e.g. using a resource after it's been released. Examples are plenty: mutexes, file-descriptors, sockets, DB transactions, your own custom-defined resources and, of course, memory.
+
+#+begin_quote
+Memory is a notoriously important resource, and mishandling it can lead to all sorts of nasty issues. Call `malloc` and never `free` it: we've got ourselves a leak. Call `free` twice on the same allocation: it's undefined behaviour, and all bets are off!
+#+end_quote
+
+Thankfully, Go has a Garbage Collector for managing memory on our behalf.
+
+For other resources, there's [[https://go.dev/tour/flowcontrol/12][~defer~]] to absolve us from many of the perils of full manual management. For instance, here's a contrived snippet showing how that's usually done for a mutex protecting a counter:
+
+#+begin_src go :imports '("fmt" "sync")
+type counter struct {
+    value int
+    mu    sync.Mutex
+}
+
+func (c *counter) Inc() {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+
+    c.value += 1
+}
+
+func (c *counter) Get() int {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+
+    return c.value
+}
+
+func main() {
+    var (
+        c counter
+        wg sync.WaitGroup
+    )
+
+    for range 100 {
+        wg.Go(func() {
+            c.Inc()
+        })
+    }
+
+    wg.Wait()
+
+    fmt.Println(c.Get())
+}
+#+end_src
+
+#+RESULTS:
+: 100
+
+The cool thing about ~defer~ is that, as control flow becomes more complicated, with multiple return paths, panics, etc., it ensures that deferred functions get called when the surrounding function returns, including during panic unwinding. That's nicer and more composable than having to manually track where we are in the function and ensure we correctly undo what's been done so far.
+
+* Resource Acquisition Is Initialisation (RAII)
+
+A ~defer~ must be explicitly scheduled by the programmer, and it's tied to the scope of the surrounding function. The language doesn't prevent us from forgetting to release resources, barring tailored lints (e.g. [[https://golangci-lint.run/docs/linters/configuration/#bodyclose][bodyclose]] for HTTP response bodies), tests, and code-reviews.
+
+In C++ and Rust, the mechanism is a bit different. There, the resource type itself defines how it should be released: through its destructor in C++ or its ~Drop~ implementation in Rust. The cleanup code gets called when the object's lifetime ends. This goes by the name Resource Acquisition Is Initialisation ([[https://en.cppreference.com/cpp/language/raii][RAII]]).
+
+As an example in Rust:
+
+#+begin_src rust
+use std::sync::{Arc, Mutex};
+
+fn main() {
+    let counter = Arc::new(Mutex::new(0));
+    let mut handles = vec![];
+
+    for _ in 0..100 {
+        let counter = Arc::clone(&counter);
+
+        handles.push(std::thread::spawn(move || {
+            let mut guard = counter.lock().unwrap();
+            *guard += 1;
+        }));
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    println!("{}", *counter.lock().unwrap());
+}
+#+end_src
+
+#+RESULTS:
+: 100
+
+Calling ~lock()~ on ~Mutex<T>~ locks the underlying mutex and returns a ~MutexGuard<T>~ that grants access to the protected ~T~. When ~guard~ goes out of scope, its ~drop~ implementation unlocks the mutex.
+
+I've been thinking about whether having something like this in Go would be a good idea, so let's *emulate* parts of it with *functions*!
+
+#+begin_src go :imports '("fmt" "sync")
+type Locked[T any] struct {
+    value T
+    mu    sync.Mutex
+}
+
+func NewLocked[T any](value T) *Locked[T] {
+    return &Locked[T]{value: value}
+}
+
+func (l *Locked[T]) Do(f func(*T)) {
+    l.mu.Lock()
+    defer l.mu.Unlock()
+
+    f(&l.value)
+}
+
+func (l *Locked[T]) Get() T {
+    l.mu.Lock()
+    defer l.mu.Unlock()
+
+    return l.value
+}
+
+func main() {
+    var wg sync.WaitGroup
+
+    c := NewLocked[int](0)
+
+    for range 100 {
+        wg.Go(func() {
+            c.Do(func(v *int) {
+                *v += 1
+            })
+        })
+    }
+
+    wg.Wait()
+
+    fmt.Println(c.Get())
+}
+#+end_src
+
+#+RESULTS:
+: 100
+
+Crucially, we wrapped ~sync.Mutex~ in the ~Locked[T]~ type, which handles locking and unlocking. The call site doesn't mention ~Lock~ and ~Unlock~ anymore; it's now handled automatically and transparently by ~Locked[T]~.
+
+As a positive side effect, this strengthens the connection between the counter and its mutex. It's harder to access the counter's value without locking its mutex first. The API is a little harder to misuse.
+
+The API is minimal for the sake of exposition, but we could enrich it as we see fit. E.g. what if the function provided to ~Do~ can fail? What if it returns a useful result? Etc.
+
+#+begin_quote
+Pushing this forward and generalising it *far* more, we come close to Haskell's idiom [[https://wiki.haskell.org/Bracket_pattern][Bracket]].
+#+end_quote
+
+* Limitations
+
+Although it's great to have the resource type itself, as opposed to its users, controlling the protocol (that's the inversion of control I hinted), this approach has its downsides compared to ~defer~, for example:
+
+1. The API is less flexible, and it doesn't play that well if we need different signatures or even multiple ways to release the same resource.
+2. It might give a false sense of safety, since it's still possible to leak the internals of the resource and break the protocol.
+
+And there are a few more problems with our particular implementation *due to our Go _emulation_ with functions*:
+
+1. It doesn't compose naturally with the usual control flow. Say, returning early from ~Do~ doesn't return early from the outer function.
+2. It gets verbose quickly as the nesting grows.
+
+Overall, for Go I'd say it's a cute little trick to be aware of, but I wouldn't consider it idiomatic.
