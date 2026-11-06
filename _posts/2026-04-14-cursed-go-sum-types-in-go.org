@@ -1,9 +1,9 @@
 #+begin_export html
 ---
 layout: post
-title: Yet Another Post on Faking Sum Types in Go
+title: Cursed Go: Yet Another Post on Faking Sum Types in Go
 permalink: /:title/
-tags: [go]
+tags: [go cursed]
 ---
 #+end_export
 
