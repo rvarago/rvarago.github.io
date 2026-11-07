@@ -19,7 +19,7 @@ As with most of the stuff I write, this is an exploratory, whimsical, and perhap
 A resource is basically something that a program acquires, uses, and releases. We must be careful not to break the protocol, e.g. using a resource after it's been released. Examples are plenty: mutexes, file descriptors, sockets, DB transactions, your own custom resources and, of course, memory.
 
 #+begin_quote
-Memory is a notoriously important resource, and mishandling it can lead to all sorts of nasty issues. Call `malloc` and never `free` it: we've got ourselves a leak. Call `free` twice on the same allocation: it's undefined behaviour, and all bets are off!
+Memory is a notoriously important resource, and mishandling it can lead to all sorts of nasty issues. Call ~malloc~ and never ~free~ it: we've got ourselves a leak. Call ~free~ twice on the same allocation: it's undefined behaviour!
 #+end_quote
 
 Thankfully, Go has a Garbage Collector for managing memory on our behalf.
