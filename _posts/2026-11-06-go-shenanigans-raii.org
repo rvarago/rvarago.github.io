@@ -194,7 +194,7 @@ func main() {
 There are different ways to express the API, e.g. without embedding, with free functions instead of methods, etc.
 #+end_quote
 
-Crucially, we wrapped ~sync.Mutex~ in the ~Locked[T]~ type, which handles locking and unlocking. The call site in ~Inc()~ doesn't mention ~Lock~ and ~Unlock~ anymore; it's now handled automatically and transparently by ~Locked[T]~.
+Crucially, we wrapped ~sync.Mutex~ in the ~Locked[T]~ type, which handles locking and unlocking. The call site in ~Inc~ doesn't mention ~Lock~ and ~Unlock~ anymore; it's now handled automatically and transparently by ~Locked[T]~' ~Do~.
 
 As a positive side effect, this strengthens the connection between the counter and its mutex. It's harder to access the counter's value without locking its mutex first. The API is a little harder to misuse.
 
