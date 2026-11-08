@@ -45,7 +45,7 @@ ping $ Hostname "localhost"
 -- OUTPUT: Pinging with hostname: localhost
 #+end_src
 
-The key advantage is that an instance of ~Host~ is *exactly* a ~Hostname~ or a ~HostIp~ and the choices are mutually-exclusive, always. Moreover, it is statically impossible to access an ~IpAddress~ from a ~Hostname~ (modulo some shenanigans). These guarantees apply to both the implementers and users of the type. This ensures that illegal states are unrepresentable, making the design correct /by construction/.
+The key advantage is that an instance of ~Host~ is always *either* a ~Hostname~ or a ~HostIp~; the choices are mutually-exclusive. Moreover, it is statically impossible to access an ~IpAddress~ from a ~Hostname~ (modulo some shenanigans). These guarantees apply to both the implementers and users of the type. This ensures that illegal states are unrepresentable, making the design correct /by construction/.
 
 While most statically-typed languages natively support product types, sum types are less common. We shall briefly revisit a way to +fake+ encode sum types in Go with a visitor.
 
@@ -71,7 +71,7 @@ A ~Host~ has _pointers_ to ~Hostname~ and ~HostIp~, which approximates the "eith
 In isolation, a ~Host~ "is" either a ~Hostname~ or ~HostIp~ or both or neither; nothing prevents both pointers from being set or left ~nil~. Let's patch that up with a little encapsulation.
 
 #+begin_quote
-While I have decided to implement ~Host~ with two pointers. We could implement it differently, e.g. two value types plus a boolean (or an enum) to disambiguate which variant we're in. The main point stays as-is.
+I've decided to implement ~Host~ with two pointers, but we could've implemented it differently, e.g. two value types plus a boolean (or an enum) to disambiguate which variant we're in. The main point stays, though.
 #+end_quote
 
 Instead of having the compiler enforcing the correct construction of ~Host~, we rely on encapsulation through (i) making ~name~ and ~ip~ unexported fields (ii) factories. Therefore, we restrict the creation of ~Host~ instances outside its package to these two factories:
@@ -233,9 +233,9 @@ func (h *Host) Ping() {
 * Conclusion
 In conclusion, ADTs offer a powerful framework for modeling domain problems with type safety. Adding sum types enriches our vocabulary and reduces the likelihood of illegal states manifesting as bugs.
 
-However, applying these concepts in languages without native support, like Go, can be challenging and may feel unnatural or non-idiomatic.
+However, applying these concepts in languages without native support for pattern matching, like Go, can be challenging and may feel unnatural or non-idiomatic.
 
-Despite the mechanics, reasoning in terms of ADTs as closed set of variants can be valuable. Even if we solve the problem using type-switches (naturally non-exhaustive) or a wholly different design, such as defining operations first and types second (often the more idiomatic approach in Go).
+Despite the mechanics, reasoning in terms of ADTs as a closed set of variants can be valuable. Even if we solve the problem using type-switches (naturally non-exhaustive) or a wholly different design, such as defining operations first and types second (often the more idiomatic approach in Go).
 
 There's much more to the topic, for instance the [[https://en.wikipedia.org/wiki/Expression_problem][Expression Problem]] shows an interesting trade-off in the design space. But that's for another day.
 

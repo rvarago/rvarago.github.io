@@ -16,7 +16,7 @@ Haskell is notorious for its sophisticated type system, in which we express cert
 
 Consider the task of constructing an AST for a simple programming language with booleans, integers, addition, and if–then–else. We'd like to forbid certain nonsensical expressions, such as:
 
-- adding to booleans to integers
+- adding booleans to integers
 - ifs with non-boolean conditions
 - ifs whose then and else branches yield different types 
 
@@ -61,7 +61,7 @@ eval (EAdd l r) = eval l + eval r
 eval (EIf c t e) = if eval c then eval t else eval e
 #+end_src
 
-GHC is clever enough to use the matched data constructor to refine the return type. So, an ~Expr Book~ evaluates to a ~Bool~ and an ~Expr Int~ to an ~Int~.
+GHC is clever enough to use the matched data constructor to refine the return type. So, an ~Expr Bool~ evaluates to a ~Bool~ and an ~Expr Int~ to an ~Int~.
 
 We _could_ improve this much further, e.g. by constraining the /kind/ of the type parameter ~v~ in the definition of ~Expr v~ to valid types. However, I'm more interested in the Rust encoding, so let's jump into that.
 
@@ -89,9 +89,9 @@ struct EIf<Cond, Then, Alt> {
 }
 #+end_src
 
-Note that what otherwise would be recursive elements ~EIf~'~cond~ are replaced with type parameters.
+Note that what otherwise would be recursive elements ~EIf~'s ~cond~ field are replaced with type parameters.
 
-Also, although we _could_ constrain the type parameters already, for simplicity's sake, let's add the bounds only to ~Eval~ (so, it'll be possible instantiate invalid expressions, but not evaluate them):
+Also, although we _could_ constrain the type parameters already, for simplicity's sake, let's add the bounds only to ~Eval~ (so, it'll be possible to instantiate invalid expressions, but not evaluate them):
 
 #+begin_src rust :noweb yes :noweb-ref eval :eval no
 <<ast>>
@@ -108,7 +108,7 @@ trait Eval {
 }
 #+end_src
 
-Each node will implement ~Eval~ and get to pick the type of the evaluation outcome and therefore its type:
+Each node implements ~Eval~ and specifies the type of its evaluation result:
 
 #+begin_src rust :noweb yes :noweb-ref impl :eval no
 <<eval>>

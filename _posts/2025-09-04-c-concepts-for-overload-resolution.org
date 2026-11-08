@@ -33,7 +33,7 @@ int main() {
 : Showing the bool: 1
 : Showing the bool: 1
 
-Both calls select the ~bool~ overload and therefore the snippet prints ~Showing the bool: 1~ twice. This might be surprising, as one could have expected ~show("A lovely string")~ resolving to the ~std::string_view~ overload instead, and such surprises often lead bugs.
+Both calls select the ~bool~ overload and therefore the snippet prints ~Showing the bool: 1~ twice. This might be surprising, as one could have expected ~show("A lovely string")~ resolving to the ~std::string_view~ overload instead, and such surprises often lead to bugs.
 
 Essentially, this happens due to a [[https://en.cppreference.com/w/cpp/language/implicit_conversion.html][conversion sequence]] from ~const char[16]~ (the underlying type of ~"A lovely string"~) to ~bool~, and that's preferred over the alternative conversion to ~std::string_view~.
 
@@ -41,12 +41,12 @@ Essentially, this happens due to a [[https://en.cppreference.com/w/cpp/language/
 The same holds if we replace ~std::string_view~ with ~const std::string&~.
 #+end_quote
 
-There are multiple ways to "fix" this, and each one depends on what we want to achieve, for example:
+There are multiple ways to "fix" this, depending on what we want to achieve:
 
 - not overloading in the first place
 - adding an overload that accepts a ~const char*~
 - explicitly converting the literal into an ~std::string_view~ at call-site
-- use a template with SFINAE
+- using a template with SFINAE
 
 I'd like to present another option that improves upon "use a template with SFINAE" with C++20 concepts.
 

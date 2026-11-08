@@ -24,7 +24,7 @@ Memory is a notoriously important resource, and mishandling it can lead to all s
 
 Thankfully, Go has a Garbage Collector for managing memory on our behalf.
 
-For other resources, there's [[https://go.dev/tour/flowcontrol/12][~defer~]] to absolve us from many of the perils of full manual management. For instance, here's a contrived snippet showing how that's usually done for a mutex protecting a counter:
+For other resources, there's [[https://go.dev/tour/flowcontrol/12][~defer~]] to absolve us from many of the perils of fully manual management. For instance, here's a contrived snippet showing how that's usually done for a mutex protecting a counter:
 
 #+begin_src go :imports '("fmt" "sync")
 type counter struct {

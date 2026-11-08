@@ -18,7 +18,7 @@ Thanks to this new standard interface, it should be easier to integrate with thi
 
 * Range over integers
 
-To start off, there's been nice feature since [[https://tip.golang.org/doc/go1.22][1.22]] more or less on the same topic: A terser syntax for iterating over integers in the range =[0, n)=. Similar to APL's [[https://aplwiki.com/wiki/Index_Generator][=Iota=]] primitive.
+To start off, there's been a nice feature since [[https://tip.golang.org/doc/go1.22][1.22]] more or less on the same topic: A terser syntax for iterating over integers in the range =[0, n)=. Similar to APL's [[https://aplwiki.com/wiki/Index_Generator][=Iota=]] primitive.
 
 *Example*: Iterating from =[0, 10)=
 
@@ -186,7 +186,7 @@ Since the iterator returned by =fibs= produces an infinite sequence, we had to e
 
 * Range adapters
 
-Lastly, we can write functions that adapts iterators to our needs, for instance, =takeWhile= to keep iterating while a given predicate applied to the current value yields =true=. As an example, we use to iterate over an infinite sequence of strings (=a= =aa= =aaa= ...) and take only the firsts whose lengths are =< 5=.
+Lastly, we can write functions that adapt iterators to our needs. For example, =takeWhile= continues iterating while a predicate applied to the current value returns =true=. As an example, we use it to iterate over an infinite sequence of strings (=a= =aa= =aaa= ...) and take only the first ones whose lengths are =< 5=.
 
 #+begin_src go :imports '("fmt" "iter") :main no
 func appendForever(s string) iter.Seq[string] {

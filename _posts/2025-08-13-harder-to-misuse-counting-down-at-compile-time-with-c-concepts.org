@@ -44,14 +44,15 @@ int main() {
 : 30
 : 10
 
-Due to not so interesting reasons, I wanted to get rid of ~std::ranges::reverse~.
+For reasons that aren't particularly interesting, I wanted to get rid of ~std::ranges::reverse~.
 
 * Builder + compile-time countdown index
 I decided to call ~resize~ with the number of amounts and keep track of a countdown index that I'd then use to assign amounts to their correct position (from end to beginning) instead of calling ~push_back~ (from beginning to end).
 
-However, I now have to account for accidental mismatches between the number of amounts and how many times ~append~ ends up being actually called. That's a not so easy to use correctly kind of API.
+However, I now have to account for accidental mismatches between the number of amounts and how many times ~append~ ends up being actually called. That's an API that's not so easy to use correctly.
 
-Although it might be impossible to enforce they do match with 100% certainty in C++, I'd be fine by making this API /a little/ harder to misuse.
+
+Although enforcing a perfect match between the number of amounts and the number of calls might be impossible in C++, I'd be already happy to make the API /a little/ harder to misuse.
 
 So I templatised the ~Builder<N>~ with a *compile-time* number ~N~ (our index) and made ~append~ require that ~N > 0~ and then return a ~Builder<N - 1>~. Finally, ~build~ requires that ~N == 0~.
 
@@ -101,8 +102,7 @@ Attempts to change ~3~ in ~Builder<3>~ to, say ~2~ or ~4~, are met with compile-
 * Bonus (Rust)
 For extra fun I translated this example to Rust. As I wanted to stick to stable, I had to manually encode natural numbers -- rather poorly I should add.
 
-I reckon much of tha
-e boilerplate will vanish once we get [[https://github.com/rust-lang/rust/issues/76560][generic const expressions]] and [[https://github.com/rust-lang/rust/issues/20041][type equality constraints in where clauses]].
+I reckon much of the boilerplate will vanish once we get [[https://github.com/rust-lang/rust/issues/76560][generic const expressions]] and [[https://github.com/rust-lang/rust/issues/20041][type equality constraints in where clauses]].
 
 Until then, here's my sketch:
 

@@ -17,13 +17,13 @@ It's been years since I solved an [[https://en.wikipedia.org/wiki/Integral][inte
 
 I remember having fun trying to find patterns that'd eventually lead me to well-known forms that I could look up in a table and rediscovering properties of different functions and useful identities along the way. I still hold memories of an introductory Quantum Mechanics exam with complicated integrals over strange geometric objects.
 
-The process often involved [[https://en.wikipedia.org/wiki/List_of_trigonometric_identities][trigonometric identities]] and I always had troubles committing them all to memory, except perhaps for the top Pythagorean identity:
+The process often involved [[https://en.wikipedia.org/wiki/List_of_trigonometric_identities][trigonometric identities]] and I always had trouble memorising them all, except perhaps for the familiar Pythagorean identity:
 
 \[
 \sin^2 x + \cos^2 x = 1
 \]
 
-And the angle sum, e.g. for \( \sin \):
+We also have the angle-sum identity for \( \sin \):
 
 \[
 \sin (\alpha + \beta) = \sin \alpha \cos \beta + \sin \beta \cos \alpha
@@ -53,7 +53,7 @@ I recognised the sum of the first and last terms as equal to \( 1 \) -- per the 
 1 + 2\sin x \cos x
 \]
 
-I remembered that with the double-angle identity for \( \sin \), we simplify \( 2\sin x \cos x \) into:
+I remembered that the double-angle identity for \( \sin \) allows us to simplify \( 2\sin x \cos x \) into:
 
 \[
 \sin(2x) = 2\sin x\cos x
@@ -85,7 +85,7 @@ I plugged it into the integral and omitted the integration limits for brevity:
 \int 1 + \sin(2x) \, dx
 \]
 
-Integral is a linear operator -- roughly, the integral of the sum is the sum of the integrals. Hence, I integrated each term individually by finding the "primitives" (anti-derivatives) of known forms/standard techniques:
+Integration is a linear operator -- roughly, the integral of the sum is the sum of the integrals. Hence, I integrated each term individually by finding the "primitives" (anti-derivatives) of known forms/standard techniques:
 
 \[
 x - \frac{1}{2}\cos(2x)

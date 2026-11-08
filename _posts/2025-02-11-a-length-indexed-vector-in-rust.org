@@ -9,7 +9,7 @@ mathjax: true
 #+end_export
 
 #+begin_quote
-Sneak peeking at Dependent Types and an encoding of length-indexed vectors in Rust to constraint /consumers/ on operations they can perform.
+A Sneak peeking at Dependent Types and an encoding of length-indexed vectors in Rust to constrain /consumers/ on operations they can perform.
 #+end_quote
 --------------
 
@@ -110,16 +110,16 @@ Encapsulate ~IndexedVec~ and functions over it in a module where we /establish t
 - Inside the module, all bets are off and we're on our own to write the implementation without any assurance: we can see everything and do anything
 - Outside the module, we can only perform operations constrained: we can only see what type-signatures allow us to see
 
-IMPORTANT: There's *no* type-system-verified relationship between type-signatures and their bodies, it's upon us (the implementers) to ensure they hold.
+IMPORTANT: There's *no* type-system-verified relationship between type-signatures and their bodies, it's up to us (the implementers) to ensure they hold.
 #+end_quote
 
-In Haskell, the constructors held tight relationships between themselves and their lengths. In Rust, we use modules (with a couple of tricks) to restrict how consumers can create and modify vectors and thus artificially establish relationships /roughly similar/ Haskell.
+In Haskell, the constructors held tight relationships between themselves and their lengths. In Rust, we use modules (with a couple of tricks) to restrict how consumers can create and modify vectors and thus artificially establish relationships /roughly similar/ to those in Haskell.
 
-We can do with by having just a few selected functions as *the only* way to access/manipulate the internal representation of ~IndexedVec~.
+We can achieve this by exposing only a small set of functions for accessing and manipulating the internal representation of ~IndexedVec~. In other words, through a judicious application of data hiding!
 
-Namely, we produce an empty vector with ~IndexedVec<A, _>::default~ returning ~IndexedVec<A, Zero>~ (like ~VEmpty~). We add an element ~A~ into an ~IndexedVec<A, N>~ with ~IndexedVec<A, N>::pushed~ returning an ~IndexedVec<A, Succ<N>>~ ( like ~VCons~).
+Namely, we produce an empty vector with ~IndexedVec<A, _>::default~ returning ~IndexedVec<A, Zero>~ (like ~VEmpty~). We add an element ~A~ into an ~IndexedVec<A, N>~ with ~IndexedVec<A, N>::pushed~ returning an ~IndexedVec<A, Succ<N>>~ (like ~VCons~).
 
-Additionally, all functions moves input vectors and produce *new* vectors (internally by simply consuming thr input). This happens because calling functions change types, e.g. from ~IndexedVec<A, N>~ to ~IndexedVec<A, Succ<N>>~ to encode the usage protocol we want, akin to the [[https://docs.rust-embedded.org/book/static-guarantees/typestate-programming.html][Type-state pattern]].
+Additionally, all functions consume their input vectors and produce *new* ones. Internally, by this is achieved by moving the input vectors. This happens because calling functions change types, e.g. from ~IndexedVec<A, N>~ to ~IndexedVec<A, Succ<N>>~ to encode the usage protocol we want, akin to the [[https://docs.rust-embedded.org/book/static-guarantees/typestate-programming.html][Type-state pattern]].
 
 The code looks like this:
 
@@ -156,7 +156,7 @@ pub mod ivec {
 
     #[derive(Debug)]
     pub struct IndexedVec<A, N: Nat> {
-        pub inner: Vec<A>,
+        inner: Vec<A>,
         _len: PhantomData<N>,
     }
 
@@ -191,6 +191,12 @@ pub mod ivec {
         }
     }
 
+    impl <A, N: Nat> From<IndexedVec<A, N>> for Vec<A> {
+        fn from(v: IndexedVec<A, N>) -> Vec<A> {
+            return v.inner
+        }
+    }
+
     fn unverified_from<A, N: Nat>(v: Vec<A>) -> IndexedVec<A, N> {
         IndexedVec {
             inner: v,
@@ -203,6 +209,8 @@ pub mod ivec {
     }
 }
 #+end_src
+
+#+RESULTS:
 
 Inside ~ivec~, we as implementers don't get much from the type-system in terms of bodies of functions satisfying their type-signatures -- special mention to ~unverified_from~.
 
@@ -225,15 +233,17 @@ fn main() {
         .pushed(2)
         // .pushed(30) // zipping vectors with different lengths -> doesn't type-check.
         .zipped(IndexedVec::default().pushed('a').pushed('b'));
-    assert_eq!(y.inner, vec![(1, 'a'), (2, 'b')]);
+    assert_eq!(y.into(), vec![(1, 'a'), (2, 'b')]);
 
     let z: IndexedVec<i32, Succ<Succ<Succ<Succ<Zero>>>>> = IndexedVec::default()
-        .pushed(1)
+        .pushed()
         .pushed(2)
         .appended(IndexedVec::default().pushed(3).pushed(4));
-    assert_eq!(z.inner, vec![1, 2, 3, 4]);
+    assert_eq!(z.into(), vec![1, 2, 3, 4]);
 }
 #+end_src
+
+#+RESULTS:
 
 * Conclusion
 
