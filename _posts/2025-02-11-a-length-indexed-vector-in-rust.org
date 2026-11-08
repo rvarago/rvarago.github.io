@@ -191,16 +191,16 @@ pub mod ivec {
         }
     }
 
-    impl <A, N: Nat> From<IndexedVec<A, N>> for Vec<A> {
-        fn from(v: IndexedVec<A, N>) -> Vec<A> {
-            return v.inner
-        }
-    }
-
     fn unverified_from<A, N: Nat>(v: Vec<A>) -> IndexedVec<A, N> {
         IndexedVec {
             inner: v,
             _len: PhantomData::default(),
+        }
+    }
+
+    impl <A, N: Nat> From<IndexedVec<A, N>> for Vec<A> {
+        fn from(v: IndexedVec<A, N>) -> Vec<A> {
+            return v.inner
         }
     }
 
