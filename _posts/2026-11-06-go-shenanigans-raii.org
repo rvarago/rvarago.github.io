@@ -1,16 +1,16 @@
 #+begin_export html
 ---
 layout: post
-title: "Cursed Go: RAII"
+title: "Go Shenanigans: RAII"
 permalink: /:title/
-tags: [go, cursed]
+tags: [go, shenanigans]
 ---
 #+end_export
 
 #+begin_quote
 I've been thinking about resource management lately, so let's play with inversion of control for resource management in Go.
 
-As with most of the stuff I write, this is an exploratory, whimsical, and perhaps quirky essay rather than recommendations or good advice for idiomatic Go.
+As with most of the stuff I write, this is an exploratory and perhaps quirky essay rather than recommendations or good advice for idiomatic Go.
 #+end_quote
 --------------
 
@@ -126,7 +126,7 @@ fn main() {
 #+RESULTS:
 : 100
 
-Calling ~lock()~ on ~Mutex<T>~ locks the underlying mutex and returns a ~MutexGuard<T>~ that grants access to the protected ~T~. When ~guard~ goes out of scope, its ~Drop~ implementation unlocks the mutex.
+Calling ~lock()~ on ~Mutex<T>~ locks the underlying mutex and returns a ~MutexGuard<T>~, which provides access to the protected ~T~. When ~guard~ goes out of scope, its ~Drop~ implementation automatically unlocks the mutex. This happens transparently, without requiring us to explicitly call ~drop(guard)~.
 
 #+begin_quote
 It's possible to simplify the example to one-liners since binding to ~guard~ isn't necessary, but that isn't the point.
@@ -194,7 +194,7 @@ func main() {
 There are different ways to express the API, e.g. without embedding, with free functions instead of methods, etc.
 #+end_quote
 
-Crucially, we wrapped ~sync.Mutex~ in the ~Locked[T]~ type, which handles locking and unlocking. The call site doesn't mention ~Lock~ and ~Unlock~ anymore; it's now handled automatically and transparently by ~Locked[T]~.
+Crucially, we wrapped ~sync.Mutex~ in the ~Locked[T]~ type, which handles locking and unlocking. The call site in ~Inc()~ doesn't mention ~Lock~ and ~Unlock~ anymore; it's now handled automatically and transparently by ~Locked[T]~.
 
 As a positive side effect, this strengthens the connection between the counter and its mutex. It's harder to access the counter's value without locking its mutex first. The API is a little harder to misuse.
 
